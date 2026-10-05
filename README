@@ -1,0 +1,5 @@
+ClankOS is the operating system for clankas.
+This repository holds it's container: Debian with GNU Emacs and Org,
+in which ClankOS commands run.
+
+https://www.clankos.org
