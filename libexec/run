@@ -1,0 +1,21 @@
+#!/bin/sh
+# run COMMAND [ARG ...]
+# Run a ClankOS command inside the image. bin/clankos-run starts it.
+# CLANKOS_PROBE, when set, names a file the host saw in the workspace:
+# its absence here means the workspace was not shared with the container.
+# Exit: the command's own, 126 workspace not visible, 127 no such command.
+if [ -n "${CLANKOS_PROBE:-}" ] && [ ! -e "$CLANKOS_PROBE" ]; then
+    echo "clankos: the workspace is not visible in the container: $PWD" >&2
+    echo "clankos: Docker may share only some host directories, such as the home directory" >&2
+    exit 126
+fi
+command=$(dirname -- "$0")/${1:-}
+case ${1:-} in
+    ''|run|*/*) command= ;;
+esac
+if [ -z "$command" ] || [ ! -x "$command" ]; then
+    echo "clankos: no such command: ${1:-}" >&2
+    exit 127
+fi
+shift
+exec "$command" "$@"

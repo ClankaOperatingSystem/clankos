@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: clankos-run [--host-network] COMMAND [ARG ...]
+       clankos-run --help
+
+Run a ClankOS command in the ClankOS container, on the workspace the
+working directory is in. The other scripts in bin/ call this.
+
+The workspace is the nearest directory, from the working directory
+upwards, that holds .pos or .git; failing both, the working directory.
+CLANKOS_WORKSPACE names it instead. It is mounted at its own path, and
+the command starts in the working directory, so paths mean the same
+inside the container as outside. The command runs as the invoking user.
+
+{config}/pos, where {config} is $XDG_CONFIG_HOME or ~/.config, is
+mounted too when it exists: the tokens that signing in to a keeper
+keeps. POS_ARCHIVE_OFFLINE and POS_ARCHIVE_TOKEN are passed on.
+
+--host-network gives the container the host's network, which signing
+in needs. CLANKOS_IMAGE names the image; it is
+ghcr.io/clankaoperatingsystem/clankos:latest unless set, which
+bin/install.sh installs.
+
+Exit: the command's own; 2 usage; 125 Docker error; 126 the workspace
+is not visible in the container; 127 docker or the command not found.
+HELP
+}
+
+network=()
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    --host-network) network=(--network host); shift ;;
+esac
+[ $# -ge 1 ] || { usage >&2; exit 2; }
+
+command -v docker >/dev/null || {
+    echo "clankos-run: docker not found" >&2
+    exit 127
+}
+
+here=$(pwd -P)
+if [ -n "${CLANKOS_WORKSPACE:-}" ]; then
+    workspace=$(cd -- "$CLANKOS_WORKSPACE" && pwd -P)
+else
+    workspace=$here
+    dir=$here
+    while :; do
+        if [ -e "$dir/.pos" ] || [ -e "$dir/.git" ]; then
+            workspace=$dir
+            break
+        fi
+        [ "$dir" != / ] || break
+        dir=$(dirname -- "$dir")
+    done
+fi
+case "$here/" in
+    "$workspace"/*) ;;
+    *) echo "clankos-run: the working directory is not in the workspace $workspace" >&2
+       exit 2 ;;
+esac
+
+# A file the host sees in the workspace, for the container to look for.
+probe=$(find "$workspace" -mindepth 1 -maxdepth 1 -print -quit)
+
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+tokens=()
+[ ! -d "$config/pos" ] || tokens=(-v "$config/pos:$config/pos")
+
+# git refuses a repository whose owner is not the user running it, and
+# a mounted directory's owner can read differently inside a container.
+exec docker run --rm -i \
+    --user "$(id -u):$(id -g)" \
+    -e HOME=/tmp \
+    -e XDG_CONFIG_HOME="$config" \
+    -e CLANKOS_PROBE="$probe" \
+    -e GIT_CONFIG_COUNT=1 \
+    -e GIT_CONFIG_KEY_0=safe.directory \
+    -e GIT_CONFIG_VALUE_0='*' \
+    -e POS_ARCHIVE_OFFLINE \
+    -e POS_ARCHIVE_TOKEN \
+    -v "$workspace:$workspace" \
+    -w "$here" \
+    ${tokens[@]+"${tokens[@]}"} \
+    ${network[@]+"${network[@]}"} \
+    "${CLANKOS_IMAGE:-ghcr.io/clankaoperatingsystem/clankos:latest}" \
+    /usr/local/libexec/clankos/run "$@"
