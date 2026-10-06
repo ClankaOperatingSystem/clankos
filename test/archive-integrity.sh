@@ -35,6 +35,16 @@ chmod u+w archives/2026-01-01-note.txt
 echo "Changed." >> archives/2026-01-01-note.txt
 check "check finds a changed item" status 1 "$bin/archive-integrity" check .
 
+# The workspace's configuration, as poslib's doc/pos-directory.txt has it.
+chmod u-w archives/2026-01-01-note.txt
+rmdir .pos
+mkdir .clanka
+printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+check "a version 2 configuration in .clanka is read" status 1 "$bin/archive-integrity" check .
+printf 'pos: 1\n' > .clanka/config.yml
+check "a version 1 configuration is refused" status 2 "$bin/archive-integrity" check .
+printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+
 check "an unknown command is refused" status 2 "$bin/archive-integrity" bogus
 check "clankos-run refuses a command the image lacks" status 127 "$bin/clankos-run" bogus
 check "help needs no container" status 0 env CLANKOS_IMAGE=none.invalid/none "$bin/archive-integrity" --help
