@@ -1,0 +1,132 @@
+#!/bin/sh
+# initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
+#          [--keeper URL] [--bin DIR] [--no-tree]
+# Make the Git repository in the working directory a garden. The
+# protocol is docs/initiate.txt.
+usage() {
+    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--bin DIR] [--no-tree]" >&2
+    exit 2
+}
+refuse() {
+    echo "initiate: $1" >&2
+    exit 2
+}
+
+registry=ghcr.io/clankaoperatingsystem/clankos
+ask=
+[ ! -t 0 ] || ask=1
+tag= archive= keeper= bin=bin tree=1
+while [ $# -gt 0 ]; do
+    case $1 in
+        --ask) ask=1; shift ;;
+        --no-tree) tree=; shift ;;
+        --image) [ $# -ge 2 ] || usage; tag=$2; shift 2 ;;
+        --archive) [ $# -ge 2 ] || usage; archive=$2; shift 2 ;;
+        --keeper) [ $# -ge 2 ] || usage; keeper=$2; shift 2 ;;
+        --bin) [ $# -ge 2 ] || usage; bin=$2; shift 2 ;;
+        *) usage ;;
+    esac
+done
+
+[ -e .git ] || refuse "not the root of a Git repository: $PWD"
+config=
+for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+    if [ -f "$file" ]; then
+        [ -z "$config" ] || refuse "two configurations: $config, $file"
+        config=$file
+    fi
+done
+
+# question PROMPT DEFAULT: the answer, or DEFAULT if none is given or asked for.
+question() {
+    answer=
+    if [ -n "$ask" ]; then
+        printf '%s [%s]: ' "$1" "$2" >&2
+        read -r answer || answer=
+    fi
+    printf '%s\n' "${answer:-$2}"
+}
+
+if [ -n "$config" ]; then
+    echo "kept      $config (this is a garden already)"
+else
+    [ -n "$tag" ] || tag=$(question "The image: latest, which follows new versions, or a version to pin, such as v0.0.1" latest)
+    case $tag in
+        ''|*[!A-Za-z0-9._-]*) refuse "not an image tag: $tag" ;;
+    esac
+    [ -n "$archive" ] || archive=$(question "The archive: uncommitted (on disk, ignored by Git), committed, or remote (kept by a keeper)" uncommitted)
+    case $archive in
+        committed|uncommitted) [ -z "$keeper" ] || refuse "only a remote archive has a keeper" ;;
+        remote)
+            [ -n "$keeper" ] || keeper=$(question "The keeper's address for this archive" "")
+            case $keeper in
+                https://*|http://*) ;;
+                *) refuse "a remote archive needs its keeper's address, as --keeper URL" ;;
+            esac
+            case $keeper in
+                *[[:space:]\"\'#]*) refuse "not an address: $keeper" ;;
+            esac ;;
+        *) refuse "the archive is kept committed, uncommitted or remote, not: $archive" ;;
+    esac
+
+    config=.clanka/config.yml
+    mkdir -p .clanka
+    {
+        printf 'pos: 2\nprojects: projects/\nimage: %s:%s\n' "$registry" "$tag"
+        case $archive in
+            committed) printf 'archives:\n  - scope: "."\n    kept: committed\n' ;;
+            remote) printf 'archives:\n  - scope: "."\n    kept: remote\n    url: %s\n' "$keeper" ;;
+        esac
+    } > "$config"
+    echo "wrote     $config (image $tag, archive $archive)"
+fi
+
+# ignore LINE: add LINE to .gitignore unless it is there.
+ignore() {
+    if [ -f .gitignore ] && grep -qxF "$1" .gitignore; then
+        return
+    fi
+    [ ! -s .gitignore ] || [ -z "$(tail -c 1 .gitignore)" ] || printf '\n' >> .gitignore
+    printf '%s\n' "$1" >> .gitignore
+    echo "ignored   $1 in .gitignore"
+}
+ignore '_*/'
+[ "$archive" != uncommitted ] || ignore '/archives/'
+
+if [ -e intray.org ]; then
+    echo "kept      intray.org"
+else
+    printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+    echo "wrote     intray.org"
+fi
+
+# The scripts that start this image's commands, as the image has them.
+case $bin in
+    ''|/*|*..*) refuse "not a directory in the repository: $bin" ;;
+esac
+mkdir -p "$bin"
+for script in /usr/local/share/clankos/bin/*; do
+    name=${script##*/}
+    if [ ! -e "$bin/$name" ]; then
+        cp "$script" "$bin/$name" && chmod +x "$bin/$name"
+        echo "wrote     $bin/$name"
+    elif cmp -s "$script" "$bin/$name"; then
+        echo "kept      $bin/$name"
+    else
+        echo "kept      $bin/$name (it differs from the image's)"
+    fi
+done
+
+# The configuration as poslib reads it.
+emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
+    --eval '(pos-tree-read-config (with-temp-buffer (insert-file-contents (car command-line-args-left)) (setq command-line-args-left nil) (buffer-string)))' \
+    "$config" 2>/dev/null || refuse "poslib refuses $config"
+
+if [ -n "$tree" ] && [ -n "$ask" ]; then
+    "$(dirname -- "$0")/responsibility-tree" --ask || true
+fi
+
+echo
+echo "This repository is a garden. Nothing is committed: read git status, and commit."
+echo "Add to the tree at any time with $bin/responsibility-tree."

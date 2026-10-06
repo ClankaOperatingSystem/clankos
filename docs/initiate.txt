@@ -1,0 +1,90 @@
+initiate: making a Git repository a garden
+
+bin/initiate runs this protocol in the ClankOS container. poslib's
+doc/pos-directory.txt defines the configuration it writes:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What a garden is
+
+A garden is a tree of responsibilities kept in Org files, in a Git
+repository. What makes a repository a garden is small:
+
+    .clanka/config.yml   the configuration: that this is a
+                         responsibility, whose projects belong in
+                         projects/; the image its commands run in; how
+                         its archive is kept; and, as the tree grows,
+                         what is declared beneath it
+    intray.org           where tasks are captured, under "Unsorted"
+    bin/                 the scripts that start the commands
+    .gitignore           directories beginning with an underscore are
+                         working material and are never committed
+
+Archives and ledgers are made by the first seal, and responsibilities
+and projects as they are needed (docs/responsibility-tree.txt).
+
+
+2. The questions
+
+Initiation asks two things, each of which an option answers instead.
+
+  - The image. "latest" follows each new version of ClankOS as it is
+    published. A version, such as v0.0.1, is pinned: the garden's
+    commands run in that image until the line is changed. The default
+    is latest.
+  - The archive. "uncommitted" keeps it on disk and has Git ignore it,
+    so that evidence is kept without growing the repository; this is
+    the default. "committed" keeps it on disk and in the repository.
+    "remote" has a keeper hold it, at an address the keeper's owners
+    give; signing in to the keeper is done afterwards, with
+    "archive-integrity sign-in".
+
+At a terminal it asks. Without one it takes the defaults for what no
+option answers. "--ask" makes it ask all the same, one answer to a
+line of standard input, an empty line taking the default.
+
+
+3. What it writes
+
+Run at the root of a Git repository, it writes, in this order:
+
+  - .clanka/config.yml, with the answers. An archive kept uncommitted
+    has no entry, since that is what a configuration means by default;
+  - in .gitignore, the line "_*/", and for an uncommitted archive
+    "/archives/";
+  - intray.org;
+  - bin/, or the directory --bin names: each script the image has for
+    starting its commands.
+
+It writes over nothing. A file that is there is kept and reported, a
+script that differs from the image's among them. It commits nothing:
+the diff is read, and the commit made, by whoever ran it.
+
+It then has poslib read the configuration, and is refused if poslib
+refuses it. At a terminal, and with --ask, it goes on to
+responsibility-tree unless --no-tree is given.
+
+
+4. Run again
+
+In a repository that already has a configuration, of either name,
+initiation keeps it and asks nothing. It adds the intray and each
+script that is missing. So it is also how a garden takes the scripts
+a newer image has added.
+
+
+5. In the container
+
+bin/initiate gives its arguments to bin/clankos-run. Before a garden
+has bin/, the same command is started from the image by the web site's
+initiate.sh. The files are the host's, written as the invoking user.
+
+
+6. Exit status
+
+    0     done
+    2     refused, or usage: not the root of a Git repository, two
+          configurations, an answer that is not one of those offered
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

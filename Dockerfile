@@ -35,7 +35,9 @@ RUN cd /usr/local/share/clankos \
         -f batch-byte-compile poslib/lisp/*.el \
     && rm -rf /root/.emacs.d
 
-# The commands, which bin/clankos-run starts through run.
+# The commands, which bin/clankos-run starts through run, and the
+# scripts that start them from a host, which initiate gives a garden.
 COPY libexec/ /usr/local/libexec/clankos/
+COPY bin/ /usr/local/share/clankos/bin/
 
 CMD ["emacs", "--version"]

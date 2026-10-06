@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
+                [--keeper URL] [--bin DIR] [--no-tree]
+       initiate --help
+
+Make the Git repository in the working directory a garden, in the
+ClankOS container. docs/initiate.txt gives the protocol.
+
+At a terminal it asks what no option answers. Without one it takes
+the defaults, and --ask makes it ask all the same, reading the answers
+from standard input.
+
+  --image TAG     the image the garden's commands run in: latest, the
+                  default, or a version to pin, such as v0.0.1
+  --archive KEPT  how the garden's archive is kept: uncommitted, the
+                  default, on disk and ignored by Git; committed; or
+                  remote, by a keeper
+  --keeper URL    with --archive remote, the keeper's address
+  --bin DIR       where the scripts go; bin unless given
+  --no-tree       do not go on to responsibility-tree
+
+Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
+scripts in bin/, as the image has them. Writes over nothing that is
+there, and commits nothing. In a repository that is a garden already
+it adds only what is missing.
+
+Exit: 0 done, 2 refused or usage; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" initiate "$@"
