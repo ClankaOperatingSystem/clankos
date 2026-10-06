@@ -1,0 +1,72 @@
+archive-migrate: rebuilding an archive that has a legacy ledger
+
+bin/archive-migrate runs this protocol in the ClankOS container. The
+commands are poslib's, at the commit the image was built with. poslib's
+doc/formats.org defines the plan and the layouts, under "Migration":
+https://github.com/ClankaOperatingSystem/poslib
+
+docs/archive-integrity.txt describes archives, ledgers and sealing.
+
+
+1. What migration is for
+
+A legacy archive keeps its ledger inside itself, in
+archives/.archive-integrity/, with events that record no CIDs, and its
+items link to one another and to other files by path.
+
+Migration rebuilds such an archive once, so that it is as a new one:
+
+  - the ledger and checkpoints are beside the archive, in
+    archive-integrity/;
+  - every link in an item is an ipfs:// link to content in the archive,
+    or cites a rumour, a record made in rumours/ that names by path
+    what the archive cannot cite by content;
+  - directories sealed whole are declared as collections;
+  - other hidden files are renamed, and Finder's .DS_Store removed;
+  - one conversion event in the ledger records the archive after.
+
+It is the only time sealed bytes are rewritten.
+
+
+2. Plan, review, apply
+
+  - Plan. "plan ARCHIVE [ROOT [DIR ... +DIR ...]]" prints the plan as
+    JSON, and builds the result in _migrate/ beside the archive, where
+    it can be read. The archive is not changed. ROOT is the directory
+    whose own files' links into the archive are to be repaired. The
+    plan names the directories it takes for collections by their
+    shape: DIR excludes one of them, and +DIR includes one their shape
+    does not show.
+  - Review. A person or an agent reads the plan: what is removed and
+    renamed, the collections, the rumours, each link and how it is
+    resolved, and the files outside the archive to be edited. The
+    reviewer saves the plan to a file, as printed. The plan's name is
+    the SHA-256 of that file.
+  - Apply. "apply PLAN HASH" applies the plan in the file PLAN if its
+    SHA-256 is HASH. It rebuilds the archive again, refuses any
+    difference from the plan, swaps the rebuilt archive in, moves the
+    ledger and checkpoints beside it, writes the conversion event,
+    removes write bits, repairs the links in ROOT's files and records a
+    checkpoint. The archive as it was is kept in _migrate/.
+
+Applied a second time, it finds its work done. A scope within another
+is migrated before its container.
+
+Afterwards "archive-integrity check ARCHIVE" is clean.
+
+
+3. In the container
+
+bin/archive-migrate gives its arguments to bin/clankos-run, as
+bin/archive-integrity does: the workspace at its host path, the
+invoking user, and git reading the workspace's repository. An item
+whose path does not begin with a date is dated by its first commit.
+
+
+4. Exit status
+
+    0     done
+    2     refused, or usage
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

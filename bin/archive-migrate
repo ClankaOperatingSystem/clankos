@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: archive-migrate plan ARCHIVE [ROOT [DIR ... +DIR ...]]
+       archive-migrate apply PLAN HASH
+       archive-migrate --help
+
+Rebuild an archive that has a legacy ledger, in the ClankOS container.
+docs/archive-migrate.txt gives the protocol.
+
+  plan ARCHIVE [ROOT [DIR ... +DIR ...]]
+      print the plan to migrate ARCHIVE as JSON, and build the result
+      in _migrate/ beside it. ROOT is the directory whose files' links
+      into the archive are repaired. DIR excludes a directory the plan
+      would declare a collection; +DIR includes one it would not
+  apply PLAN HASH
+      apply the plan in the file PLAN, if its SHA-256 is HASH
+
+Exit: 0 done, 2 refused or usage; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" archive-migrate "$@"
