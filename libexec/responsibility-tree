@@ -1,0 +1,174 @@
+#!/bin/sh
+# responsibility-tree [--ask] [--responsibility NAME] ... [--project NAME] ...
+#                     [--product PATH=REMOTE] ...
+# Add responsibilities, projects and products to the garden in the
+# working directory. The protocol is docs/responsibility-tree.txt.
+usage() {
+    echo "Usage: responsibility-tree [--ask] [--responsibility NAME] ... [--project NAME] ... [--product PATH=REMOTE] ..." >&2
+    exit 2
+}
+refuse() {
+    echo "responsibility-tree: $1" >&2
+    exit 2
+}
+
+config=
+for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+    if [ -f "$file" ]; then
+        [ -z "$config" ] || refuse "two configurations: $config, $file"
+        config=$file
+    fi
+done
+[ -n "$config" ] || refuse "no configuration in $PWD; run initiate first"
+projects=$(sed -n 's/^projects: *\([^ ]*\) *$/\1/p' "$config" | head -n 1)
+[ -n "$projects" ] || refuse "$config does not say where projects belong: this is not a responsibility"
+projects=${projects%/}
+
+# A name is one part of a path, of letters, digits, dot, dash and underscore.
+name_ok() {
+    case $1 in
+        ''|.|..|.*|*[!A-Za-z0-9._-]*) return 1 ;;
+    esac
+}
+# path_ok PATH: each of its parts a name.
+path_ok() {
+    rest=$1
+    while :; do
+        case $rest in
+            */*) name_ok "${rest%%/*}" || return 1; rest=${rest#*/} ;;
+            *) name_ok "$rest"; return ;;
+        esac
+    done
+}
+
+# config_of DIR: the configuration file of the node at DIR, or nothing.
+config_of() {
+    for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+        if [ -f "$1/$file" ]; then
+            printf '%s\n' "$1/$file"
+            return
+        fi
+    done
+}
+# declared FILE PATH: whether the configuration FILE declares PATH.
+declared() {
+    grep -q "^  - path: $2\$" "$1"
+}
+# declare_child FILE PATH [REMOTE]: add a child's entry to FILE, after
+# its children line.
+declare_child() {
+    grep -q '^children:' "$1" || printf 'children:\n' >> "$1"
+    entry="  - path: $2"
+    [ -z "${3:-}" ] || entry="$entry
+    remote: $3"
+    awk -v entry="$entry" '{ print } /^children:/ && !done { print entry; done = 1 }' \
+        "$1" > "$1.new" && cat "$1.new" > "$1" && rm -f "$1.new"
+}
+
+add_responsibility() {
+    name_ok "$1" || { echo "not a name: $1" >&2; return 1; }
+    if [ -e "$1/.clanka" ] || [ -e "$1/.pos" ]; then
+        echo "kept      $1/ (it has a configuration)"
+    else
+        mkdir -p "$1/.clanka"
+        printf 'pos: 2\nprojects: projects/\n' > "$1/.clanka/config.yml"
+        echo "wrote     $1/.clanka/config.yml"
+    fi
+    if [ -e "$1/intray.org" ]; then
+        echo "kept      $1/intray.org"
+    else
+        printf '#+TITLE: Intray\n\n* Unsorted\n' > "$1/intray.org"
+        echo "wrote     $1/intray.org"
+    fi
+    if declared "$config" "$1"; then
+        echo "kept      $config (it declares $1)"
+    else
+        declare_child "$config" "$1"
+        echo "declared  $1 in $config"
+    fi
+}
+
+add_project() {
+    name_ok "$1" || { echo "not a name: $1" >&2; return 1; }
+    file=$projects/$1.org
+    if [ -e "$file" ] || [ -e "$projects/$1" ]; then
+        echo "kept      $projects/$1 (it is there)"
+    else
+        mkdir -p "$projects"
+        printf '#+TITLE: %s\n\n* Outcome\n\n* Tasks\n' "$1" > "$file"
+        echo "wrote     $file"
+    fi
+}
+
+add_product() {
+    path=${1%%=*}
+    remote=${1#*=}
+    if [ "$path" = "$1" ] || [ -z "$remote" ] || ! path_ok "$path"; then
+        echo "not PATH=REMOTE: $1" >&2
+        return 1
+    fi
+    # A node declares what is directly beneath it: the entry goes in the
+    # configuration of the deepest directory on the way that has one.
+    owner=$config
+    within=$path
+    prefix=${path%/*}
+    while [ "$prefix" != "$path" ] && [ -n "$prefix" ]; do
+        found=$(config_of "$prefix")
+        if [ -n "$found" ] && [ ! -e "$prefix/.git" ]; then
+            owner=$found
+            within=${path#"$prefix"/}
+            break
+        fi
+        case $prefix in
+            */*) prefix=${prefix%/*} ;;
+            *) break ;;
+        esac
+    done
+    if declared "$owner" "$within"; then
+        echo "kept      $owner (it declares $within)"
+    else
+        declare_child "$owner" "$within" "$remote"
+        echo "declared  $within in $owner, from $remote"
+    fi
+}
+
+ask=
+[ ! -t 0 ] || ask=1
+[ $# -gt 0 ] && [ "$1" != --ask ] && ask=
+failed=0
+while [ $# -gt 0 ]; do
+    case $1 in
+        --ask) ask=1; shift ;;
+        --responsibility) [ $# -ge 2 ] || usage; add_responsibility "$2" || failed=1; shift 2 ;;
+        --project) [ $# -ge 2 ] || usage; add_project "$2" || failed=1; shift 2 ;;
+        --product) [ $# -ge 2 ] || usage; add_product "$2" || failed=1; shift 2 ;;
+        *) usage ;;
+    esac
+done
+
+if [ -n "$ask" ]; then
+    echo "Responsibilities: the areas of life or work this garden tends. Each gets a directory."
+    while printf 'A responsibility to add (empty to go on): ' && read -r answer && [ -n "$answer" ]; do
+        add_responsibility "$answer" || true
+    done
+    echo "Projects: finite pieces of work with an outcome. Each gets a file in $projects/."
+    while printf 'A project to add (empty to go on): ' && read -r answer && [ -n "$answer" ]; do
+        add_project "$answer" || true
+    done
+    echo "Products: repositories this garden works on, under their own rules."
+    while printf 'A product to add, as PATH=REMOTE (empty to finish): ' && read -r answer && [ -n "$answer" ]; do
+        add_product "$answer" || true
+    done
+fi
+
+# What the tree now needs, and what is wrong in it, by poslib's plan.
+emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
+    --eval '(let ((plan (pos-tree-plan default-directory)))
+              (seq-doseq (f (alist-get (quote findings) plan))
+                (let-alist f (princ (format "finding   %s %s%s\n" .finding .path
+                                            (if .detail (concat " (" .detail ")") "")))))
+              (seq-doseq (a (alist-get (quote actions) plan))
+                (let-alist a (when (equal .do "clone")
+                               (princ (format "to clone  %s\n" .path))))))' 2>/dev/null
+exit $failed

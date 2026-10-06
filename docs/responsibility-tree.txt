@@ -1,0 +1,79 @@
+responsibility-tree: adding responsibilities, projects and products
+
+bin/responsibility-tree runs this protocol in the ClankOS container.
+poslib's doc/pos-directory.txt defines the declarations it writes:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. The tree
+
+A garden is a tree. A responsibility is a branch: an area of life or
+work that is tended and does not finish. It holds responsibilities,
+projects and products. A project is a leaf: a finite piece of work
+with an outcome. A product is a leaf too: a repository the garden
+works on, under that repository's own rules.
+
+A node's configuration declares what is directly beneath it, each as a
+path. What is at the path says what it is:
+
+    a configuration that names where projects belong    a responsibility
+    a configuration that names where methodologies belong      a project
+    no configuration                                           a product
+
+No folder name carries meaning, with one convention: a responsibility
+keeps its one-file projects where its configuration says they belong,
+which is projects/.
+
+
+2. What each addition does
+
+The command works on the garden in the working directory, which is a
+responsibility. To add beneath one of its responsibilities, it is run
+in that directory.
+
+  - A responsibility NAME. The directory NAME is made, with
+    .clanka/config.yml saying its projects belong in projects/, and
+    intray.org. Its path is added to this garden's children.
+  - A project NAME. The file NAME.org is made where this garden's
+    projects belong, with a title and headings for its outcome and
+    tasks. Making the file is the commitment, and nothing declares it.
+  - A product PATH=REMOTE. An entry with that path and remote is
+    added: to this garden's children, or, where a responsibility of
+    this garden is on the way to PATH, to that responsibility's, since
+    a node declares only what is directly beneath it. The repository
+    is not cloned.
+
+A name is one part of a path: letters, digits, dot, dash and
+underscore, not beginning with a dot. Nothing that is there is written
+over, and an entry already made is kept. Nothing is committed.
+
+A project that needs more than one file is given a directory and a
+configuration of its own. This command does not do that.
+
+
+3. Asking
+
+With options, it does what they say and asks nothing. At a terminal
+with no option, and with --ask, it asks for responsibilities, then
+projects, then products, each until an empty answer.
+
+
+4. The report
+
+Each thing written, declared or kept is printed on a line. Then
+poslib's plan of the tree is read, and printed from it:
+
+    finding   what is wrong in the tree: a declared directory that is
+              missing, a configuration nothing declares, a node that
+              does not say what it is
+    to clone  a declared repository that is not there yet
+
+
+5. Exit status
+
+    0     done
+    1     a name or a path was refused; the rest was done
+    2     not a garden, not a responsibility, or usage
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
