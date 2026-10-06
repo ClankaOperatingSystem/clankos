@@ -1,5 +1,5 @@
-# The ClankOS container: Emacs with Org and poslib, and what Emacs needs
-# to fetch packages from Git repositories and from GNU and NonGNU ELPA.
+# The ClankOS container: Emacs with Org and poslib, and git, which poslib
+# runs and which fetches what the image is built from.
 FROM debian:trixie-slim
 
 RUN apt-get update \
@@ -7,29 +7,33 @@ RUN apt-get update \
         ca-certificates \
         emacs-nox \
         git \
-        gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY lisp/ /usr/local/share/clankos/lisp/
 
-# poslib at one commit, so that an image tag names one poslib. Its
-# dependencies come from ELPA when the image is built, signatures checked.
+# poslib, and the packages it requires, each from its Git repository at
+# one commit, so that an image tag names one of each: markdown-mode 2.8
+# and yaml 1.2.4. All are byte-compiled, poslib with warnings as errors.
 ARG POSLIB_COMMIT=9ff9e5a7f084ae448a4cd2ef4ee91690e3c34e97
+ARG MARKDOWN_MODE_COMMIT=f5d520b3ee7722dd2231ab586ba51d8eb166e49b
+ARG YAML_COMMIT=5546f36bde24a9a8c1934e0f6ce205cd41d72537
 RUN cd /usr/local/share/clankos \
-    && git init -q poslib \
-    && git -C poslib fetch -q --depth 1 \
-        https://github.com/ClankaOperatingSystem/poslib.git "$POSLIB_COMMIT" \
-    && git -C poslib checkout -q FETCH_HEAD \
-    && rm -rf poslib/.git \
-    && echo "$POSLIB_COMMIT" > poslib/COMMIT \
+    && fetch() { \
+        git init -q "$1" \
+        && git -C "$1" fetch -q --depth 1 "$2" "$3" \
+        && git -C "$1" checkout -q FETCH_HEAD \
+        && rm -rf "$1/.git" \
+        && echo "$3" > "$1/COMMIT"; \
+    } \
+    && fetch poslib https://github.com/ClankaOperatingSystem/poslib.git "$POSLIB_COMMIT" \
+    && fetch markdown-mode https://github.com/jrblevin/markdown-mode.git "$MARKDOWN_MODE_COMMIT" \
+    && fetch yaml https://github.com/zkry/yaml.el.git "$YAML_COMMIT" \
     && emacs -Q --batch -l lisp/clankos-packages.el \
-        --eval '(setq package-check-signature t)' \
-        --eval '(package-refresh-contents)' \
-        --eval '(package-install (quote markdown-mode))' \
-        --eval '(package-install (quote yaml))' \
+        -f batch-byte-compile markdown-mode/markdown-mode.el yaml/yaml.el \
+    && emacs -Q --batch -l lisp/clankos-packages.el \
         --eval '(setq byte-compile-error-on-warn t)' \
         -f batch-byte-compile poslib/lisp/*.el \
-    && rm -rf elpa/gnupg/S.* /root/.emacs.d
+    && rm -rf /root/.emacs.d
 
 # The commands, which bin/clankos-run starts through run.
 COPY libexec/ /usr/local/libexec/clankos/
