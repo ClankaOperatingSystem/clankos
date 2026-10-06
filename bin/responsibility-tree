@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: responsibility-tree [--ask] [--responsibility NAME] ...
+                           [--project NAME] ... [--product PATH=REMOTE] ...
+       responsibility-tree --help
+
+Add responsibilities, projects and products to the garden in the
+working directory, in the ClankOS container.
+docs/responsibility-tree.txt gives the protocol.
+
+At a terminal with no option, and with --ask, it asks for each in
+turn until an empty answer.
+
+  --responsibility NAME   make the directory NAME with a configuration
+                          and an intray, and declare it
+  --project NAME          make the one-file project NAME.org where the
+                          garden's projects belong
+  --product PATH=REMOTE   declare the repository at REMOTE as mounted
+                          at PATH; it is not cloned
+
+Then prints what poslib's plan finds wrong in the tree, and what is
+still to clone. Writes over nothing that is there, and commits
+nothing.
+
+Exit: 0 done, 1 a name or path was refused, 2 not a garden or usage;
+125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" responsibility-tree "$@"
