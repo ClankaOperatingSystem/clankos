@@ -1,0 +1,6 @@
+#!/bin/sh
+# archive-migrate plan ARCHIVE [ROOT [DIR ... +DIR ...]] | apply PLAN HASH
+# poslib's migration command line. The protocol is docs/archive-migrate.txt.
+exec emacs -Q --batch \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el \
+    -l pos-migrate -f pos-migrate-batch "$@"
