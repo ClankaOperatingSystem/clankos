@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: archive-integrity COMMAND ...
+       archive-integrity --help
+
+Seal items into an archive and check archives, in the ClankOS
+container. docs/archive-integrity.txt gives the protocol.
+
+  seal SOURCE DESTINATION [--apply]
+      print the plan to seal SOURCE at DESTINATION, in an archive
+  write-new DESTINATION [--apply]
+      print the plan to seal a new record, read from standard input
+  apply PLAN HASH
+      apply a reviewed plan, named by its hash
+  check ROOT
+      report every archive under ROOT, as JSON
+  checkpoint ROOT
+      record the ledger heads under ROOT, once the check is clean
+  repair ROOT
+      remove write bits from verified evidence; never enrols
+  convert ROOT
+      bring each schema 2 ledger under ROOT to schema 3, once it is clean
+  keep ROOT
+      move to its keeper each archive under ROOT a keeper is to keep
+  sign-in URL
+      sign in to the keeper at URL and keep the token for later
+      commands. Prints an address to open in a browser on this
+      machine. Writes pos/tokens.json under $XDG_CONFIG_HOME or
+      ~/.config, outside the workspace. Runs with the host's network.
+
+--apply applies a command's own plan at once and prints both.
+Paths are within the workspace; bin/clankos-run --help says what the
+workspace is and what reaches the container.
+Exit: 0 done or clean, 1 findings, 2 refused or usage; 125, 126 and
+127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+
+run=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run
+if [ "$1" = sign-in ]; then
+    config=${XDG_CONFIG_HOME:-$HOME/.config}
+    [ -d "$config/pos" ] || mkdir -p -m 700 "$config/pos"
+    exec "$run" --host-network archive-integrity "$@"
+fi
+exec "$run" archive-integrity "$@"
