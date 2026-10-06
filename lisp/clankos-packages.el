@@ -3,22 +3,16 @@
 ;;; Commentary:
 ;; Commands in the image run emacs -Q, which loads no packages.  They
 ;; load this file first.  It points Emacs at the packages the image was
-;; built with: poslib, and what poslib requires from GNU and NonGNU
-;; ELPA.  Nothing is read from or written to a home directory.
+;; built with: poslib, and what poslib requires, markdown-mode and yaml.
+;; Nothing is read from or written to a home directory.
 
 ;;; Code:
 
-(require 'package)
-
 (defconst clankos-packages-directory "/usr/local/share/clankos/"
-  "Where the image keeps poslib and the ELPA packages.")
+  "Where the image keeps poslib and the packages it requires.")
 
-(setq package-user-dir (expand-file-name "elpa" clankos-packages-directory)
-      package-gnupghome-dir (expand-file-name "gnupg" package-user-dir)
-      package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
-(package-initialize)
-(add-to-list 'load-path (expand-file-name "poslib/lisp" clankos-packages-directory))
+(dolist (directory '("markdown-mode" "yaml" "poslib/lisp"))
+  (add-to-list 'load-path (expand-file-name directory clankos-packages-directory)))
 
 (provide 'clankos-packages)
 ;;; clankos-packages.el ends here
