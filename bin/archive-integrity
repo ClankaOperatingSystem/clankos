@@ -20,7 +20,7 @@ container. docs/archive-integrity.txt gives the protocol.
   checkpoint ROOT
       record the ledger heads under ROOT, once the check is clean
   repair ROOT
-      remove write bits from verified evidence; never enrols
+      restore recorded directories and read bits; remove write bits; never enrols
   convert ROOT
       bring each schema 2 ledger under ROOT to schema 3, once it is clean
   keep ROOT
