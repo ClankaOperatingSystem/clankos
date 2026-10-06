@@ -31,6 +31,9 @@ check "and not by the garden" sh -c '! grep -q widget .clanka/config.yml'
 check "a product is not cloned, and is reported as to clone" \
     sh -c 'test ! -e vendor/lib && grep -qx "to clone  vendor/lib" out && grep -qx "to clone  work/widget" out'
 check "poslib's plan finds nothing wrong" sh -c '! grep -q "^finding" out'
+check "new responsibilities have ignored archives before they exist" \
+    sh -c 'git check-ignore -q health/archives/evidence && git check-ignore -q work/archives/evidence'
+check "a responsibility itself is not ignored" sh -c '! git check-ignore -q health/intray.org'
 
 cp .clanka/config.yml before
 "$bin/responsibility-tree" --responsibility health --project kitchen \
@@ -44,6 +47,7 @@ check "a name that climbs is refused, and the rest done" \
 (cd work && "$bin/responsibility-tree" --responsibility clients >/dev/null 2>&1)
 check "run in a responsibility, it adds beneath that one" \
     sh -c "test -f work/clients/.clanka/config.yml && grep -qx '  - path: clients' work/.clanka/config.yml"
+check "a nested responsibility's archive is ignored" git check-ignore -q work/clients/archives/evidence
 
 printf 'garden-two\n\nbook\n\n\n' | "$bin/responsibility-tree" --ask >/dev/null 2>&1
 check "--ask reads the answers from standard input" test -d garden-two -a -f projects/book.org

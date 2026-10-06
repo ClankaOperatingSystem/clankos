@@ -44,8 +44,14 @@ in that directory.
     is not cloned.
 
 A name is one part of a path: letters, digits, dot, dash and
-underscore, not beginning with a dot. Nothing that is there is written
-over, and an entry already made is kept. Nothing is committed.
+underscore, not beginning with a dot. Existing configuration and
+content are kept, and an entry already made is kept. Nothing is committed.
+Afterwards poslib updates the owning repository's managed archive
+rules in Git's info/exclude, using each scope's own archive policy.
+This includes newly created responsibilities, whose archives default
+to uncommitted. Other ignore rules and already tracked files stay as
+they are. When run in a directory scope, the container mounts the
+owning Git repository so that its ignore rules are available.
 
 A project that needs more than one file is given a directory and a
 configuration of its own. This command does not do that.

@@ -24,9 +24,10 @@ from standard input.
   --no-tree       do not go on to responsibility-tree
 
 Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
-scripts in bin/, as the image has them. Writes over nothing that is
-there, and commits nothing. In a repository that is a garden already
-it adds only what is missing.
+scripts in bin/, as the image has them. Updates the managed archive
+rules in Git's info/exclude from the saved configuration, including
+child scopes. Keeps existing configuration and content, and commits
+nothing. In an existing garden it also adds what is missing.
 
 Exit: 0 done, 2 refused or usage; 125, 126 and 127 are clankos-run's.
 HELP

@@ -161,14 +161,17 @@ if [ -n "$ask" ]; then
     done
 fi
 
-# What the tree now needs, and what is wrong in it, by poslib's plan.
+# The owning repository holds the ignore rules, even when run in a child.
+tree_root=$(git rev-parse --show-toplevel) || refuse "not in a Git repository"
+# Apply archive rules only, then report what the tree still needs.
 emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
-    --eval '(let ((plan (pos-tree-plan default-directory)))
+    --eval '(let ((plan (pos-tree-ignore-archives (pop command-line-args-left))))
               (seq-doseq (f (alist-get (quote findings) plan))
                 (let-alist f (princ (format "finding   %s %s%s\n" .finding .path
                                             (if .detail (concat " (" .detail ")") "")))))
               (seq-doseq (a (alist-get (quote actions) plan))
                 (let-alist a (when (equal .do "clone")
-                               (princ (format "to clone  %s\n" .path))))))' 2>/dev/null
+                               (princ (format "to clone  %s\n" .path))))))' \
+    "$tree_root" || refuse "could not configure archive exclusions"
 exit $failed
