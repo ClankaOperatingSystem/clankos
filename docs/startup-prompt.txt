@@ -70,8 +70,14 @@ then the item. A view with no item says "(none)".
 A review item is an open heading tagged :review: with a scheduled
 date, in a file of the scope it reviews. An active project is one
 whose project file has, before its first heading, a STATUS property of
-COMMITTED or WIP. A responsibility is a directory directly within a
-directory named responsibilities.
+COMMITTED or WIP, in a property drawer that begins the file:
+
+    :PROPERTIES:
+    :STATUS: COMMITTED
+    :END:
+
+responsibility-tree gives a new project that drawer. A responsibility
+is a directory directly within a directory named responsibilities.
 
 The label of a line is its file's directory under the root, without
 the segments named projects, and with the file's name added unless it
