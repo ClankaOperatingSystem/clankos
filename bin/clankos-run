@@ -17,7 +17,9 @@ inside the container as outside. The command runs as the invoking user.
 
 {config}/pos, where {config} is $XDG_CONFIG_HOME or ~/.config, is
 mounted too when it exists: the tokens that signing in to a keeper
-keeps. POS_ARCHIVE_OFFLINE and POS_ARCHIVE_TOKEN are passed on.
+keeps. POS_ARCHIVE_OFFLINE and POS_ARCHIVE_TOKEN are passed on. The
+container is given the host's time zone, from TZ or /etc/localtime, so
+that today is the same day inside as outside; failing both it is UTC.
 
 --host-network gives the container the host's network, which signing
 in needs. CLANKOS_IMAGE names the image; it is
@@ -69,6 +71,19 @@ config=${XDG_CONFIG_HOME:-$HOME/.config}
 tokens=()
 [ ! -d "$config/pos" ] || tokens=(-v "$config/pos:$config/pos")
 
+# The host's time zone, so that today is the same day inside: TZ, or
+# the zone /etc/localtime links to.
+zone=${TZ:-}
+if [ -z "$zone" ] && [ -L /etc/localtime ]; then
+    zone=$(readlink /etc/localtime)
+    case $zone in
+        */zoneinfo/*) zone=${zone##*/zoneinfo/} ;;
+        *) zone= ;;
+    esac
+fi
+timezone=()
+[ -z "$zone" ] || timezone=(-e "TZ=$zone")
+
 # git refuses a repository whose owner is not the user running it, and
 # a mounted directory's owner can read differently inside a container.
 exec docker run --rm -i \
@@ -84,6 +99,7 @@ exec docker run --rm -i \
     -v "$workspace:$workspace" \
     -w "$here" \
     ${tokens[@]+"${tokens[@]}"} \
+    ${timezone[@]+"${timezone[@]}"} \
     ${network[@]+"${network[@]}"} \
     "${CLANKOS_IMAGE:-ghcr.io/clankaoperatingsystem/clankos:latest}" \
     /usr/local/libexec/clankos/run "$@"
