@@ -50,14 +50,18 @@ Run at the root of a Git repository, it writes, in this order:
 
   - .clanka/config.yml, with the answers. An archive kept uncommitted
     has no entry, since that is what a configuration means by default;
-  - in .gitignore, the line "_*/", and for an uncommitted archive
-    "/archives/";
+  - in .gitignore, the line "_*/";
   - intray.org;
   - bin/, or the directory --bin names: each script the image has for
-    starting its commands.
+    starting its commands;
+  - in Git's info/exclude, poslib's managed archive block: each scope's
+    archive is ignored when its own configuration says uncommitted,
+    including that default when no entry says otherwise.
 
-It writes over nothing. A file that is there is kept and reported, a
-script that differs from the image's among them. It commits nothing:
+It updates the managed archive block from the saved configuration,
+including in an existing garden. Other ignore rules and already
+tracked files stay as they are. Existing files are kept and reported,
+scripts that differ from the image's among them. It commits nothing:
 the diff is read, and the commit made, by whoever ran it.
 
 It then has poslib read the configuration, and is refused if poslib

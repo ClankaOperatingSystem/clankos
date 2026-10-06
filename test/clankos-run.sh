@@ -47,4 +47,19 @@ check "CLANKOS_WORKSPACE names the workspace" \
     sh -c "cd one/sub && [ \"\$(CLANKOS_WORKSPACE='$work/one' '$bin/clankos-run' --show | head -n 1)\" = 'workspace $work/one' ]"
 check "--show takes no command" status 2 "$bin/clankos-run" --show archive-integrity
 
+# A nested responsibility needs its repository's Git metadata, but
+# still chooses its own pinned image. Record Docker's arguments only.
+mkdir -p nested/child/.clanka mock-bin
+git -C nested init -q .
+printf 'pos: 2\nprojects: projects/\nimage: example.org/clankos:child\n' > nested/child/.clanka/config.yml
+cat > mock-bin/docker <<'MOCK'
+#!/bin/sh
+printf '%s\n' "$@" > "$DOCKER_ARGS"
+MOCK
+chmod +x mock-bin/docker
+(cd nested/child && PATH="$work/mock-bin:$PATH" DOCKER_ARGS="$work/docker-args" \
+    "$bin/responsibility-tree" --project example)
+check "a nested tree command mounts the owning repository" grep -qxF "$work/nested:$work/nested" docker-args
+check "a nested tree command keeps its own image pin" grep -qxF 'example.org/clankos:child' docker-args
+
 [ "$failures" -eq 0 ]

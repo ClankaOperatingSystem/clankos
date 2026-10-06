@@ -12,7 +12,7 @@ check "with no terminal it takes the defaults" \
     test "$(cat .clanka/config.yml)" = "pos: 2
 projects: projects/
 image: $registry:latest"
-check "an uncommitted archive is ignored by Git" grep -qxF '/archives/' .gitignore
+check "an uncommitted archive is ignored by Git" git check-ignore -q archives/evidence
 check "underscore directories are ignored by Git" grep -qxF '_*/' .gitignore
 check "the intray has Unsorted" grep -qx '\* Unsorted' intray.org
 check "it gives the garden the image's scripts" \
@@ -31,6 +31,19 @@ echo "mine" > bin/pos-capture
 check "run again, the configuration is kept" grep -qxF "image: $registry:latest" .clanka/config.yml
 check "run again, a script that differs is kept" test "$(cat bin/pos-capture)" = mine
 check "and is reported" grep -q 'kept      bin/pos-capture (it differs' out
+check "existing configuration wins over the archive option" git check-ignore -q archives/evidence
+mkdir -p work/.clanka work/archives work/archive-integrity
+printf 'pos: 2\nprojects: projects/\n' > work/.clanka/config.yml
+printf '\nchildren:\n  - path: work\n' >> .clanka/config.yml
+printf 'evidence\n' > work/archives/evidence
+printf 'ledger\n' > work/archive-integrity/ledger
+"$bin/initiate" --no-tree < /dev/null > out 2>&1
+check "rerunning initiate ignores existing child archives" git check-ignore -q work/archives/evidence
+check "the ledger stays available to Git" sh -c '! git check-ignore -q work/archive-integrity/ledger'
+printf 'pos: 2\nprojects: projects/\narchives:\n  - scope: .\n    kept: committed\n' > work/.clanka/config.yml
+"$bin/initiate" --no-tree < /dev/null > out 2>&1
+check "a changed child policy removes its generated exclusion" sh -c '! git check-ignore -q work/archives/evidence'
+check "the evidence is kept" grep -qx evidence work/archives/evidence
 cd ..
 
 mkdir pinned && cd pinned && git init -q . && printf 'node_modules/' > .gitignore
@@ -43,7 +56,7 @@ archives:
   - scope: \".\"
     kept: remote
     url: https://keeper.example/ledgers/a"
-check "a remote archive is not ignored" sh -c '! grep -q archives .gitignore'
+check "a remote archive is not ignored" sh -c '! git check-ignore -q archives/evidence'
 check "a line is added to .gitignore on a line of its own" grep -qx 'node_modules/' .gitignore
 check "the pinned image is the one the garden runs" \
     sh -c "[ \"\$(env -u CLANKOS_IMAGE bin/clankos-run --show | tail -n 1)\" = 'image $registry:v0.0.1' ]"

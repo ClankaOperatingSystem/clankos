@@ -21,9 +21,9 @@ turn until an empty answer.
   --product PATH=REMOTE   declare the repository at REMOTE as mounted
                           at PATH; it is not cloned
 
-Then prints what poslib's plan finds wrong in the tree, and what is
-still to clone. Writes over nothing that is there, and commits
-nothing.
+Then updates Git's managed archive ignore rules and prints what
+poslib's plan finds wrong in the tree, and what is still to clone.
+Keeps existing configuration and content, and commits nothing.
 
 Exit: 0 done, 1 a name or path was refused, 2 not a garden or usage;
 125, 126 and 127 are clankos-run's.
@@ -33,4 +33,17 @@ HELP
 case "${1:-}" in
     help|-h|--help) usage; exit 0 ;;
 esac
-exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" responsibility-tree "$@"
+# A directory scope shares its repository's Git metadata. Mount that
+# repository so archive rules can be updated when invoked in a child.
+runner="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run"
+if [ -z "${CLANKOS_WORKSPACE:-}" ]; then
+    # Keep the image selected by the current scope before widening the mount.
+    if [ -z "${CLANKOS_IMAGE:-}" ]; then
+        selection=$("$runner" --show)
+        CLANKOS_IMAGE=$(printf '%s\n' "$selection" | sed -n 's/^image //p')
+        export CLANKOS_IMAGE
+    fi
+    CLANKOS_WORKSPACE=$(git rev-parse --show-toplevel) || exit 2
+    export CLANKOS_WORKSPACE
+fi
+exec "$runner" responsibility-tree "$@"
