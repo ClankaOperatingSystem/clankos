@@ -7,7 +7,8 @@ Usage: archive-integrity COMMAND ...
        archive-integrity --help
 
 Seal items into an archive and check archives, in the ClankOS
-container. docs/archive-integrity.txt gives the protocol.
+container.
+"clankos-run help archive-integrity" prints the protocol.
 
   seal SOURCE DESTINATION [--apply]
       print the plan to seal SOURCE at DESTINATION, in an archive

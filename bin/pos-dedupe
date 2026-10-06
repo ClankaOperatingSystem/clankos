@@ -9,7 +9,7 @@ Usage: pos-dedupe plan [FILE]
 
 Find tasks written more than once among the Org files of the working
 directory and resolve them, in the ClankOS container.
-docs/pos-dedupe.txt gives the protocol.
+"clankos-run help pos-dedupe" prints the protocol.
 
   plan [FILE]
       write one table for each duplicated task to FILE, suggesting

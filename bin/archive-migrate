@@ -8,7 +8,7 @@ Usage: archive-migrate plan ARCHIVE [ROOT [DIR ... +DIR ...]]
        archive-migrate --help
 
 Rebuild an archive that has a legacy ledger, in the ClankOS container.
-docs/archive-migrate.txt gives the protocol.
+"clankos-run help archive-migrate" prints the protocol.
 
   plan ARCHIVE [ROOT [DIR ... +DIR ...]]
       print the plan to migrate ARCHIVE as JSON, and build the result

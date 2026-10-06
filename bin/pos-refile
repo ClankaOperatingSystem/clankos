@@ -9,8 +9,8 @@ Usage: pos-refile stranded [--dry-run]
        pos-refile --help
 
 Move tasks to where they belong among the Org files of the working
-directory, in the ClankOS container. docs/pos-refile.txt gives the
-protocol.
+directory, in the ClankOS container.
+"clankos-run help pos-refile" prints the protocol.
 
   stranded [--dry-run]
       move each open task in an Org file outside the covered

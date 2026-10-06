@@ -9,7 +9,7 @@ Usage: responsibility-tree [--ask] [--responsibility NAME] ...
 
 Add responsibilities, projects and products to the garden in the
 working directory, in the ClankOS container.
-docs/responsibility-tree.txt gives the protocol.
+"clankos-run help responsibility-tree" prints the protocol.
 
 At a terminal with no option, and with --ask, it asks for each in
 turn until an empty answer.

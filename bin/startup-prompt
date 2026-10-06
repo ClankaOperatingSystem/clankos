@@ -8,7 +8,7 @@ Usage: startup-prompt [--view NAME] ...
 
 Print what a session opens with: four prompts, then views of the saved
 Org files under the working directory, in the ClankOS container.
-docs/startup-prompt.txt gives the protocol.
+"clankos-run help startup-prompt" prints the protocol.
 
   next                 every NEXT item
   scheduled            items scheduled in the next 14 days, or late

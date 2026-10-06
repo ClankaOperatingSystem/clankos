@@ -8,7 +8,8 @@ Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
        initiate --help
 
 Make the Git repository in the working directory a garden, in the
-ClankOS container. docs/initiate.txt gives the protocol.
+ClankOS container.
+"clankos-run help initiate" prints the protocol.
 
 At a terminal it asks what no option answers. Without one it takes
 the defaults, and --ask makes it ask all the same, reading the answers
