@@ -1,0 +1,9 @@
+#!/bin/sh
+# pos-capture -- TITLE
+# The protocol is docs/pos-capture.txt.
+if [ $# -ne 2 ] || [ "$1" != -- ]; then
+    echo "Usage: pos-capture -- 'Task title'" >&2
+    exit 2
+fi
+POS_CAPTURE_ROOT=$PWD POS_CAPTURE_TITLE=$2 \
+    exec "$(dirname -- "$0")/pos-emacs" -l pos-capture -f pos-capture-batch

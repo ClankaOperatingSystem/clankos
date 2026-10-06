@@ -1,0 +1,13 @@
+#!/bin/sh
+# pos-emacs [EMACS-ARG ...]
+# Batch Emacs with poslib, working on the working directory: it is
+# pos-directory, and its pos-config.el is loaded if there is one. The
+# pos-* commands here start through this. An error prints its message
+# alone, without a backtrace, and exits 255.
+exec emacs -Q --batch \
+    --eval '(setq backtrace-on-error-noninteractive nil)' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el \
+    -l pos \
+    --eval '(setq pos-directory (file-name-as-directory default-directory))' \
+    --eval '(pos-load-config)' \
+    "$@"

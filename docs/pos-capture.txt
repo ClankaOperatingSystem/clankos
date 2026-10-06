@@ -1,0 +1,60 @@
+pos-capture: adding a task to the intray
+
+bin/pos-capture runs this protocol in the ClankOS container. The
+command is poslib's pos-capture, at the commit the image was built
+with: https://github.com/ClankaOperatingSystem/poslib
+
+
+1. The intray
+
+The intray is intray.org in the working directory. Under its top-level
+heading "Unsorted" are tasks nobody has yet decided where to keep, each
+a second-level TODO heading:
+
+    * Unsorted
+    ** TODO Make time for sketching
+
+Capture is for the moment a task comes to mind. It asks nothing about
+where the task belongs; pos-refile moves it later.
+
+
+2. Capturing
+
+"pos-capture -- TITLE" adds "** TODO TITLE" at the end of Unsorted and
+saves the file. It makes Unsorted, at the end of the file, if the intray
+lacks it. It prints the file, the line and the title:
+
+    /path/to/intray.org:3: TODO Make time for sketching
+
+TITLE is kept as written, less surrounding spaces. Nothing else in the
+file is changed, and no backup or autosave file is written.
+
+It is refused, and nothing is written, if:
+
+  - TITLE is empty or holds a newline or another control character;
+  - intray.org is missing, or is a symlink;
+  - an editor holds a lock on intray.org. Save the intray there first.
+
+It does not look for a task of the same title: a second call adds a
+second task. pos-dedupe finds those.
+
+It sees saved files only: text typed into an editor and not yet saved
+is not seen.
+
+
+3. In the container
+
+bin/pos-capture gives its arguments to bin/clankos-run. The intray is
+the host's file, at its own path, and is written as the invoking user.
+The lock capture takes while it writes is a file beside the intray,
+which an editor on the host sees.
+
+
+4. Exit status
+
+    0     saved
+    2     usage
+    255   refused, or an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
