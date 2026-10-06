@@ -31,7 +31,7 @@ RUN cd /usr/local/share/clankos \
         -f batch-byte-compile poslib/lisp/*.el \
     && rm -rf elpa/gnupg/S.* /root/.emacs.d
 
-# Commands run against a garden or project mounted here.
-WORKDIR /workspace
+# The commands, which bin/clankos-run starts through run.
+COPY libexec/ /usr/local/libexec/clankos/
 
 CMD ["emacs", "--version"]
