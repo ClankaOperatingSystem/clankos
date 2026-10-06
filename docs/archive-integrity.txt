@@ -1,0 +1,108 @@
+archive-integrity: sealing items into an archive, and checking archives
+
+bin/archive-integrity runs this protocol in the ClankOS container. The
+commands are poslib's, at the commit the image was built with. poslib
+defines the formats this document names, in doc/formats.org, and what
+passes between a client and a keeper, in
+doc/remote-archive-protocol.txt:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What is kept
+
+An archive is a directory of sealed items. A sealed item never changes;
+an archive only grows. Beside the archive, not in it, is
+archive-integrity/:
+
+    ledger/        one file for each seal, numbered and chained by hash:
+                   the item, the files it added with their CIDs, and
+                   the archive's root CID afterwards
+    checkpoints/   records of the ledger's head, by which an archive
+                   that vanished or was rewritten is noticed
+
+Sealed files, ledger events and checkpoints have no write bits.
+
+
+2. Sealing: plan, review, apply
+
+A seal is made in three steps, so that what is sealed is what was
+reviewed.
+
+  - Plan. "seal SOURCE DESTINATION" prints a plan as JSON and changes
+    nothing. SOURCE is a file or directory in the workspace;
+    DESTINATION is where it goes in an archive. "write-new DESTINATION"
+    plans a new record from standard input instead.
+  - Review. A person or an agent reads the plan: what goes where, how
+    each link in the item is resolved, and which rumours are sealed
+    with it. The reviewer saves the plan to a file, as printed. The
+    plan's name is the SHA-256 of that file.
+  - Apply. "apply PLAN HASH" applies the plan in the file PLAN if its
+    SHA-256 is HASH, and refuses if the plan is another or if anything
+    it relied on has changed. SOURCE is moved into the archive, its
+    write bits are removed, and an event is added to the ledger.
+
+"--apply", given to seal or write-new, plans and applies at once and
+prints both. It is for a seal that needs no review.
+
+A plan records absolute paths. It is applied where it was made.
+
+
+3. Checking
+
+  - "check ROOT" reports every archive under ROOT as JSON, one object
+    for each: the files changed, missing, new or hidden against its
+    ledger, and its head. Exit 0 is clean; 1 is findings.
+  - "checkpoint ROOT" records the ledger heads under ROOT. It is
+    refused unless the check is clean.
+  - "repair ROOT" removes write bits from the sealed files, events and
+    checkpoints under ROOT. It is refused if a sealed file has changed
+    or is missing, and it never adds a file to a ledger.
+  - "convert ROOT" brings each schema 2 ledger under ROOT to schema 3,
+    once it is clean.
+
+
+4. Keepers
+
+A keeper is a server that holds the files of one ledger's archive and a
+copy of its events. The ledger stays in the workspace.
+
+  - "keep ROOT" sends to its keeper each archive under ROOT that is to
+    be kept by one, and removes the archive from disk once the keeper
+    holds the ledger's head.
+  - "sign-in URL" signs a person in to the keeper at URL. No other
+    command opens a browser or asks anyone to sign in.
+
+Which token a request to a keeper carries: POS_ARCHIVE_TOKEN from the
+environment if set; else the token kept by signing in, refreshed first
+when it is about to expire; else none. POS_ARCHIVE_OFFLINE, set to
+anything, makes check ask no keeper.
+
+
+5. In the container
+
+bin/archive-integrity gives its arguments to bin/clankos-run, which
+starts the container.
+
+  - The workspace is mounted at the path it has on the host, and the
+    command starts in the working directory. Paths in arguments, plans
+    and reports are the host's.
+  - The command runs as the invoking user, so what it writes is that
+    user's.
+  - git in the container reads the workspace's repository. A seal sent
+    to a keeper says which commit and branch it came from.
+  - Signing in. The container listens on a port of 127.0.0.1 and prints
+    the issuer's address. The person opens it in a browser on the host;
+    the issuer sends the browser back to that port. For the browser to
+    reach it, this one command runs with the host's network. The tokens
+    are kept in pos/tokens.json under $XDG_CONFIG_HOME or ~/.config on
+    the host, which every command's container mounts.
+
+
+6. Exit status
+
+    0     done, or clean
+    1     findings
+    2     refused, or usage
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

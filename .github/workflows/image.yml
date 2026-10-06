@@ -19,6 +19,10 @@ jobs:
       - name: Refuse a tag that is not on master
         if: github.ref_type == 'tag'
         run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+      - name: Test the commands in the image
+        run: |
+          docker build -t clankos:test .
+          CLANKOS_IMAGE=clankos:test test/archive-integrity.sh
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
