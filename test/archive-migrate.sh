@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Run bin/archive-migrate against a copy of the legacy archive in
 # test/fixtures/archive-migrate: one record, enrolled in a schema 1
-# ledger inside the archive, linking to a file outside it.
+# ledger inside the archive, linking to a file outside it. The fixture
+# names the archive legacy, so that an integrity check of a tree
+# holding this repository does not take the fixture for an archive.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
 
 mkdir .pos
 cp -R "$repo/test/fixtures/archive-migrate/." .
+mv legacy archives
 
 "$bin/archive-migrate" plan archives . > plan.json 2>/dev/null
 check "plan prints a plan" grep -q '"operation":"migrate"' plan.json
