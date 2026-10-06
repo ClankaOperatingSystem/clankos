@@ -1,0 +1,27 @@
+#!/bin/sh
+# pos-dedupe plan [FILE] | apply [--dry-run] [FILE]
+# The protocol is docs/pos-dedupe.txt.
+usage() {
+    echo "Usage: pos-dedupe plan [FILE] | apply [--dry-run] [FILE]" >&2
+    exit 2
+}
+emacs=$(dirname -- "$0")/pos-emacs
+command=${1:-}
+[ $# -eq 0 ] || shift
+dry=nil
+if [ "${1:-}" = --dry-run ]; then
+    dry=t
+    shift
+fi
+[ $# -le 1 ] || usage
+# The plan's file reaches Lisp as an argument, not as quoted text.
+case $command in
+    plan)
+        [ "$dry" = nil ] || usage
+        exec "$emacs" --eval '(pos-dedupe-plan-batch (expand-file-name (pop command-line-args-left)))' \
+            "${1:-dedupe.org}" ;;
+    apply)
+        exec "$emacs" --eval "(pos-dedupe-apply-batch (expand-file-name (pop command-line-args-left)) $dry)" \
+            "${1:-dedupe.org}" ;;
+    *) usage ;;
+esac
