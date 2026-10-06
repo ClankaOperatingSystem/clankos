@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-capture -- 'Task title'
+       pos-capture --help
+
+Add one TODO under Unsorted in the working directory's intray.org, in
+the ClankOS container. docs/pos-capture.txt gives the protocol.
+
+The title is one nonempty line. Prints the file, the line and the title
+saved. Unsorted is made if the intray lacks it. Refused if intray.org
+is missing, is a symlink, or is locked by an editor. A second call with
+the same title adds a second task.
+
+Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-capture "$@"
