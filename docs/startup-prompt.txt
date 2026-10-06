@@ -9,7 +9,7 @@ with: https://github.com/ClankaOperatingSystem/poslib
 
 A session opens by choosing what to do. The choice needs to know what
 is already waiting: what is next, what has a date, what is due, what is
-to be reviewed. Finding that by opening each Org file is slow and
+to be reviewed, what is captured and not yet placed. Finding that by opening each Org file is slow and
 misses things.
 
 startup-prompt prints four prompts, for the choice, and then views of
@@ -37,9 +37,17 @@ except those in a directory named archives or attic, or whose name
 begins with an underscore or a full stop. Repositories mounted beneath
 the root are read as part of it.
 
-A file belongs to a scope, by its path: the last projects/NAME or
-responsibilities/NAME in it names the scope, a project or a
-responsibility. A file under neither belongs to the root.
+A file belongs to a scope: the deepest project or responsibility on
+its path. A file under neither belongs to the root.
+
+    responsibility   a directory beneath the root whose configuration
+                     says where its projects belong, which is what
+                     responsibility-tree makes; or a directory directly
+                     within a directory named responsibilities
+    project          what is directly within a directory named
+                     projects: NAME.org, or the directory NAME
+
+The root is a responsibility, and is not listed as one.
 
 The keywords are poslib's one sequence: BACKLOG, TODO, NEXT, WIP and
 BLOCKED are open; DONE and CANCELLED are done. A done item is in no
@@ -65,6 +73,10 @@ then the item. A view with no item says "(none)".
                          days: projects', then responsibilities'.
     reviews-to-schedule  Active projects, then responsibilities, that
                          have no review scheduled.
+    intray               Every open item under the heading "Unsorted"
+                         in a file named intray.org, the root's and
+                         each scope's: what pos-capture has added and
+                         nobody has yet placed.
     all                  Every open item.
 
 A review item is an open heading tagged :review: with a scheduled
@@ -76,8 +88,7 @@ COMMITTED or WIP, in a property drawer that begins the file:
     :STATUS: COMMITTED
     :END:
 
-responsibility-tree gives a new project that drawer. A responsibility
-is a directory directly within a directory named responsibilities.
+responsibility-tree gives a new project that drawer.
 
 The label of a line is its file's directory under the root, without
 the segments named projects, and with the file's name added unless it

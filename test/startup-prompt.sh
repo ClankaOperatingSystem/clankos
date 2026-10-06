@@ -10,6 +10,7 @@ day() {
 }
 
 mkdir -p .pos projects/alpha projects/beta responsibilities/home responsibilities/garden archives _tmp
+printf 'pos: 2\nprojects: projects/\n' > .pos/config.yaml
 printf '* Unsorted\n** NEXT Answer the letter\n' > intray.org
 printf ':PROPERTIES:\n:STATUS:   COMMITTED\n:END:\n* NEXT Draft the outline\n* TODO Review Alpha :review:\nSCHEDULED: <%s>\n' \
     "$(day -1)" > projects/alpha/project.org
@@ -19,11 +20,16 @@ printf '* TODO Review the home :review:\nSCHEDULED: <%s>\n' "$(day 0)" > respons
 printf '* TODO Prune the hedge\n' > responsibilities/garden/index.org
 printf '* NEXT Archived\n' > archives/old.org
 printf '* NEXT Generated\n' > _tmp/scratch.org
+# A responsibility and a project as responsibility-tree makes them.
+"$bin/responsibility-tree" --responsibility health > /dev/null 2>&1
+(cd health && "$bin/responsibility-tree" --project checkup > /dev/null 2>&1)
+"$bin/pos-capture" -- 'Sort the shelf' > /dev/null 2>&1
+(cd health && "$bin/pos-capture" -- 'Book the dentist' > /dev/null 2>&1)
 find . -type f ! -name before | sort > before
 
 "$bin/startup-prompt" > out 2>/dev/null
 check "the prompts come first" test "$(head -1 out)" = "START-UP PROMPTS"
-check "the files read are counted" grep -q '^Files read: 5$' out
+check "the files read are counted" grep -q '^Files read: 7$' out
 check "next lists a NEXT item by its scope" grep -q '^  alpha  *NEXT Draft the outline$' out
 check "an archive is not read" sh -c '! grep -q Archived out'
 check "an underscore directory is not read" sh -c '! grep -q Generated out'
@@ -36,6 +42,11 @@ check "a review scheduled today is not late" \
 check "an active project with no review is named" grep -q '^  projects/beta  *WIP$' out
 check "a project with a review is not" sh -c '! grep -q "^  projects/alpha " out'
 check "a responsibility with no review is named" grep -q '^  responsibilities/garden$' out
+check "a responsibility is known by its configuration" grep -q '^  health$' out
+check "a project made by responsibility-tree is named" grep -q '^  health/projects/checkup  *COMMITTED$' out
+check "the intray lists what is captured, by its scope" \
+    sh -c "grep -A3 '^Intray, to be placed\$' out | grep -q '^  health/intray  *TODO Book the dentist\$'"
+check "and the root's" grep -q '^  intray  *TODO Sort the shelf$' out
 check "every TODO item is not printed unasked" sh -c '! grep -q "^All TODO items" out'
 
 "$bin/startup-prompt" --view all > all 2>/dev/null
