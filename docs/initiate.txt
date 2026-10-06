@@ -19,6 +19,8 @@ repository. What makes a repository a garden is small:
     bin/                 the scripts that start the commands
     .gitignore           directories beginning with an underscore are
                          working material and are never committed
+    AGENTS.md            a block that tells an agent this is a garden
+                         and to run "clankos-run help"
 
 Archives and ledgers are made by the first seal, and responsibilities
 and projects as they are needed (docs/responsibility-tree.txt).
@@ -54,6 +56,12 @@ Run at the root of a Git repository, it writes, in this order:
   - intray.org;
   - bin/, or the directory --bin names: each script the image has for
     starting its commands;
+  - in AGENTS.md, one block between the lines
+    "<!-- clankos: begin -->" and "<!-- clankos: end -->". The file is
+    made if it is missing. In a file that is there, the block is added
+    at the end, or, if it has the block already, the block alone is
+    brought to what this image writes. Nothing outside the block is
+    changed;
   - in Git's info/exclude, poslib's managed archive block: each scope's
     archive is ignored when its own configuration says uncommitted,
     including that default when no entry says otherwise.
@@ -61,8 +69,9 @@ Run at the root of a Git repository, it writes, in this order:
 It updates the managed archive block from the saved configuration,
 including in an existing garden. Other ignore rules and already
 tracked files stay as they are. Existing files are kept and reported,
-scripts that differ from the image's among them. It commits nothing:
-the diff is read, and the commit made, by whoever ran it.
+scripts that differ from the image's among them; of an existing
+AGENTS.md, all but the block is kept. It commits nothing: the diff is
+read, and the commit made, by whoever ran it.
 
 It then has poslib read the configuration, and is refused if poslib
 refuses it. At a terminal, and with --ask, it goes on to
@@ -73,8 +82,8 @@ responsibility-tree unless --no-tree is given.
 
 In a repository that already has a configuration, of either name,
 initiation keeps it and asks nothing. It adds the intray and each
-script that is missing. So it is also how a garden takes the scripts
-a newer image has added.
+script that is missing, and writes the block in AGENTS.md. So it is
+also how a garden takes the scripts a newer image has added.
 
 
 5. In the container
