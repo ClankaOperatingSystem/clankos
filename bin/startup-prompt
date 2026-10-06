@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: startup-prompt [--view NAME] ...
+       startup-prompt --help
+
+Print what a session opens with: four prompts, then views of the saved
+Org files under the working directory, in the ClankOS container.
+docs/startup-prompt.txt gives the protocol.
+
+  next                 every NEXT item
+  scheduled            items scheduled in the next 14 days, or late
+  deadlines            every open deadline, however far off
+  reviews              reviews late or due in the next 7 days, projects'
+                       and responsibilities' apart
+  reviews-to-schedule  active projects, and responsibilities, with no
+                       review scheduled
+  all                  every TODO item
+
+With no --view, every view but all is printed. --view NAME, repeated,
+prints the prompts and those views only.
+
+Reads; writes nothing. Archives, attics, and hidden and underscore
+directories are not read. The working directory's pos-config.el, if it
+has one, is loaded and can change the horizons and what is read.
+
+Exit: 0 printed, 2 usage, 255 Emacs error, its message on stderr; 125,
+126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" startup-prompt "$@"

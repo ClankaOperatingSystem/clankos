@@ -1,0 +1,113 @@
+startup-prompt: what a session opens with
+
+bin/startup-prompt runs this protocol in the ClankOS container. The
+command is poslib's pos-startup, at the commit the image was built
+with: https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What it is for
+
+A session opens by choosing what to do. The choice needs to know what
+is already waiting: what is next, what has a date, what is due, what is
+to be reviewed. Finding that by opening each Org file is slow and
+misses things.
+
+startup-prompt prints four prompts, for the choice, and then views of
+the saved Org files, for what is waiting. It chooses nothing and writes
+nothing.
+
+
+2. The prompts
+
+    Purpose         What are we here to do in this session?
+    Circumstances   What time, attention, energy, and fixed commitments
+                    constrain the choice?
+    Choice          Which established work, new concern, or
+                    clarification should begin?
+    Trust           Treat the views below as a bounded view of saved
+                    files, not a complete review.
+
+They are the same on every run.
+
+
+3. What is read
+
+The working directory is the root. Every Org file under it is read,
+except those in a directory named archives or attic, or whose name
+begins with an underscore or a full stop. Repositories mounted beneath
+the root are read as part of it.
+
+A file belongs to a scope, by its path: the last projects/NAME or
+responsibilities/NAME in it names the scope, a project or a
+responsibility. A file under neither belongs to the root.
+
+The keywords are poslib's one sequence: BACKLOG, TODO, NEXT, WIP and
+BLOCKED are open; DONE and CANCELLED are done. A done item is in no
+view.
+
+After the prompts, "Files read: N" says how many files were read.
+
+
+4. The views
+
+Each view is a title, then one line for each item: the item's scope,
+then the item. A view with no item says "(none)".
+
+    next                 Every item whose keyword is NEXT.
+    scheduled            Items scheduled in the next 14 days, under
+                         their dates, and those scheduled earlier and
+                         still open, as late. Reviews and deadlines
+                         are left to their own views.
+    deadlines            Every open deadline, once, with the days
+                         until it or since it. None is left out for
+                         being far off.
+    reviews              Review items late or scheduled in the next 7
+                         days: projects', then responsibilities'.
+    reviews-to-schedule  Active projects, then responsibilities, that
+                         have no review scheduled.
+    all                  Every open item.
+
+A review item is an open heading tagged :review: with a scheduled
+date, in a file of the scope it reviews. An active project is one
+whose project file has, before its first heading, a STATUS property of
+COMMITTED or WIP. A responsibility is a directory directly within a
+directory named responsibilities.
+
+The label of a line is its file's directory under the root, without
+the segments named projects, and with the file's name added unless it
+is project.org: projects/alpha/project.org is "alpha", and
+projects/alpha/notes.org is "alpha/notes".
+
+With no --view, every view but all is printed, in the order above.
+"--view NAME", repeated, prints the prompts and those views only.
+
+
+5. Settings
+
+The root's pos-config.el, if it has one, is loaded. It can set:
+
+    pos-startup-scheduled-days         14
+    pos-startup-review-days            7
+    pos-startup-review-tag             "review"
+    pos-startup-active-statuses        ("COMMITTED" "WIP")
+    pos-startup-excluded-directories   ("archives" "attic")
+
+
+6. In the container
+
+bin/startup-prompt gives its arguments to bin/clankos-run. The files
+are the host's, at their own paths. The container is given the host's
+time zone, so that "today", "late" and "due" are counted from the same
+day as on the host. pos-config.el is Lisp, and is run in the container.
+
+The report is on stdout. Emacs's own messages are on stderr.
+
+
+7. Exit status
+
+    0     printed
+    2     usage
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
