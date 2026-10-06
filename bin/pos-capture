@@ -7,7 +7,8 @@ Usage: pos-capture -- 'Task title'
        pos-capture --help
 
 Add one TODO under Unsorted in the working directory's intray.org, in
-the ClankOS container. docs/pos-capture.txt gives the protocol.
+the ClankOS container.
+"clankos-run help pos-capture" prints the protocol.
 
 The title is one nonempty line. Prints the file, the line and the title
 saved. Unsorted is made if the intray lacks it. Refused if intray.org

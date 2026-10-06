@@ -1,0 +1,77 @@
+clankos: a garden and its commands
+
+"clankos-run help" prints this document from the ClankOS image the
+garden runs, so it describes the commands that image has.
+
+
+1. A garden
+
+A garden is a tree of responsibilities kept in Org files, in a Git
+repository.
+
+    responsibility   an area of life or work that is tended and does
+                     not finish. A directory, with a configuration and
+                     an intray. It holds responsibilities, projects
+                     and products. The garden's root is one.
+    project          a finite piece of work with an outcome. An Org
+                     file where its responsibility's projects belong,
+                     which is projects/.
+    product          a repository the garden works on, under that
+                     repository's own rules.
+    intray           intray.org: where a task is written the moment it
+                     comes to mind, under "Unsorted", to be placed
+                     later.
+    archive          sealed records that never change, with a ledger
+                     beside them by which a change is noticed.
+
+A task is an Org heading with a keyword. BACKLOG, TODO, NEXT, WIP and
+BLOCKED are open; DONE and CANCELLED are done. Dates are Org's
+SCHEDULED and DEADLINE. The commands below capture tasks, move them
+and report them. Keywords, dates and tags are edited in the Org files.
+
+The files are plain text and the garden is a Git repository. No
+command commits: the diff is read, and the commit made, by whoever ran
+it.
+
+
+2. The commands
+
+Each is a script in the garden's bin/, run from the directory it is to
+work on. Run from a responsibility's directory, a command works on
+that responsibility.
+
+    initiate              make a Git repository a garden; run again,
+                          add what a newer image has
+    responsibility-tree   add responsibilities, projects and products
+    pos-capture           add a task to the intray
+    pos-refile            move tasks from the intray to where they
+                          belong, and stranded tasks into it
+    pos-dedupe            resolve tasks written more than once
+    startup-prompt        print what a session opens with: what is
+                          next, dated, due and to be reviewed
+    archive-integrity     seal items into an archive; check archives
+    archive-migrate       rebuild an archive that has a legacy ledger
+    clankos-run           run a command in the image; the others call
+                          it
+    install.sh            pull the image
+
+
+3. Reading more
+
+    COMMAND --help              what the command takes, does and exits
+                                with
+    clankos-run help COMMAND    the command's protocol: what it reads
+                                and writes, and why
+    clankos-run help            this document
+
+Both are the installed image's own, so they describe the commands as
+the garden runs them. A garden that pins an image reads that image's.
+
+
+4. Exit status
+
+    0     printed
+    2     no such document; those there are, are listed on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

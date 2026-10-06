@@ -1,0 +1,25 @@
+#!/bin/sh
+# help [COMMAND]
+# Print a document of this image: COMMAND's protocol, or, with no
+# COMMAND, docs/clankos.txt, which says what a garden is and lists the
+# commands.
+# Exit: 0 printed, 2 usage or no such document.
+docs=/usr/local/share/clankos/docs
+[ $# -le 1 ] || {
+    echo "Usage: help [COMMAND]" >&2
+    exit 2
+}
+topic=${1:-clankos}
+case $topic in
+    */*|.*) topic= ;;
+esac
+if [ -z "$topic" ] || [ ! -f "$docs/$topic.txt" ]; then
+    echo "help: no document for: ${1:-}" >&2
+    echo "help: there is one for each of:" >&2
+    for file in "$docs"/*.txt; do
+        name=${file##*/}
+        echo "  ${name%.txt}" >&2
+    done
+    exit 2
+fi
+exec cat "$docs/$topic.txt"

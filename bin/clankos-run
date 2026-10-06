@@ -10,6 +10,10 @@ Usage: clankos-run [--host-network] COMMAND [ARG ...]
 Run a ClankOS command in the ClankOS container, on the workspace the
 working directory is in. The other scripts in bin/ call this.
 
+"clankos-run help" says what a garden is and lists the commands, and
+"clankos-run help COMMAND" prints a command's protocol, both as the
+image has them.
+
 The workspace is the nearest directory, from the working directory
 upwards, that holds .clanka, .pos or .git; failing all, the working
 directory. CLANKOS_WORKSPACE names it instead. It is mounted at its own path, and
