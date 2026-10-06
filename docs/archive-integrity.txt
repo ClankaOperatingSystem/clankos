@@ -54,9 +54,15 @@ A plan records absolute paths. It is applied where it was made.
     ledger, and its head. Exit 0 is clean; 1 is findings.
   - "checkpoint ROOT" records the ledger heads under ROOT. It is
     refused unless the check is clean.
-  - "repair ROOT" removes write bits from the sealed files, events and
-    checkpoints under ROOT. It is refused if a sealed file has changed
-    or is missing, and it never adds a file to a ledger.
+  - "repair ROOT" restores empty directories recorded in the ledger and
+    removes write bits from sealed files, events and checkpoints under
+    ROOT. It validates all archives before writing, refuses changed or
+    missing file bytes and obstructed directory paths, and never rewrites
+    a ledger. It restores recorded read permissions after checking the
+    content; executable and special mode changes are refused. Run repair
+    after cloning, then "check ROOT": Git preserves neither empty
+    directories nor read permissions or write bits. No local archive is
+    created for an archive held by a keeper.
   - "convert ROOT" brings each schema 2 ledger under ROOT to schema 3,
     once it is clean.
 
