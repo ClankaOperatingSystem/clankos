@@ -14,7 +14,7 @@ COPY lisp/ /usr/local/share/clankos/lisp/
 
 # poslib at one commit, so that an image tag names one poslib. Its
 # dependencies come from ELPA when the image is built, signatures checked.
-ARG POSLIB_COMMIT=92e65bbc8348b831bfd244780e239097384f9df0
+ARG POSLIB_COMMIT=9ff9e5a7f084ae448a4cd2ef4ee91690e3c34e97
 RUN cd /usr/local/share/clankos \
     && git init -q poslib \
     && git -C poslib fetch -q --depth 1 \
