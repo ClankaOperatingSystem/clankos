@@ -14,7 +14,7 @@ COPY lisp/ /usr/local/share/clankos/lisp/
 # poslib, and the packages it requires, each from its Git repository at
 # one commit, so that an image tag names one of each: markdown-mode 2.8
 # and yaml 1.2.4. All are byte-compiled, poslib with warnings as errors.
-ARG POSLIB_COMMIT=bf5e069c777ba7caccad7ee3a10406e1ed0193f0
+ARG POSLIB_COMMIT=c9abd9f10bd1bd9981bba46af4142e13f4b4ec9c
 ARG MARKDOWN_MODE_COMMIT=f5d520b3ee7722dd2231ab586ba51d8eb166e49b
 ARG YAML_COMMIT=5546f36bde24a9a8c1934e0f6ce205cd41d72537
 RUN cd /usr/local/share/clankos \
