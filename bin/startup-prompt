@@ -17,6 +17,8 @@ Org files under the working directory, in the ClankOS container.
                        and responsibilities' apart
   reviews-to-schedule  active projects, and responsibilities, with no
                        review scheduled
+  intray               every open item under Unsorted in an intray.org:
+                       captured and not yet placed
   all                  every TODO item
 
 With no --view, every view but all is printed. --view NAME, repeated,
