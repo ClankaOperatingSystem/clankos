@@ -1,0 +1,63 @@
+pos-dedupe: resolving tasks written more than once
+
+bin/pos-dedupe runs this protocol in the ClankOS container. The
+commands are poslib's, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. Duplicates
+
+The working directory is the root. The covered files are the Org files
+at the top level of the root and of each directory its pos-config.el
+names in pos-pillars.
+
+Two headings with a TODO keyword in the covered files are duplicates
+when their text is the same, ignoring case. They may be in one file or
+in several.
+
+
+2. Plan, review, apply
+
+  - Plan. "plan [FILE]" writes FILE, an Org file with one heading and
+    one table for each duplicated task, a row for each copy:
+
+        * Buy milk
+        | act  | file          | line | under    | body lines |
+        | drop | intray.org    |    4 | Unsorted |          0 |
+        | keep | work/todo.org |    4 | Tasks    |          1 |
+
+    It suggests one copy to keep and the rest to drop. Nothing is
+    changed.
+  - Review. A person or an agent edits act in each row: "keep" for one
+    copy, "drop" for the others. "?" in a group leaves that group
+    alone.
+  - Apply. "apply [FILE]" resolves each group that has exactly one keep
+    and at least one drop. A dropped copy is removed. If its body
+    differs from the kept copy's, it is first placed beneath the kept
+    copy, under a heading saying which file and line it came from, so
+    that no text is lost. "apply --dry-run" reports what it would do.
+
+The report counts the groups resolved, the copies merged, the groups
+skipped as undecided, the copies already gone, and the groups whose
+copies are no longer at their lines. A copy is found by its file, line
+and heading as the plan recorded them: if the files have changed
+since, its group is not resolved, and a new plan is needed.
+
+FILE is dedupe.org in the root unless given.
+
+
+3. In the container
+
+bin/pos-dedupe gives its arguments to bin/clankos-run. The files are
+the host's, at their own paths, and are written as the invoking user.
+pos-config.el is Lisp, and is run in the container.
+
+
+4. Exit status
+
+    0     done
+    2     usage
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-dedupe plan [FILE]
+       pos-dedupe apply [--dry-run] [FILE]
+       pos-dedupe --help
+
+Find tasks written more than once among the Org files of the working
+directory and resolve them, in the ClankOS container.
+docs/pos-dedupe.txt gives the protocol.
+
+  plan [FILE]
+      write one table for each duplicated task to FILE, suggesting
+      which copy to keep and which to drop
+  apply [--dry-run] [FILE]
+      resolve each group in FILE that has one keep: remove the dropped
+      copies, first merging under the kept one any whose body differs
+
+FILE is dedupe.org in the working directory unless given. --dry-run
+reports and changes nothing. The working directory's pos-config.el, if
+it has one, names the covered directories.
+
+Exit: 0 done, 2 usage, 255 Emacs error, its message on stderr; 125,
+126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-dedupe "$@"
