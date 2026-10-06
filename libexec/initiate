@@ -116,6 +116,58 @@ for script in /usr/local/share/clankos/bin/*; do
     fi
 done
 
+# AGENTS.md: one marked block, which sends its reader to the image's
+# own help. The file is made if it is missing; in a file that is there,
+# only the block is written, and what surrounds it is kept.
+begin='<!-- clankos: begin -->'
+end='<!-- clankos: end -->'
+block() {
+    cat <<BLOCK
+$begin
+## ClankOS
+
+This repository is a ClankOS garden: a tree of responsibilities kept
+in Org files. Its commands are the scripts in $bin/.
+
+Before working in the garden, run \`$bin/clankos-run help\`. It says
+what a garden is and lists the commands. Run a command with \`--help\`
+before using it, and \`$bin/clankos-run help COMMAND\` for its protocol.
+These print what the garden's ClankOS image holds, so they describe
+the commands as they run here.
+
+\`$bin/initiate\` writes this block. Write outside it.
+$end
+BLOCK
+}
+if [ ! -e AGENTS.md ]; then
+    block > AGENTS.md
+    echo "wrote     AGENTS.md"
+elif [ ! -f AGENTS.md ]; then
+    echo "kept      AGENTS.md (it is not a file)"
+elif ! grep -qxF "$begin" AGENTS.md; then
+    [ ! -s AGENTS.md ] || [ -z "$(tail -c 1 AGENTS.md)" ] || printf '\n' >> AGENTS.md
+    [ ! -s AGENTS.md ] || printf '\n' >> AGENTS.md
+    block >> AGENTS.md
+    echo "added     the ClankOS block to AGENTS.md"
+elif ! grep -qxF "$end" AGENTS.md; then
+    echo "kept      AGENTS.md (its ClankOS block has no end)"
+else
+    agents=$(mktemp)
+    block > "$agents.block"
+    awk -v begin="$begin" -v end="$end" -v block="$agents.block" '
+        $0 == begin && !done { while ((getline line < block) > 0) print line; skip = 1; done = 1; next }
+        skip { if ($0 == end) skip = 0; next }
+        { print }
+    ' AGENTS.md > "$agents"
+    if cmp -s "$agents" AGENTS.md; then
+        echo "kept      AGENTS.md"
+    else
+        cat "$agents" > AGENTS.md
+        echo "updated   the ClankOS block in AGENTS.md"
+    fi
+    rm -f "$agents" "$agents.block"
+fi
+
 # The configuration as poslib reads it.
 emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
@@ -137,3 +189,4 @@ fi
 echo
 echo "This repository is a garden. Nothing is committed: read git status, and commit."
 echo "Add to the tree at any time with $bin/responsibility-tree."
+echo "$bin/clankos-run help says what a garden is and lists the commands."

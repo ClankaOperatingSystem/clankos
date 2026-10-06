@@ -25,7 +25,9 @@ from standard input.
   --no-tree       do not go on to responsibility-tree
 
 Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
-scripts in bin/, as the image has them. Updates the managed archive
+scripts in bin/, as the image has them. Makes AGENTS.md, or in one
+that is there writes only its own marked block, which sends an agent
+to "clankos-run help". Updates the managed archive
 rules in Git's info/exclude from the saved configuration, including
 child scopes. Keeps existing configuration and content, and commits
 nothing. In an existing garden it also adds what is missing.
