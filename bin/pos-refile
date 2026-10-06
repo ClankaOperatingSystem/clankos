@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-refile stranded [--dry-run]
+       pos-refile plan [FILE]
+       pos-refile apply [--dry-run] [FILE]
+       pos-refile --help
+
+Move tasks to where they belong among the Org files of the working
+directory, in the ClankOS container. docs/pos-refile.txt gives the
+protocol.
+
+  stranded [--dry-run]
+      move each open task in an Org file outside the covered
+      directories into intray.org under Unsorted, with a link back to
+      where it was
+  plan [FILE]
+      write one table of every intray entry to FILE, each with a
+      suggested target file
+  apply [--dry-run] [FILE]
+      move the entries marked move in FILE to their targets
+
+FILE is refile.org in the working directory unless given. --dry-run
+reports and changes nothing. The working directory holds intray.org
+and, if it has one, pos-config.el, which names the covered directories
+and the rules for suggestions.
+
+Exit: 0 done, 2 usage or no intray.org, 255 Emacs error, its message
+on stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-refile "$@"
