@@ -1,38 +1,8 @@
 #!/usr/bin/env bash
-# Run bin/archive-integrity against a new workspace, in the image
-# CLANKOS_IMAGE names. The workspace is made under _test/ here, since
-# Docker may share only some host directories.
+# Run bin/archive-integrity against a new workspace.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-
-repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
-bin=$repo/bin
-mkdir -p "$repo/_test"
-work=$(mktemp -d "$repo/_test/archive-integrity.XXXXXX")
-trap 'chmod -R u+w "$work"; rm -rf "$work"' EXIT
-cd "$work"
-
-failures=0
-check() {
-    if "${@:2}"; then
-        echo "ok    $1"
-    else
-        echo "FAIL  $1"
-        failures=$((failures + 1))
-    fi
-}
-status() {
-    local expected=$1
-    shift
-    "$@" >/dev/null 2>&1
-    [ $? -eq "$expected" ]
-}
-sha256() {
-    if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi | cut -d' ' -f1
-}
-owner() {
-    stat -c %u "$1" 2>/dev/null || stat -f %u "$1"
-}
+. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
 
 mkdir _seal .pos
 echo "A note." > _seal/note.txt
