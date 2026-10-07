@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-sweep plan [FILE]
+       pos-sweep apply [--dry-run] [FILE]
+       pos-sweep close [--apply]
+       pos-sweep --help
+
+Retire the done items of the working directory's Org files into the
+archive of the week that ended, where each scope's configuration says,
+in the ClankOS container. "clankos-run help pos-sweep" prints the
+protocol.
+
+  plan [FILE]
+      write one table row for each file with done entries to FILE:
+      how many, and where they would go
+  apply [--dry-run] [FILE]
+      archive the done entries of each file marked sweep in FILE
+  close [--apply]
+      print the seal plans of the swept weeks that have closed, for a
+      scope whose sweep is sealed; with --apply, seal them
+
+FILE is sweep.org in the working directory unless given. --dry-run
+reports and changes nothing. The files are those the configuration
+allows, in the working directory's own repository.
+
+Exit: 0 done, 2 usage or a refusal, 255 Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-sweep "$@"

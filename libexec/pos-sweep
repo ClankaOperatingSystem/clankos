@@ -1,0 +1,16 @@
+#!/bin/sh
+# pos-sweep plan [FILE] | apply [--dry-run] [FILE] | close [--apply]
+# The protocol is docs/pos-sweep.txt.
+usage() {
+    echo "Usage: pos-sweep plan [FILE] | apply [--dry-run] [FILE] | close [--apply]" >&2
+    exit 2
+}
+emacs=$(dirname -- "$0")/pos-emacs
+case ${1:-} in
+    plan) [ $# -le 2 ] || usage ;;
+    apply)
+        if [ "${2:-}" = --dry-run ]; then [ $# -le 3 ] || usage; else [ $# -le 2 ] || usage; fi ;;
+    close) [ $# -eq 1 ] || [ "${2:-}" = --apply ] && [ $# -le 2 ] || usage ;;
+    *) usage ;;
+esac
+exec "$emacs" -l pos-sweep -f pos-sweep-batch "$@"

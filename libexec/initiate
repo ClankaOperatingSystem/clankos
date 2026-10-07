@@ -78,8 +78,8 @@ else
         # node declares none.
         printf 'exclude:\n  - archives\n  - attic\n  - node_modules\n  - "_*"\n  - ".*"\n'
         case $archive in
-            committed) printf 'archives:\n  - scope: "."\n    kept: committed\n' ;;
-            remote) printf 'archives:\n  - scope: "."\n    kept: remote\n    url: %s\n' "$keeper" ;;
+            committed) printf 'archives:\n  - scope: "."\n    kept: committed\n    sweep: sealed\n' ;;
+            remote) printf 'archives:\n  - scope: "."\n    kept: remote\n    url: %s\n    sweep: sealed\n' "$keeper" ;;
         esac
     } > "$config"
     echo "wrote     $config (image $tag, archive $archive)"
