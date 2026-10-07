@@ -22,7 +22,10 @@ inside the container as outside. The command runs as the invoking user.
 
 {config}/pos, where {config} is $XDG_CONFIG_HOME or ~/.config, is
 mounted too when it exists: the tokens that signing in to a keeper
-keeps. POS_ARCHIVE_OFFLINE and POS_ARCHIVE_TOKEN are passed on. The
+keeps. {cache}/pos, where {cache} is $XDG_CACHE_HOME or ~/.cache, is
+mounted as well, and made if it does not exist: the index of the
+workspace's Org files that the commands keep, which a run would
+otherwise build afresh. POS_ARCHIVE_OFFLINE and POS_ARCHIVE_TOKEN are passed on. The
 container is given the host's time zone, from TZ or /etc/localtime, so
 that today is the same day inside as outside; failing both it is UTC.
 
@@ -111,6 +114,11 @@ home=${XDG_CONFIG_HOME:-$HOME/.config}
 tokens=()
 [ ! -d "$home/pos" ] || tokens=(-v "$home/pos:$home/pos")
 
+# The index the commands keep of the workspace's Org files, so that a
+# run finds it where the last one left it.
+cache=${XDG_CACHE_HOME:-$HOME/.cache}
+mkdir -p "$cache/pos"
+
 # The host's time zone, so that today is the same day inside: TZ, or
 # the zone /etc/localtime links to.
 zone=${TZ:-}
@@ -137,6 +145,8 @@ exec docker run --rm -i \
     --user "$(id -u):$(id -g)" \
     -e HOME=/tmp \
     -e XDG_CONFIG_HOME="$home" \
+    -e XDG_CACHE_HOME="$cache" \
+    -v "$cache/pos:$cache/pos" \
     -e CLANKOS_PROBE="$probe" \
     -e GIT_CONFIG_COUNT=1 \
     -e GIT_CONFIG_KEY_0=safe.directory \
