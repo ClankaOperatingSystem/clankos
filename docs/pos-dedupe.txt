@@ -15,6 +15,13 @@ Two headings with a TODO keyword in the covered files are duplicates
 when their text is the same, ignoring case. They may be in one file or
 in several.
 
+A heading may carry an ID, in its property drawer, that id: links
+elsewhere point at. Where the links to a heading are is read from the
+index org-roam keeps of the root's Org files, brought up to date
+before each plan and apply. The index records a link only where a
+heading with an ID, or a file with one, holds it; archives, attics,
+and hidden and underscore directories are not in it.
+
 
 2. Plan, review, apply
 
@@ -22,12 +29,14 @@ in several.
     one table for each duplicated task, a row for each copy:
 
         * Buy milk
-        | act  | file          | line | under    | body lines |
-        | drop | intray.org    |    4 | Unsorted |          0 |
-        | keep | work/todo.org |    4 | Tasks    |          1 |
+        | act  | file          | line | under    | body lines | id |
+        | drop | intray.org    |    4 | Unsorted |          0 | 3f |
+        | keep | work/todo.org |    4 | Tasks    |          1 |    |
+        - Links to intray.org:4 from notes.org:7, work/plan.org:12
 
-    It suggests one copy to keep and the rest to drop. Nothing is
-    changed.
+    It suggests one copy to keep and the rest to drop, and lists the
+    links to each copy that has an ID. A property drawer is not body.
+    Nothing is changed.
   - Review. A person or an agent edits act in each row: "keep" for one
     copy, "drop" for the others. "?" in a group leaves that group
     alone.
@@ -35,13 +44,19 @@ in several.
     and at least one drop. A dropped copy is removed. If its body
     differs from the kept copy's, it is first placed beneath the kept
     copy, under a heading saying which file and line it came from, so
-    that no text is lost. "apply --dry-run" reports what it would do.
+    that no text is lost, and without the dropped copy's ID. The kept
+    copy takes the first dropped ID where it has none, so that the
+    links to it still arrive; each id: link to any other dropped ID
+    that the index records is pointed at the kept copy's.
+    "apply --dry-run" reports what it would do.
 
-The report counts the groups resolved, the copies merged, the groups
-skipped as undecided, the copies already gone, and the groups whose
-copies are no longer at their lines. A copy is found by its file, line
-and heading as the plan recorded them: if the files have changed
-since, its group is not resolved, and a new plan is needed.
+The report counts the groups resolved, the copies merged, the links
+relinked, the groups skipped as undecided, the copies already gone,
+and the groups whose copies are no longer at their lines. A copy is
+found by its file, line and heading as the plan recorded them: if the
+files have changed since, its group is not resolved, and a new plan is
+needed. A link is rewritten only where the index says it is: one that
+has moved since is left as it was.
 
 FILE is dedupe.org in the root unless given.
 
@@ -50,7 +65,10 @@ FILE is dedupe.org in the root unless given.
 
 bin/pos-dedupe gives its arguments to bin/clankos-run. The files are
 the host's, at their own paths, and are written as the invoking user.
-pos-config.el is Lisp, and is run in the container.
+pos-config.el is Lisp, and is run in the container. The index is in
+the cache directory clankos-run mounts, {cache}/pos/org-roam/, named
+by the root's path; a first run builds it, later runs bring it up to
+date.
 
 
 4. Exit status
