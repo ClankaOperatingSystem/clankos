@@ -19,6 +19,11 @@ jobs:
       - name: Refuse a tag that is not on master
         if: github.ref_type == 'tag'
         run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+      - name: Refuse a poslib pin that is not on poslib's master
+        run: |
+          pin=$(sed -n 's/^ARG POSLIB_COMMIT=//p' Dockerfile)
+          git clone -q --bare https://github.com/ClankaOperatingSystem/poslib.git "$RUNNER_TEMP/poslib.git"
+          git -C "$RUNNER_TEMP/poslib.git" merge-base --is-ancestor "$pin" master
       - name: Test the commands in the image
         run: |
           docker build -t clankos:test .
