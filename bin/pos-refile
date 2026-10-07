@@ -24,8 +24,8 @@ directory, in the ClankOS container.
 
 FILE is refile.org in the working directory unless given. --dry-run
 reports and changes nothing. The working directory holds intray.org
-and, if it has one, pos-config.el, which names the covered directories
-and the rules for suggestions.
+and, if it has one, pos-config.el, which holds the rules for
+suggestions. The files are those the configuration allows.
 
 Exit: 0 done, 2 usage or no intray.org, 255 Emacs error, its message
 on stderr; 125, 126 and 127 are clankos-run's.

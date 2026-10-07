@@ -1,7 +1,8 @@
 #!/bin/sh
 # pos-emacs [EMACS-ARG ...]
 # Batch Emacs with poslib, working on the working directory: it is
-# pos-directory, and its pos-config.el is loaded if there is one. The
+# pos-directory, and its pos-config.el is loaded if there is one; a
+# setting it no longer reads is reported on stderr. The
 # pos-* commands here start through this. An error prints its message
 # alone, without a backtrace, and exits 255.
 exec emacs -Q --batch \

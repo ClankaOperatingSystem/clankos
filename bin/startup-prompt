@@ -24,9 +24,10 @@ Org files under the working directory, in the ClankOS container.
 With no --view, every view but all is printed. --view NAME, repeated,
 prints the prompts and those views only.
 
-Reads; writes nothing. Archives, attics, and hidden and underscore
-directories are not read. The working directory's pos-config.el, if it
-has one, is loaded and can change the horizons and what is read.
+Reads; writes nothing. The files are those the configuration allows:
+not the excluded directories, archives and attics by default. The
+working directory's pos-config.el, if it has one, is loaded and can
+change the horizons.
 
 Exit: 0 printed, 2 usage, 255 Emacs error, its message on stderr; 125,
 126 and 127 are clankos-run's.

@@ -7,16 +7,15 @@ https://github.com/ClankaOperatingSystem/poslib
 
 1. Where tasks are kept
 
-The working directory is the root. Its pos-config.el, if it has one,
-sets:
+The working directory is the root. The files where tasks are kept are
+the corpus poslib's doc/pos-directory.txt describes: every Org file
+under the root but those in the directories the configuration
+excludes. intray.org, in the root, holds the tasks not yet placed,
+under "Unsorted". The root's pos-config.el, if it has one, sets:
 
-    pos-pillars        directories of the root, one for each area
-    pos-refile-rules   pairs of a pattern and a pillar: a heading the
-                       pattern matches is suggested for that pillar
-
-The covered files are the Org files at the top level of the root and
-of each pillar. They are where tasks are kept. intray.org, in the root,
-holds the tasks not yet placed, under "Unsorted".
+    pos-refile-rules   pairs of a pattern and a file relative to the
+                       root: a heading the pattern matches is suggested
+                       for that file
 
 There are two movements: into the intray, of tasks written where
 nobody will find them; and out of it, to the files they belong in.
@@ -24,8 +23,9 @@ nobody will find them; and out of it, to the files they belong in.
 
 2. Into the intray: stranded tasks
 
-A stranded task is an open task in an Org file outside the covered
-files: in a note, a journal, a resource.
+A stranded task is an open task in an Org file the corpus does not
+read: in an attic, an archive, or a directory beginning with an
+underscore.
 
 "stranded" moves each one into intray.org under Unsorted, and writes
 below its heading a link back to the file and heading it came from.
@@ -46,8 +46,8 @@ reviewed as a diff.
         | move |    4 | Send the invoice | work/todo.org |       |         |
         | ?    |    5 | Buy milk         |               |       |         |
 
-    A row whose heading a rule matches is suggested as "move" to a file
-    of that pillar. The rest are "?". Nothing is moved.
+    A row whose heading a rule matches is suggested as "move" to the
+    rule's file. The rest are "?". Nothing is moved.
   - Review. A person or an agent edits the table. To move an entry:
     act "move", file the target relative to the root, and optionally
     under, the path of the heading it goes beneath. To leave it: "skip"
@@ -56,9 +56,11 @@ reviewed as a diff.
     its target: beneath the heading named, or at the end of the file.
     "apply --dry-run" reports what it would do.
 
-The report counts the entries moved, left, with a missing target, and
-no longer at their line. An entry whose target file or heading does not
-exist is not moved. An entry is found by its line and heading as the
+The report counts the entries moved, left, with a missing target, with
+a target the root may not write, and no longer at their line. An
+entry whose target file or heading does not exist is not moved; nor
+is one whose target is another repository's, or a file the corpus
+does not read. An entry is found by its line and heading as the
 plan recorded them: if the intray has changed since, it is not moved,
 and a new plan is needed.
 
