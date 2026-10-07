@@ -19,8 +19,8 @@ directory and resolve them, in the ClankOS container.
       copies, first merging under the kept one any whose body differs
 
 FILE is dedupe.org in the working directory unless given. --dry-run
-reports and changes nothing. The working directory's pos-config.el, if
-it has one, names the covered directories.
+reports and changes nothing. The files are those the configuration
+allows, at any depth.
 
 Exit: 0 done, 2 usage, 255 Emacs error, its message on stderr; 125,
 126 and 127 are clankos-run's.

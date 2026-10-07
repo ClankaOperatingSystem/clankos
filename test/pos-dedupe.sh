@@ -5,7 +5,6 @@ set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
 
 mkdir .pos work
-echo "(setq pos-pillars '(\"work\"))" > pos-config.el
 printf '#+TITLE: Intray\n\n* Unsorted\n** TODO Buy milk\n:PROPERTIES:\n:ID: milk-intray\n:END:\nTwo litres.\n** TODO Water the plants\n' > intray.org
 printf '#+TITLE: Work\n\n* Tasks\n** TODO Buy milk\n:PROPERTIES:\n:ID: milk-work\n:END:\nFrom the shop.\n' > work/todo.org
 printf ':PROPERTIES:\n:ID: notes\n:END:\n#+TITLE: Notes\n\nSee [[id:milk-intray][the milk]].\n' > notes.org

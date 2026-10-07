@@ -7,11 +7,12 @@ https://github.com/ClankaOperatingSystem/poslib
 
 1. Duplicates
 
-The working directory is the root. The covered files are the Org files
-at the top level of the root and of each directory its pos-config.el
-names in pos-pillars.
+The working directory is the root. The files are the corpus poslib's
+doc/pos-directory.txt describes: every Org file under the root but
+those in the directories the configuration excludes, and those of a
+repository within the tree, which are read but belong to it.
 
-Two headings with a TODO keyword in the covered files are duplicates
+Two headings with a TODO keyword in those files are duplicates
 when their text is the same, ignoring case. They may be in one file or
 in several.
 
@@ -51,7 +52,8 @@ and hidden and underscore directories are not in it.
     "apply --dry-run" reports what it would do.
 
 The report counts the groups resolved, the copies merged, the links
-relinked, the groups skipped as undecided, the copies already gone,
+relinked, the groups skipped as undecided, the groups with a copy the
+root may not write, which are left alone, the copies already gone,
 and the groups whose copies are no longer at their lines. A copy is
 found by its file, line and heading as the plan recorded them: if the
 files have changed since, its group is not resolved, and a new plan is

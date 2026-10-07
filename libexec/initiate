@@ -73,6 +73,10 @@ else
     mkdir -p .clanka
     {
         printf 'pos: 2\nprojects: projects/\nimage: %s:%s\n' "$registry" "$tag"
+        # The directories no command reads, written out so that a reader
+        # of the file can see why; these are what poslib assumes when a
+        # node declares none.
+        printf 'exclude:\n  - archives\n  - attic\n  - node_modules\n  - "_*"\n  - ".*"\n'
         case $archive in
             committed) printf 'archives:\n  - scope: "."\n    kept: committed\n' ;;
             remote) printf 'archives:\n  - scope: "."\n    kept: remote\n    url: %s\n' "$keeper" ;;

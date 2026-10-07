@@ -11,7 +11,13 @@ mkdir defaults && cd defaults && git init -q .
 check "with no terminal it takes the defaults" \
     test "$(cat .clanka/config.yml)" = "pos: 2
 projects: projects/
-image: $registry:latest"
+image: $registry:latest
+exclude:
+  - archives
+  - attic
+  - node_modules
+  - \"_*\"
+  - \".*\""
 check "an uncommitted archive is ignored by Git" git check-ignore -q archives/evidence
 check "underscore directories are ignored by Git" grep -qxF '_*/' .gitignore
 check "the intray has Unsorted" grep -qx '\* Unsorted' intray.org
@@ -66,6 +72,12 @@ check "options answer the questions" \
     test "$(cat .clanka/config.yml)" = "pos: 2
 projects: projects/
 image: $registry:v0.0.1
+exclude:
+  - archives
+  - attic
+  - node_modules
+  - \"_*\"
+  - \".*\"
 archives:
   - scope: \".\"
     kept: remote
@@ -84,7 +96,7 @@ cd ..
 mkdir asked && cd asked && git init -q .
 printf 'v0.0.1\ncommitted\nhealth\n\n\n\n' | "$bin/initiate" --ask >/dev/null 2>&1
 check "--ask reads the answers from standard input" \
-    test "$(sed -n 3,6p .clanka/config.yml | tr '\n' '|')" = "image: $registry:v0.0.1|archives:|  - scope: \".\"|    kept: committed|"
+    test "$(sed -n '3p;10,12p' .clanka/config.yml | tr '\n' '|')" = "image: $registry:v0.0.1|archives:|  - scope: \".\"|    kept: committed|"
 check "--ask goes on to the tree" test -f health/.clanka/config.yml
 cd ..
 

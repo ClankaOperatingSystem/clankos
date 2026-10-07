@@ -12,9 +12,11 @@ repository. What makes a repository a garden is small:
 
     .clanka/config.yml   the configuration: that this is a
                          responsibility, whose projects belong in
-                         projects/; the image its commands run in; how
-                         its archive is kept; and, as the tree grows,
-                         what is declared beneath it
+                         projects/; the image its commands run in; the
+                         directories no command reads, archives and
+                         attics among them; how its archive is kept;
+                         and, as the tree grows, what is declared
+                         beneath it
     intray.org           where tasks are captured, under "Unsorted"
     bin/                 the scripts that start the commands
     .gitignore           directories beginning with an underscore are

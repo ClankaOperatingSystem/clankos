@@ -35,22 +35,29 @@ They are the same on every run.
 
 3. What is read
 
-The working directory is the root. Every Org file under it is read,
-except those in a directory named archives or attic, or whose name
-begins with an underscore or a full stop. Repositories mounted beneath
-the root are read as part of it.
+The working directory is the root. The files read are the corpus
+poslib's doc/pos-directory.txt describes: every Org file under the
+root except those in the directories the configuration excludes,
+which by default are archives, attic, node_modules and names
+beginning with an underscore or a full stop, at any depth; hidden
+files, lock files and symbolic links are not read. A repository
+mounted beneath the root is read as part of it when it has a
+configuration of its own, and is a product, not read, when it has
+none.
 
 A file belongs to a scope: the deepest project or responsibility on
 its path. A file under neither belongs to the root.
 
     responsibility   a directory beneath the root whose configuration
                      says where its projects belong, which is what
-                     responsibility-tree makes; or a directory directly
-                     within a directory named responsibilities
-    project          what is directly within a directory named
-                     projects: NAME.org, or the directory NAME
+                     responsibility-tree makes
+    project          what lies where that configuration says the
+                     projects belong: NAME.org, or the directory NAME
 
-The root is a responsibility, and is not listed as one.
+A directory's name alone makes it neither. The root is a
+responsibility, and is not listed as one. A configuration that is
+refused is named after the count of files, as "Not read", and nothing
+beneath it is read.
 
 The keywords are poslib's one sequence: BACKLOG, TODO, NEXT, WIP and
 BLOCKED are open; DONE and CANCELLED are done. A done item is in no
@@ -110,7 +117,9 @@ The root's pos-config.el, if it has one, is loaded. It can set:
     pos-startup-review-days            7
     pos-startup-review-tag             "review"
     pos-startup-active-statuses        ("COMMITTED" "WIP")
-    pos-startup-excluded-directories   ("archives" "attic")
+
+Which directories are read is not a setting here: the configuration
+declares it, under exclude.
 
 
 6. In the container

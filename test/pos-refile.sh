@@ -4,25 +4,26 @@
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
 
-mkdir .pos work notes
-echo "(setq pos-pillars '(\"work\") pos-refile-rules '((\"invoice\" . \"work\")))" > pos-config.el
+mkdir .pos work attic
+echo "(setq pos-refile-rules '((\"invoice\" . \"work/todo.org\")))" > pos-config.el
 printf '#+TITLE: Intray\n\n* Unsorted\n** TODO Send the invoice\n** TODO Buy milk\n' > intray.org
 printf '#+TITLE: Work\n\n* Tasks\n' > work/todo.org
-printf '#+TITLE: A note\n\n* Thinking\n** TODO Call the plumber\n' > notes/note.org
+# A task in a directory no command reads is stranded.
+printf '#+TITLE: A note\n\n* Thinking\n** TODO Call the plumber\n' > attic/note.org
 
 "$bin/pos-refile" stranded --dry-run > out 2>/dev/null
-check "a dry run names the stranded task" grep -q 'notes/note.org:4 Call the plumber' out
-check "a dry run changes nothing" grep -q 'Call the plumber' notes/note.org
+check "a dry run names the stranded task" grep -q 'attic/note.org:4 Call the plumber' out
+check "a dry run changes nothing" grep -q 'Call the plumber' attic/note.org
 
 "$bin/pos-refile" stranded >/dev/null 2>&1
 check "stranded moves the task to the intray" grep -q '^\*\* TODO Call the plumber$' intray.org
-check "stranded links back to where it was" grep -qF '[[file:notes/note.org::*Thinking]' intray.org
-check "stranded takes the task from its file" sh -c '! grep -q "Call the plumber" notes/note.org'
+check "stranded links back to where it was" grep -qF '[[file:attic/note.org::*Thinking]' intray.org
+check "stranded takes the task from its file" sh -c '! grep -q "Call the plumber" attic/note.org'
 
 "$bin/pos-refile" plan > out 2>/dev/null
 check "plan reports the entries written" grep -q '^3 intray entries written to refile.org$' out
-check "plan suggests a target by the rules" \
-    grep -q '^| move *| *4 *| Send the invoice *| work/' refile.org
+check "plan suggests the rule's file" \
+    grep -q '^| move *| *4 *| Send the invoice *| work/todo.org ' refile.org
 check "plan leaves the rest undecided" grep -q '^| ? *| *5 *| Buy milk ' refile.org
 check "plan changes no intray" grep -q 'Send the invoice' intray.org
 
