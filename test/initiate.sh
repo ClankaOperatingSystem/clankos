@@ -81,7 +81,8 @@ exclude:
 archives:
   - scope: \".\"
     kept: remote
-    url: https://keeper.example/ledgers/a"
+    url: https://keeper.example/ledgers/a
+    sweep: sealed"
 check "a remote archive is not ignored" sh -c '! git check-ignore -q archives/evidence'
 check "a line is added to .gitignore on a line of its own" grep -qx 'node_modules/' .gitignore
 check "an AGENTS.md that is there keeps its content" \

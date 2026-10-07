@@ -1,0 +1,88 @@
+pos-sweep: retiring done items
+
+bin/pos-sweep runs this protocol in the ClankOS container. The
+commands are poslib's, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What is retired, and where
+
+The working directory is the root. Each week the done items of its
+Org files, DONE and CANCELLED entries, are retired: moved out of the
+files people work in, into an archive of the week that ended. A done
+entry with an open entry beneath it stays, and is named.
+
+The files are the corpus poslib's doc/pos-directory.txt describes:
+every Org file under the root but those in the directories the
+configuration excludes, and those of a repository mounted within the
+tree, which belong to that repository and are not this root's to
+sweep.
+
+Where a file's done items go is its scope's to say, in the archives
+entry of the nearest configuration at or above it that has a sweep:
+
+    weekly   Org archive files beneath the scope, at the entry's path
+             or archive/orgmode: one directory for each ISO week, one
+             file for each source, named by the source's path within
+             the scope with _archive appended
+    sealed   the same files beneath _sweep/ in the scope; once the
+             week has closed, the week's directory is sealed into the
+             scope's archive at sweep/WEEK, on disk or with the
+             scope's keeper, as its archive is kept
+
+A scope with no entry that says is retired by the nearest above it;
+with none anywhere, weekly beneath the root at archive/orgmode.
+
+The week is the ISO week the latest boundary closed: Sunday 23:00,
+local time. A run before Sunday 23:00 sweeps the week before.
+
+
+2. Plan, review, apply
+
+  - Plan. "plan [FILE]" writes FILE, an Org file titled with the week,
+    with one table row for each file that has done entries:
+
+        | act   | file          | done | destination                               |
+        | sweep | intray.org    |    3 | archive/orgmode/2026-W40/intray.org_archive |
+        | skip  | work/todo.org |    0 | archive/orgmode/2026-W40/work/todo.org_archive |
+
+    done counts the entries that would be archived, each with its
+    subtree. A file whose only done entries have open entries beneath
+    them is "skip" with 0, and those entries are named below the
+    table. Nothing is changed.
+  - Review. A person or an agent edits act: "sweep" to archive the
+    file's done entries, "skip" or "?" to leave the file.
+  - Apply. "apply [FILE]" archives the done entries of each file marked
+    sweep to its destination, each stamped with the week's boundary as
+    its ARCHIVE_TIME, and saves the files. A file whose count of done
+    entries differs from the plan's is left, as stale: it changed
+    since the review, and a new plan is needed. "apply --dry-run"
+    reports what it would do.
+
+The report counts the entries archived, the entries that stayed for
+an open child, the files left as not sweep, and the files stale.
+
+FILE is sweep.org in the root unless given.
+
+
+3. Closing a week
+
+For a scope whose sweep is sealed, "close" prints, as JSON, the seal
+plan of each week beneath its _sweep/ that is before the current
+week: the directory sealed into the scope's archive at sweep/WEEK,
+as poslib's doc/formats.org specifies a seal. It changes nothing.
+"close --apply" seals them, each under the hash of its own plan, and
+prints each event written; a scope kept by a keeper sends the week
+there. A week sealed is immutable and ledgered like any other item,
+and links to its entries are ipfs: links.
+
+
+4. In the container
+
+bin/pos-sweep gives its arguments to bin/clankos-run. The files are
+the host's, at their own paths, and are written as the invoking user.
+The container is given the host's time zone, so that the week is the
+same as on the host. pos-config.el is Lisp, and is run in the
+container.
+
+The report is on stdout. Emacs's own messages are on stderr.

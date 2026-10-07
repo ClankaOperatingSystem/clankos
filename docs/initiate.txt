@@ -41,7 +41,10 @@ Initiation asks two things, each of which an option answers instead.
     the default. "committed" keeps it on disk and in the repository.
     "remote" has a keeper hold it, at an address the keeper's owners
     give; signing in to the keeper is done afterwards, with
-    "archive-integrity sign-in".
+    "archive-integrity sign-in". With either of these the week's
+    swept done items are sealed into the archive once the week
+    closes (docs/pos-sweep.txt); with "uncommitted" they are kept as
+    Org archive files under archive/orgmode.
 
 At a terminal it asks. Without one it takes the defaults for what no
 option answers. "--ask" makes it ask all the same, one answer to a
