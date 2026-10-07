@@ -14,7 +14,10 @@ misses things.
 
 startup-prompt prints four prompts, for the choice, and then views of
 the saved Org files, for what is waiting. It chooses nothing and writes
-nothing.
+nothing to the root. It does bring the index org-roam keeps of the
+root's Org files up to date, in the cache directory clankos-run
+mounts, so that every session leaves it current for the commands that
+read it, pos-dedupe among them.
 
 
 2. The prompts
