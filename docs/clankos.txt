@@ -42,7 +42,9 @@ it.
 
 Each is a script in the garden's bin/, run from the directory it is to
 work on. Run from a responsibility's directory, a command works on
-that responsibility.
+that responsibility. The scripts are links to what ClankOS installs in
+.clanka/auto/, which Git does not keep and each command brings to the
+image's own before it runs.
 
     initiate              make a Git repository a garden; run again,
                           add what a newer image has
@@ -59,6 +61,7 @@ that responsibility.
     archive-migrate       rebuild an archive that has a legacy ledger
     clankos-run           run a command in the image; the others call
                           it
+    clankos-run refresh   bring what ClankOS installs to the image's
     install.sh            pull the image
 
 

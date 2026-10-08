@@ -20,7 +20,7 @@ COPY lisp/ /usr/local/share/clankos/lisp/
 # poslib with warnings as errors; of emacsql, the files for SQLite,
 # since the others want servers the image has not. org-roam's manual
 # and tests are not kept.
-ARG POSLIB_COMMIT=7521d6195afbba4a4356b08a9f9a5a772051f66c
+ARG POSLIB_COMMIT=2709c13481752bb9ae3f2db0ef2ed5a4528a4a65
 ARG MARKDOWN_MODE_COMMIT=f5d520b3ee7722dd2231ab586ba51d8eb166e49b
 ARG YAML_COMMIT=5546f36bde24a9a8c1934e0f6ce205cd41d72537
 ARG COMPAT_COMMIT=90880f81419577e1d3f68424d2a3adf31e6d663e
@@ -65,11 +65,19 @@ RUN cd /usr/local/share/clankos \
         -f batch-byte-compile poslib/lisp/*.el \
     && rm -rf /root/.emacs.d
 
-# The commands, which bin/clankos-run starts through run; the scripts
-# that start them from a host, which initiate gives a garden; and the
+# The commands, which bin/clankos-run starts through run; and the
 # documents, which help prints.
 COPY libexec/ /usr/local/libexec/clankos/
-COPY bin/ /usr/local/share/clankos/bin/
 COPY docs/ /usr/local/share/clankos/docs/
+
+# The source: what refresh installs in a garden, which is the scripts
+# that start the commands from a host. Its version is a hash of what it
+# holds, so that it changes when they do and at no other time. bin is
+# where the web site's initiate.sh looks for clankos-run.
+COPY bin/ /usr/local/share/clankos/source/bin/
+RUN cd /usr/local/share/clankos \
+    && ln -s source/bin bin \
+    && (cd source && find bin -type f | LC_ALL=C sort | xargs sha256sum \
+        | sha256sum | cut -c1-16) > source/version
 
 CMD ["emacs", "--version"]

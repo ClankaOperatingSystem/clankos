@@ -47,8 +47,18 @@ question() {
     printf '%s\n' "${answer:-$2}"
 }
 
+case $bin in
+    ''|/*|*..*) refuse "not a directory in the repository: $bin" ;;
+esac
+
 if [ -n "$config" ]; then
     echo "kept      $config (this is a garden already)"
+    # A garden made before commands were links says where they go.
+    if ! grep -q '^bin:' "$config"; then
+        [ -z "$(tail -c 1 "$config")" ] || printf '\n' >> "$config"
+        printf 'bin: %s\n' "$bin" >> "$config"
+        echo "added     bin: $bin to $config"
+    fi
 else
     [ -n "$tag" ] || tag=$(question "The image: latest, which follows new versions, or a version to pin, such as v0.0.1" latest)
     case $tag in
@@ -72,7 +82,7 @@ else
     config=.clanka/config.yml
     mkdir -p .clanka
     {
-        printf 'pos: 2\nprojects: projects/\nimage: %s:%s\n' "$registry" "$tag"
+        printf 'pos: 2\nprojects: projects/\nimage: %s:%s\nbin: %s\n' "$registry" "$tag" "$bin"
         # The directories no command reads, written out so that a reader
         # of the file can see why; these are what poslib assumes when a
         # node declares none.
@@ -103,23 +113,6 @@ else
     echo "wrote     intray.org"
 fi
 
-# The scripts that start this image's commands, as the image has them.
-case $bin in
-    ''|/*|*..*) refuse "not a directory in the repository: $bin" ;;
-esac
-mkdir -p "$bin"
-for script in /usr/local/share/clankos/bin/*; do
-    name=${script##*/}
-    if [ ! -e "$bin/$name" ]; then
-        cp "$script" "$bin/$name" && chmod +x "$bin/$name"
-        echo "wrote     $bin/$name"
-    elif cmp -s "$script" "$bin/$name"; then
-        echo "kept      $bin/$name"
-    else
-        echo "kept      $bin/$name (it differs from the image's)"
-    fi
-done
-
 # AGENTS.md: one marked block, which sends its reader to the image's
 # own help. The file is made if it is missing; in a file that is there,
 # only the block is written, and what surrounds it is kept.
@@ -138,6 +131,12 @@ what a garden is and lists the commands. Run a command with \`--help\`
 before using it, and \`$bin/clankos-run help COMMAND\` for its protocol.
 These print what the garden's ClankOS image holds, so they describe
 the commands as they run here.
+
+The scripts in $bin/ are links ClankOS makes, and Git does not keep
+them. Where they are missing, as in a new clone, run this at the root
+of the repository, which makes them and changes nothing else:
+
+    sh -c "\$(curl -fsSL https://www.clankos.org/initiate.sh)"
 
 \`$bin/initiate\` writes this block. Write outside it.
 $end
@@ -185,6 +184,20 @@ emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
               (seq-doseq (f (alist-get (quote findings) plan))
                 (let-alist f (princ (format "finding   %s %s\n" .finding .path)))))' \
     || refuse "could not configure archive exclusions"
+
+# The scripts that start this image's commands: links in $bin to what
+# refresh installs beside the configuration.
+"$(dirname -- "$0")/refresh"
+installed=$?
+[ "$installed" -le 1 ] || refuse "could not install the commands"
+for script in /usr/local/share/clankos/source/bin/*; do
+    name=${script##*/}
+    if [ -L "$bin/$name" ]; then
+        echo "linked    $bin/$name"
+    else
+        echo "kept      $bin/$name (it is not ClankOS's link; rename or remove it)"
+    fi
+done
 
 if [ -n "$tree" ] && [ -n "$ask" ]; then
     "$(dirname -- "$0")/responsibility-tree" --ask || true

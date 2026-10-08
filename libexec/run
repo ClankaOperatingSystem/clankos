@@ -3,6 +3,10 @@
 # Run a ClankOS command inside the image. bin/clankos-run starts it.
 # CLANKOS_PROBE, when set, names a file the host saw in the workspace:
 # its absence here means the workspace was not shared with the container.
+# Before any command but help, initiate and refresh, refresh runs: what
+# ClankOS installs in the repository is brought to what this image
+# holds, and a name it cannot take is reported on stderr. initiate
+# does it itself, once there is a configuration.
 # Exit: the command's own, 126 workspace not visible, 127 no such command.
 if [ -n "${CLANKOS_PROBE:-}" ] && [ ! -e "$CLANKOS_PROBE" ]; then
     echo "clankos: the workspace is not visible in the container: $PWD" >&2
@@ -17,5 +21,9 @@ if [ -z "$command" ] || [ ! -x "$command" ]; then
     echo "clankos: no such command: ${1:-}" >&2
     exit 127
 fi
+case $1 in
+    help|initiate|refresh) ;;
+    *) "$(dirname -- "$0")/refresh" || true ;;
+esac
 shift
 exec "$command" "$@"
