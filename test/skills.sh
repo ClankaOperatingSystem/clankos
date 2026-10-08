@@ -43,4 +43,25 @@ mkdir -p .agents/skills/mine && printf '%s\n' '---' 'name: mine' 'description: M
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a skill of the garden's own is left alone" test -f .agents/skills/mine/SKILL.md -a ! -L .agents/skills/mine
 
+# A project that is a directory of the garden uses a methodology, hello,
+# whose skill and command are linked where they lie, in the project.
+mkdir -p projects/p/.clanka projects/p/methodologies/hello/skills/hello-greet projects/p/methodologies/hello/bin
+grep -q '^children:' .clanka/config.yml || printf 'children:\n' >> .clanka/config.yml
+printf '  - path: projects/p\n' >> .clanka/config.yml
+printf 'pos: 2\nmethodologies: methodologies\nbin: bin\nchildren:\n  - path: methodologies/hello\n' > projects/p/.clanka/config.yml
+printf '%s\n' '---' 'name: hello-greet' 'description: Greet.' '---' > projects/p/methodologies/hello/skills/hello-greet/SKILL.md
+printf '#!/bin/sh\necho Hello.\n' > projects/p/methodologies/hello/bin/hello-greet && chmod +x projects/p/methodologies/hello/bin/hello-greet
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a methodology's skill is linked in the project, where it lies" \
+    test "$(readlink projects/p/.agents/skills/hello-greet)" = ../../methodologies/hello/skills/hello-greet
+check "and its command, where the project says bin" \
+    test "$(readlink projects/p/bin/hello-greet)" = ../methodologies/hello/bin/hello-greet
+check "the project's .claude/skills finds it too" test -f projects/p/.claude/skills/hello-greet/SKILL.md
+check "nothing of the methodology is linked at the root" test ! -e .agents/skills/hello-greet
+check "Git keeps none of that either" \
+    sh -c '! git status --porcelain --untracked-files=all | grep -q "projects/p/\.agents\|projects/p/\.claude\|projects/p/bin"'
+mkdir -p projects/p/methodologies/hello/skills/greet && printf '%s\n' '---' 'name: greet' 'description: Bad.' '---' > projects/p/methodologies/hello/skills/greet/SKILL.md
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a skill named without the methodology's prefix is reported" grep -q 'methodology-refused' ../err
+
 [ "$failures" -eq 0 ]

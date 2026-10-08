@@ -13,13 +13,18 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     --eval '
 (let ((root (pop command-line-args-left))
       (source (pop command-line-args-left))
-      (taken 0))
+      (taken 0)
+      (refused 0))
   (condition-case err
       (seq-doseq (finding (alist-get (quote findings) (pos-tree-install root source)))
         (let-alist finding
-          (when (equal .finding "name-taken")
+          (cond
+           ((equal .finding "name-taken")
             (setq taken (1+ taken))
-            (message "clankos: name-taken %s (%s)" .path .detail))))
+            (message "clankos: name-taken %s (%s)" .path .detail))
+           ((equal .finding "methodology-refused")
+            (setq refused (1+ refused))
+            (message "clankos: methodology-refused %s (%s)" .path .detail)))))
     (pos-tree-refused
      (if (and (eq (nth 1 err) (quote failed))
               (string-match "\\`Cannot make a symbolic link at \\(.*\\): \\(.*\\)\\'"'"'"
@@ -44,6 +49,9 @@ permission to create them."
        (message "clankos: refresh: %s: %s" (nth 1 err) (nth 2 err))
        (kill-emacs 2))))
   (when (> taken 0)
-    (message "clankos: each holds a name ClankOS links to what it installs; rename or remove it")
+    (message "clankos: each holds a name ClankOS links to what it installs; rename or remove it"))
+  (when (> refused 0)
+    (message "clankos: each is a methodology with a skill not named after it; nothing of it is linked"))
+  (when (> (+ taken refused) 0)
     (kill-emacs 1)))' \
     "$root" /usr/local/share/clankos/source
