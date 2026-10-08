@@ -1,10 +1,10 @@
 #!/bin/sh
 # initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
-#          [--keeper URL] [--bin DIR] [--no-tree]
+#          [--keeper URL] [--root|--graft] [--bin DIR] [--no-tree]
 # Make the Git repository in the working directory a garden. The
 # protocol is docs/initiate.txt.
 usage() {
-    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--bin DIR] [--no-tree]" >&2
+    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--root|--graft] [--bin DIR] [--no-tree]" >&2
     exit 2
 }
 refuse() {
@@ -15,11 +15,13 @@ refuse() {
 registry=ghcr.io/clankaoperatingsystem/clankos
 ask=
 [ ! -t 0 ] || ask=1
-tag= archive= keeper= bin=bin tree=1
+tag= archive= keeper= place= bin=bin tree=1
 while [ $# -gt 0 ]; do
     case $1 in
         --ask) ask=1; shift ;;
         --no-tree) tree=; shift ;;
+        --root) place=root; shift ;;
+        --graft) place=graft; shift ;;
         --image) [ $# -ge 2 ] || usage; tag=$2; shift 2 ;;
         --archive) [ $# -ge 2 ] || usage; archive=$2; shift 2 ;;
         --keeper) [ $# -ge 2 ] || usage; keeper=$2; shift 2 ;;
@@ -47,8 +49,14 @@ question() {
     printf '%s\n' "${answer:-$2}"
 }
 
+# Whether this repository is the root of a garden or a responsibility
+# grafted into one. Only the root holds life.org. The parent is not
+# visible from the container, so the host's bin/initiate presets
+# --graft when it finds a configuration above this repository; the
+# question is for a repository cloned on its own.
 if [ -n "$config" ]; then
     echo "kept      $config (this is a garden already)"
+    [ -n "$place" ] || place=root
 else
     [ -n "$tag" ] || tag=$(question "The image: latest, which follows new versions, or a version to pin, such as v0.0.1" latest)
     case $tag in
@@ -67,6 +75,11 @@ else
                 *[[:space:]\"\'#]*) refuse "not an address: $keeper" ;;
             esac ;;
         *) refuse "the archive is kept committed, uncommitted or remote, not: $archive" ;;
+    esac
+    [ -n "$place" ] || place=$(question "This repository: the root of a garden, or a responsibility grafted into one (root or graft)" root)
+    case $place in
+        root|graft) ;;
+        *) refuse "a repository is the root of a garden or a graft, not: $place" ;;
     esac
 
     config=.clanka/config.yml
@@ -101,6 +114,30 @@ if [ -e intray.org ]; then
 else
     printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
     echo "wrote     intray.org"
+fi
+
+# life.org, at the root only: the person's purpose, vision and goals,
+# and the two reviews of the whole tree, a weekly and a four-weekly one
+# on the same weekday. The weekly is first due on the next Monday and
+# the four-weekly on the fourth weekly date, so that the first deep
+# pass follows three shallow ones. ++ keeps each on its cadence when a
+# review is late.
+if [ "$place" = graft ]; then
+    echo "skipped   life.org (a graft; the root's reviews the whole tree)"
+elif [ -e life.org ]; then
+    echo "kept      life.org"
+else
+    weekly=$(date -d "next monday" "+%Y-%m-%d %a")
+    monthly=$(date -d "next monday +21 days" "+%Y-%m-%d %a")
+    {
+        printf '#+TITLE: Life\n\n'
+        printf '* Purpose and principles\n\n* Vision\n\n* Goals\n\n* Reviews\n\n'
+        printf '** TODO Weekly review                                               :review:\n'
+        printf 'SCHEDULED: <%s ++1w>\n\n' "$weekly"
+        printf '** TODO Monthly review                                              :review:\n'
+        printf 'SCHEDULED: <%s ++4w>\n' "$monthly"
+    } > life.org
+    echo "wrote     life.org (reviews from $weekly)"
 fi
 
 # The scripts that start this image's commands, as the image has them.

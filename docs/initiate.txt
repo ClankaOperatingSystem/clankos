@@ -18,6 +18,9 @@ repository. What makes a repository a garden is small:
                          and, as the tree grows, what is declared
                          beneath it
     intray.org           where tasks are captured, under "Unsorted"
+    life.org             at the root only: the person's purpose and
+                         principles, vision and goals, and the two
+                         reviews of the whole tree
     bin/                 the scripts that start the commands
     .gitignore           directories beginning with an underscore are
                          working material and are never committed
@@ -30,7 +33,7 @@ and projects as they are needed (docs/responsibility-tree.txt).
 
 2. The questions
 
-Initiation asks two things, each of which an option answers instead.
+Initiation asks three things, each of which an option answers instead.
 
   - The image. "latest" follows each new version of ClankOS as it is
     published. A version, such as v0.0.1, is pinned: the garden's
@@ -45,6 +48,13 @@ Initiation asks two things, each of which an option answers instead.
     swept done items are sealed into the archive once the week
     closes (docs/pos-sweep.txt); with "uncommitted" they are kept as
     Org archive files under archive/orgmode.
+  - Root or graft. A repository is the root of a garden, which holds
+    life.org, or a responsibility grafted into one, which does not,
+    since the root's reviews cover the whole tree. The default is
+    root. The container sees this repository alone, so bin/initiate
+    on the host looks above it, as far as the repository that holds
+    this one: finding a garden's configuration, it answers graft.
+    "--root" and "--graft" answer it outright.
 
 At a terminal it asks. Without one it takes the defaults for what no
 option answers. "--ask" makes it ask all the same, one answer to a
@@ -59,6 +69,14 @@ Run at the root of a Git repository, it writes, in this order:
     has no entry, since that is what a configuration means by default;
   - in .gitignore, the line "_*/";
   - intray.org;
+  - at a root, life.org: headings for purpose and principles, vision
+    and goals, empty, and under Reviews two repeating review items on
+    the same weekday, a weekly one first due on the next Monday and a
+    four-weekly one first due on the fourth weekly date, so that the
+    first deep pass follows three shallow ones. Each has the ++
+    repeater, which keeps a late review on its cadence. The person
+    tunes a review by editing its item: the interval, the day, or
+    removing it. startup-prompt lists these under the root's reviews;
   - bin/, or the directory --bin names: each script the image has for
     starting its commands;
   - in AGENTS.md, one block between the lines
@@ -86,9 +104,11 @@ responsibility-tree unless --no-tree is given.
 4. Run again
 
 In a repository that already has a configuration, of either name,
-initiation keeps it and asks nothing. It adds the intray and each
-script that is missing, and writes the block in AGENTS.md. So it is
-also how a garden takes the scripts a newer image has added.
+initiation keeps it and asks nothing. It adds the intray, at a root
+life.org, and each script that is missing, and writes the block in
+AGENTS.md. So it is also how a garden takes the scripts and files a
+newer image has added. Root or graft is taken from the option, else
+from what the host found above the repository, else root.
 
 
 5. In the container

@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
     cat <<'HELP'
 Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
-                [--keeper URL] [--bin DIR] [--no-tree]
+                [--keeper URL] [--root|--graft] [--bin DIR] [--no-tree]
        initiate --help
 
 Make the Git repository in the working directory a garden, in the
@@ -21,15 +21,21 @@ from standard input.
                   default, on disk and ignored by Git; committed; or
                   remote, by a keeper
   --keeper URL    with --archive remote, the keeper's address
+  --root          this repository is the root of a garden, and holds
+                  life.org; the default unless a configuration is
+                  found above it
+  --graft         this repository is a responsibility grafted into a
+                  garden, and holds no life.org; preset when a
+                  configuration is found above it
   --bin DIR       where the scripts go; bin unless given
   --no-tree       do not go on to responsibility-tree
 
-Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
-scripts in bin/, as the image has them. Makes AGENTS.md, or in one
-that is there writes only its own marked block, which sends an agent
-to "clankos-run help". Updates the managed archive
-rules in Git's info/exclude from the saved configuration, including
-child scopes. Keeps existing configuration and content, and commits
+Writes .clanka/config.yml, intray.org, at a root life.org, lines in
+.gitignore, and the scripts in bin/, as the image has them. Makes
+AGENTS.md, or in one that is there writes only its own marked block,
+which sends an agent to "clankos-run help". Updates the managed
+archive rules in Git's info/exclude from the saved configuration,
+including child scopes. Keeps existing configuration and content, and commits
 nothing. In an existing garden it also adds what is missing.
 
 Exit: 0 done, 2 refused or usage; 125, 126 and 127 are clankos-run's.
@@ -39,4 +45,29 @@ HELP
 case "${1:-}" in
     help|-h|--help) usage; exit 0 ;;
 esac
+
+# Root or graft: the container sees this repository alone, so it is
+# the host that looks above it for a garden's configuration, as far as
+# the repository that holds this one: a graft lies in a garden's
+# repository, or in a responsibility of one. An explicit --root or
+# --graft is passed as given.
+place=
+for arg in "$@"; do
+    case $arg in
+        --root|--graft) place=$arg ;;
+    esac
+done
+if [ -z "$place" ]; then
+    dir=$(pwd -P)
+    while [ "$dir" != / ]; do
+        dir=$(dirname -- "$dir")
+        for file in .clanka/config.yml .clanka/config.yaml .pos/config.yml .pos/config.yaml; do
+            if [ -f "$dir/$file" ]; then
+                set -- --graft "$@"
+                break 2
+            fi
+        done
+        [ ! -e "$dir/.git" ] || break
+    done
+fi
 exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" initiate "$@"
