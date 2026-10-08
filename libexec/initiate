@@ -30,7 +30,7 @@ done
 
 [ -e .git ] || refuse "not the root of a Git repository: $PWD"
 config=
-for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos/config.yml .pos/config.yaml .pos/config.yml; do
     if [ -f "$file" ]; then
         [ -z "$config" ] || refuse "two configurations: $config, $file"
         config=$file

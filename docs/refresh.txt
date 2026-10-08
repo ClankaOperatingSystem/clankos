@@ -16,8 +16,9 @@ mounted responsibility's or project's, the source is installed:
     .clanka/auto/    a copy of the source. It is ClankOS's alone and is
                      replaced whole when the image's version is
                      another. What anyone else writes in it is lost.
-                     In a repository whose configuration is in .pos/,
-                     it is .pos/auto/
+                     In a repository whose configuration is in
+                     .clankos/ or .pos/, it is .clankos/auto/ or
+                     .pos/auto/
     bin/NAME         where the configuration says "bin: bin", a link to
                      each command in auto/bin/
     .agents/skills/NAME

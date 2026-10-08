@@ -20,7 +20,7 @@ COPY lisp/ /usr/local/share/clankos/lisp/
 # poslib with warnings as errors; of emacsql, the files for SQLite,
 # since the others want servers the image has not. org-roam's manual
 # and tests are not kept.
-ARG POSLIB_COMMIT=2709c13481752bb9ae3f2db0ef2ed5a4528a4a65
+ARG POSLIB_COMMIT=23d3ef20ec26bcbe95ac323629681079ade349c5
 ARG MARKDOWN_MODE_COMMIT=f5d520b3ee7722dd2231ab586ba51d8eb166e49b
 ARG YAML_COMMIT=5546f36bde24a9a8c1934e0f6ce205cd41d72537
 ARG COMPAT_COMMIT=90880f81419577e1d3f68424d2a3adf31e6d663e

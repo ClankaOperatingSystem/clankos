@@ -16,7 +16,7 @@ image has them.
 
 The workspace is the repository the working directory is in: the
 nearest directory, from the working directory upwards, that holds
-.git. Failing one, it is the nearest that holds .clanka or .pos, and
+.git. Failing one, it is the nearest that holds .clanka, .clankos or .pos, and
 failing all, the working directory. CLANKOS_WORKSPACE names it
 instead. It is mounted at its own path, and the command starts in the
 working directory, so paths mean the same inside the container as
@@ -36,7 +36,7 @@ that today is the same day inside as outside; failing both it is UTC.
 
 The image is the one CLANKOS_IMAGE names; failing that, the one a
 configuration pins, on its line "image: NAME" in .clanka/config.yaml,
-or config.yml, or the same in .pos: the nearest that has the line,
+or config.yml, or the same in .clankos or .pos: the nearest that has the line,
 from the working directory up to the workspace. Failing that, it is
 ghcr.io/clankaoperatingsystem/clankos:latest, which bin/install.sh
 installs.
@@ -71,7 +71,7 @@ else
     node=
     dir=$here
     while :; do
-        if [ -z "$node" ] && { [ -e "$dir/.clanka" ] || [ -e "$dir/.pos" ]; }; then
+        if [ -z "$node" ] && { [ -e "$dir/.clanka" ] || [ -e "$dir/.clankos" ] || [ -e "$dir/.pos" ]; }; then
             node=$dir
         fi
         if [ -e "$dir/.git" ]; then
@@ -96,7 +96,7 @@ image=${CLANKOS_IMAGE:-}
 dir=$here
 while :; do
     config=
-    for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+    for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos/config.yml .pos/config.yaml .pos/config.yml; do
         if [ -f "$dir/$file" ]; then
             if [ -n "$config" ]; then
                 echo "clankos-run: $dir has two configurations: $config, $file" >&2
