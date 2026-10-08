@@ -6,9 +6,18 @@ usage() {
 Usage: archive-integrity COMMAND ...
        archive-integrity --help
 
-Seal items into an archive and check archives, in the ClankOS
-container.
+Seal items into an archive, check archives and read what they hold,
+in the ClankOS container.
 "clankos-run help archive-integrity" prints the protocol.
+
+To seal: plan, save the plan as printed, read it, and apply it by its
+SHA-256.
+
+    archive-integrity seal notes/findings.org archives/findings.org > _seal/plan.json
+    archive-integrity apply _seal/plan.json HASH
+    archive-integrity check . && archive-integrity checkpoint .
+
+HASH is what sha256sum, or shasum -a 256, prints for the plan file.
 
   seal SOURCE DESTINATION [--apply]
       print the plan to seal SOURCE at DESTINATION, in an archive
@@ -26,6 +35,16 @@ container.
       bring each schema 2 ledger under ROOT to schema 3, once it is clean
   keep ROOT
       move to its keeper each archive under ROOT a keeper is to keep
+  recall ROOT
+      bring back from its keeper each archive under ROOT a keeper keeps
+  link PATH
+      print the ipfs:// link to PATH, a sealed path in an archive: the
+      citation a document uses for it
+  fetch LINK
+      print the bytes of the archived file LINK names, an ipfs:// link
+      with any path after the CID, from an archive of the working
+      directory or of a directory above it: on disk, or from its
+      keeper, checked against the CID
   sign-in URL
       sign in to the keeper at URL and keep the token for later
       commands. Prints an address to open in a browser on this

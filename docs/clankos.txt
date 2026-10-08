@@ -66,7 +66,26 @@ image's own before it runs.
     install.sh            pull the image
 
 
-3. Reading more
+3. The skills
+
+A coding agent finds ClankOS's skills in .agents/skills/ of a garden,
+and of each responsibility and project that is a repository of its
+own, so that a session has the same ones wherever in the tree it is
+started. Each is named clankos-NAME and says when a command is used
+and what to check; the command's --help says how.
+
+    clankos-start-up        open a session: what is waiting, and what
+                            to do
+    clankos-capture         add a task to the intray
+    clankos-seal            seal a record or evidence into an archive
+    clankos-read-evidence   read an archived file cited by ipfs://
+
+They are links to what is installed in .clanka/auto/, as the scripts
+are (docs/refresh.txt). A skill of the repository's own that is not
+ClankOS's is left alone.
+
+
+4. Reading more
 
     COMMAND --help              what the command takes, does and exits
                                 with
@@ -81,7 +100,7 @@ Both are the installed image's own, so they describe the commands as
 the garden runs them. A garden that pins an image reads that image's.
 
 
-4. Exit status
+5. Exit status
 
     0     printed
     2     no such document; those there are, are listed on stderr
