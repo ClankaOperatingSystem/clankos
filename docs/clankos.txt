@@ -25,8 +25,9 @@ repository.
                      beside them by which a change is noticed.
     review           a scheduled item tagged :review: in a scope's
                      file, of that scope: a project's, a
-                     responsibility's, or the root's two in life.org
-                     of the whole ("clankos-run help review").
+                     responsibility's, or the root's of the whole.
+                     :purpose: and :goal: mark what a review reads
+                     ("clankos-run help review").
 
 A task is an Org heading with a keyword. BACKLOG, TODO, NEXT, WIP and
 BLOCKED are open; DONE and CANCELLED are done. Dates are Org's
