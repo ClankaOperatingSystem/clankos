@@ -80,9 +80,11 @@ then the item. A view with no item says "(none)".
                          until it or since it. None is left out for
                          being far off.
     reviews              Review items late or scheduled in the next 7
-                         days: projects', then responsibilities'.
-    reviews-to-schedule  Active projects, then responsibilities, that
-                         have no review scheduled.
+                         days: projects', then responsibilities', then
+                         the root's, which review the whole tree.
+    reviews-to-schedule  Active projects, then responsibilities, then
+                         the root, named ".", that have no review
+                         scheduled.
     intray               Every open item under the heading "Unsorted"
                          in a file named intray.org, the root's and
                          each scope's: what pos-capture has added and
@@ -90,7 +92,8 @@ then the item. A view with no item says "(none)".
     all                  Every open item.
 
 A review item is an open heading tagged :review: with a scheduled
-date, in a file of the scope it reviews. An active project is one
+date, in a file of the scope it reviews; which file is the person's
+choice ("clankos-run help review"). An active project is one
 whose project file has, before its first heading, a STATUS property of
 COMMITTED or WIP, in a property drawer that begins the file:
 
