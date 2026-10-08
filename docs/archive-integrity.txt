@@ -102,7 +102,22 @@ A document cites a sealed file by its content, not by where it lies:
 
 A fetch that fails prints nothing and exits 1 or 2: the file could not
 be read, which is not to say that it is empty or was never sealed.
-fetch reads a file whose link is known. It does not search.
+fetch reads a file whose link is known. To find one, search:
+
+  - "search ROOT QUERY" prints each line QUERY is found on in the
+    archives under ROOT, as LINK:LINE:TEXT, grep's shape with a
+    citation in place of a path: the link fetch takes, the line's
+    number in the file, and the line. An archive on disk is searched
+    in the container and an archive a keeper keeps is searched by the
+    keeper, so the answer is the same wherever the files are.
+    "--mode regex" takes a POSIX extended regular expression, as
+    grep -E does; "--limit N" caps the hits; "--within CID" searches
+    beneath one sealed item, file or archive. Exit 0 with a hit, 1
+    with none, 2 refused.
+
+A search over an archive directory with grep finds nothing in an
+archive a keeper keeps, since its files are not on disk, and that is
+not evidence that no record exists. Search with the command.
 
 
 6. In the container

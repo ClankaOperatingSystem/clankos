@@ -25,6 +25,16 @@ check "check is clean" status 0 "$bin/archive-integrity" check .
 echo "Second." | "$bin/archive-integrity" write-new archives/2026-01-02-second.txt --apply >/dev/null
 check "write-new seals standard input" grep -q Second. archives/2026-01-02-second.txt
 
+link=$("$bin/archive-integrity" link archives/2026-01-02-second.txt)
+"$bin/archive-integrity" search . Second > found 2> err
+check "search prints each hit as LINK:LINE:TEXT" test "$(cat found)" = "$link:1:Second."
+check "search with a regex is grep -E's" \
+    sh -c "'$bin/archive-integrity' search . '^(A|Second)' --mode regex | grep -c . | grep -qx 2"
+check "search within one item sees that item alone" \
+    sh -c "'$bin/archive-integrity' search . note --within '${link#ipfs://}' >/dev/null; [ \$? -eq 1 ]"
+check "a search that finds nothing exits 1" status 1 "$bin/archive-integrity" search . nothing-of-the-kind
+check "a search in a mode the image lacks is refused" status 2 "$bin/archive-integrity" search . Second --mode words
+
 mkdir sub
 check "paths are relative to the working directory" \
     sh -c "cd sub && '$bin/archive-integrity' check ../archives >/dev/null"
