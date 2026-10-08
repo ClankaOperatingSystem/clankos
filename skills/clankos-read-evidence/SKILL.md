@@ -33,9 +33,10 @@ run in upwards, so run it in the scope whose document cites the link.
   read and go on without guessing its contents.
 - A keeper may need a sign-in, which opens a browser and is not for an
   agent to run. Say that it is needed.
-- This reads a file whose link is known. It does not search. Searching
-  the files on disk misses whatever a keeper holds, so say so when
-  coverage matters.
+- This reads a file whose link is known. To find a file by what it
+  says, use the clankos-search-evidence skill, which searches archives
+  on disk and at a keeper alike and cites each hit by a link this
+  reads.
 
 ## Afterwards
 

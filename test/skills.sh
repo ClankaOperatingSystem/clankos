@@ -38,6 +38,10 @@ check "run in a responsibility, it works on that responsibility" \
 check "a command that is not one is refused" status 127 .agents/skills/clankos-capture/scripts/clankos no-such-command
 check "the start-up skill's script prints the prompts" \
     sh -c ".agents/skills/clankos-start-up/scripts/clankos startup-prompt 2>/dev/null | grep -q 'START-UP PROMPTS'"
+echo "A sealed sentence." | .agents/skills/clankos-seal/scripts/clankos archive-integrity write-new archives/2026-01-01-sentence.txt --apply > ../out 2>&1
+check "the search skill's script finds a sealed line and cites it" \
+    sh -c ".agents/skills/clankos-search-evidence/scripts/clankos archive-integrity search . sealed | grep -q '^ipfs://[a-z0-9]*:1:A sealed sentence\.$'"
+check "the search skill says never to grep an archive" grep -q 'never with grep' "$repo/skills/clankos-search-evidence/SKILL.md"
 
 mkdir -p .agents/skills/mine && printf '%s\n' '---' 'name: mine' 'description: Mine.' '---' > .agents/skills/mine/SKILL.md
 "$bin/clankos-run" refresh > ../out 2> ../err

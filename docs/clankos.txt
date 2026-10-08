@@ -82,6 +82,8 @@ and what to check; the command's --help says how.
     clankos-capture         add a task to the intray
     clankos-seal            seal a record or evidence into an archive
     clankos-read-evidence   read an archived file cited by ipfs://
+    clankos-search-evidence find where words occur in the archives, on
+                            disk or kept, and cite each hit
 
 They are links to what is installed in .clanka/auto/, as the scripts
 are (docs/refresh.txt). A skill of the repository's own that is not
