@@ -23,6 +23,10 @@ repository.
                      later.
     archive          sealed records that never change, with a ledger
                      beside them by which a change is noticed.
+    review           a scheduled item tagged :review: in a scope's
+                     file, of that scope: a project's, a
+                     responsibility's, or the root's two in life.org
+                     of the whole ("clankos-run help review").
 
 A task is an Org heading with a keyword. BACKLOG, TODO, NEXT, WIP and
 BLOCKED are open; DONE and CANCELLED are done. Dates are Org's
@@ -64,6 +68,9 @@ that responsibility.
                                 with
     clankos-run help COMMAND    the command's protocol: what it reads
                                 and writes, and why
+    clankos-run help review     how a garden is reviewed: the three
+                                reviews, the weekly and four-weekly
+                                passes, and tuning them
     clankos-run help            this document
 
 Both are the installed image's own, so they describe the commands as

@@ -1,0 +1,141 @@
+review: how a garden is reviewed
+
+"clankos-run help review" prints this document from the ClankOS image
+the garden runs. A review is not a command: it is read and decided by
+the person, with the agent preparing what is to be read. The commands
+named here have protocols of their own.
+
+
+1. Three reviews, told by scope
+
+A review item is an open heading tagged :review: with a SCHEDULED
+date, in a file of the scope it reviews. What the review is of is the
+kind of that scope. No tag or property names a kind of review.
+
+    project          one project: its own file holds the item. Still
+                     wanted; outcome still right; next action true;
+                     review date right.
+    responsibility   an area and the projects under it: its Org
+                     entrance holds the item. Standard still met; the
+                     right projects running; nothing left dormant.
+    the whole        the root: the person, the practice and the tree.
+                     life.org holds two items, a weekly one and a
+                     four-weekly one (sections 4 and 5).
+
+A container's review includes its children's: a responsibility's
+review looks over its projects, and the root's over everything.
+
+Only the root reviews the whole. A repository grafted into a garden is
+a responsibility of that garden, and has no life.org
+(docs/initiate.txt).
+
+startup-prompt lists review items late or due in the next 7 days,
+projects', responsibilities' and the root's apart, and names each
+active project, responsibility and root that has none scheduled.
+
+
+2. Doing any review
+
+  - Read the scope: its Org files, and what startup-prompt lists for
+    it.
+  - Decide, and edit the files: keywords, dates, outcomes, next
+    actions. Capture what comes to mind with pos-capture rather than
+    holding it.
+  - Write what was found where it will be read again: in the project
+    file, the responsibility's entrance, or life.org. A note on the
+    review item itself goes into its LOGBOOK when it is marked done.
+  - Mark the item DONE. Its repeater moves the date forward; the next
+    review is scheduled by doing this one.
+  - A finding about ClankOS itself, a command that got in the way or
+    could do more, goes to an issue (section 7).
+
+
+3. A project or a responsibility
+
+A project's review asks whether the outcome is still wanted and still
+right; whether the next action is true, the one thing that would move
+it; whether the project is blocked, and on whom; and whether its review
+interval fits its pace. A project that has reached its outcome, or is
+no longer wanted, is closed: its outcome recorded, and the file's
+STATUS set to COMPLETE, or the file retired.
+
+A responsibility's review asks whether the standard it holds is still
+being met; whether the projects under it are the right ones, and
+whether any has gone quiet without being closed; whether something it
+should hold has no project; and whether its own interval fits. Its
+projects' reviews are not repeated here; they have their own items.
+
+
+4. The weekly review
+
+Fast and shallow: it keeps the inventory one that can be trusted. It
+is GTD's weekly review, in this garden's terms.
+
+    Get clear      Capture what is in the head and on loose paper with
+                   pos-capture. Empty the intray with pos-refile, each
+                   item placed or dropped. Retire the week's done items
+                   with pos-sweep.
+    Get current    Read startup-prompt. Every NEXT item is still the
+                   next thing. Scheduled items and deadlines are right.
+                   Every late review is done or rescheduled. Every
+                   active project and responsibility named as having
+                   no review gets one. Look back over the week's
+                   calendar for what it left behind, and forward for
+                   what is coming.
+    Get creative   Anything wanted but not committed to is written
+                   down, in the intray or where it belongs.
+
+Then mark the weekly item done.
+
+
+5. The four-weekly review
+
+Slower and deeper. It falls on the same weekday as the weekly review,
+once every four weeks, and is done in the same sitting after it. The
+weekly pass asks whether the system is in order; this pass asks
+whether the practice helps.
+
+  - Each responsibility's entrance, in turn: is the standard still
+    the right one, and is the tree of responsibilities still the shape
+    of the life?
+  - life.org: Goals, for the next year or two, against what the
+    projects are actually doing; Vision, further out; Purpose and
+    principles, whether what is being done serves them. Write here
+    what is found; the headings are empty until the person fills them.
+  - The practice itself, over the four weeks:
+        attention    was anything held in the head that should have
+                     been captured, or captured and lost?
+        trust        did what mattered surface in time, and did
+                     deferred things come back?
+        clarity      could work begin from a reminder without
+                     reconstructing it?
+        choice       did circumstances and purpose shape what was
+                     chosen, or only what was visible?
+        proportion   did the system cost more than it gave back?
+    An answer that points at ClankOS goes to an issue (section 7); one
+    that points at the practice goes into how the person works.
+
+Then mark the four-weekly item done.
+
+
+6. Tuning
+
+The person tunes a review by editing its item: the interval, the
+weekday, or removing the item. No configuration holds an interval.
+
+Each item written by initiate uses the ++ repeater, "++1w" and
+"++4w": a review done late is next due on its cadence, not a week
+from the day it was done ".+1w", and not left in the past "+1w". A
+longer horizon, quarterly or yearly, is one more item under Reviews in
+life.org, with a longer interval.
+
+
+7. Findings about ClankOS
+
+Any review may find that ClankOS got in the way or could do more. Such
+a finding is an issue on the repository concerned, at
+https://github.com/ClankaOperatingSystem: poslib for the Emacs
+commands and the formats, pyposlib for the Python library, clankos for
+the image, its scripts and these documents. A finding about the
+practice rather than the commands may also be raised there, as a
+question for the methodology pages.
