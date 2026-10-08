@@ -12,6 +12,7 @@ check "with no terminal it takes the defaults" \
     test "$(cat .clanka/config.yml)" = "pos: 2
 projects: projects/
 image: $registry:latest
+bin: bin
 exclude:
   - archives
   - attic
@@ -24,6 +25,12 @@ check "the intray has Unsorted" grep -qx '\* Unsorted' intray.org
 check "it gives the garden the image's scripts" \
     sh -c 'for s in archive-integrity clankos-run initiate pos-capture responsibility-tree startup-prompt; do [ -x "bin/$s" ] || exit 1; done'
 check "the scripts are those of this repository" cmp -s bin/clankos-run "$bin/clankos-run"
+check "each is a link to what is installed beside the configuration" \
+    test "$(readlink bin/clankos-run)" = ../.clanka/auto/bin/clankos-run
+check "what is installed names its version" test -s .clanka/auto/version
+check "Git keeps neither the links nor what is installed" \
+    sh -c '! git status --porcelain --untracked-files=all | grep -q "bin/\|\.clanka/auto"'
+check "and reports the links" grep -qx 'linked    bin/pos-capture' out
 check "it makes AGENTS.md, which sends an agent to help" \
     grep -qF 'run `bin/clankos-run help`' AGENTS.md
 check "and reports it" grep -qx 'wrote     AGENTS.md' out
@@ -35,11 +42,15 @@ rm out
 check "the garden's own capture works" sh -c "bin/pos-capture -- 'First task' >/dev/null 2>&1 && grep -q 'First task' intray.org"
 check "the garden's archive check is clean" status 0 bin/archive-integrity check .
 
+rm bin/pos-capture bin/startup-prompt
 echo "mine" > bin/pos-capture
 "$bin/initiate" --image v9 --archive committed < /dev/null > out 2>&1
 check "run again, the configuration is kept" grep -qxF "image: $registry:latest" .clanka/config.yml
-check "run again, a script that differs is kept" test "$(cat bin/pos-capture)" = mine
-check "and is reported" grep -q 'kept      bin/pos-capture (it differs' out
+check "run again, a link that is missing is made" test -L bin/startup-prompt
+check "run again, a file that has a script's name is kept" test "$(cat bin/pos-capture)" = mine
+check "and is reported" grep -q 'kept      bin/pos-capture (it is not ClankOS' out
+check "as a name taken" grep -qx 'clankos: name-taken bin/pos-capture (untracked)' out
+rm bin/pos-capture
 check "existing configuration wins over the archive option" git check-ignore -q archives/evidence
 check "run again, AGENTS.md is kept" grep -qx 'kept      AGENTS.md' out
 sed 's/^## ClankOS$/## An older block/' AGENTS.md > edited
@@ -72,6 +83,7 @@ check "options answer the questions" \
     test "$(cat .clanka/config.yml)" = "pos: 2
 projects: projects/
 image: $registry:v0.0.1
+bin: bin
 exclude:
   - archives
   - attic
@@ -97,14 +109,36 @@ cd ..
 mkdir asked && cd asked && git init -q .
 printf 'v0.0.1\ncommitted\nhealth\n\n\n\n' | "$bin/initiate" --ask >/dev/null 2>&1
 check "--ask reads the answers from standard input" \
-    test "$(sed -n '3p;10,12p' .clanka/config.yml | tr '\n' '|')" = "image: $registry:v0.0.1|archives:|  - scope: \".\"|    kept: committed|"
+    test "$(sed -n '3p;11,13p' .clanka/config.yml | tr '\n' '|')" = "image: $registry:v0.0.1|archives:|  - scope: \".\"|    kept: committed|"
 check "--ask goes on to the tree" test -f health/.clanka/config.yml
 cd ..
 
 mkdir elsewhere && cd elsewhere && git init -q . && mkdir tools
 "$bin/initiate" --bin tools < /dev/null >/dev/null 2>&1
 check "--bin names where the scripts go" test -x tools/clankos-run -a ! -e bin
+check "and the configuration says so" grep -qx 'bin: tools' .clanka/config.yml
 check "AGENTS.md names that directory" grep -qF 'run `tools/clankos-run help`' AGENTS.md
+cd ..
+
+# A garden made before the commands were links has no line that says
+# where they go, and copies of the scripts. A new clone has no links.
+mkdir older && cd older && git init -q . && mkdir -p .clanka bin
+printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+cp "$bin/pos-capture" bin/pos-capture
+git add . && git -c user.name=Test -c user.email=test@example.org commit -qm 'An older garden'
+"$bin/initiate" --no-tree < /dev/null > out 2>&1
+check "an older garden is told where its links go" grep -qx 'bin: bin' .clanka/config.yml
+check "its copy of a script is kept and reported, with its commit" \
+    grep -q '^clankos: name-taken bin/pos-capture (tracked, added in [0-9a-f]*)$' out
+check "its other scripts are linked" test -L bin/clankos-run
+git rm -q bin/pos-capture
+git add . && git -c user.name=Test -c user.email=test@example.org commit -qm 'Take the links'
+git clone -q . ../cloned
+cd ../cloned
+check "a new clone has no links" test ! -e bin/clankos-run
+"$bin/initiate" --no-tree < /dev/null > ../out 2>&1
+check "initiate, run in a clone, makes them" test -L bin/clankos-run -a -L bin/pos-capture
+check "and changes nothing Git keeps" test -z "$(git status --porcelain)"
 cd ..
 
 mkdir plain

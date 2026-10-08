@@ -48,7 +48,10 @@ rm before
 check "a name that climbs is refused, and the rest done" \
     sh -c "'$bin/responsibility-tree' --responsibility ../out --responsibility play >/dev/null 2>&1; [ \$? -eq 1 ] && test -d play && test ! -e ../out"
 
-(cd work && "$bin/responsibility-tree" --responsibility clients >/dev/null 2>&1)
+printf 'image: example.org/clankos:v9\n' >> work/.clanka/config.yml
+(cd work && CLANKOS_IMAGE=${CLANKOS_IMAGE:-} "$bin/responsibility-tree" --responsibility clients >/dev/null 2>&1)
+check "a new responsibility names the image its container runs" \
+    grep -qx 'image: example.org/clankos:v9' work/clients/.clanka/config.yml
 check "run in a responsibility, it adds beneath that one" \
     sh -c "test -f work/clients/.clanka/config.yml && grep -qx '  - path: clients' work/.clanka/config.yml"
 check "a nested responsibility's archive is ignored" git check-ignore -q work/clients/archives/evidence

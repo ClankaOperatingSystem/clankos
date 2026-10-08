@@ -15,7 +15,8 @@ At a terminal with no option, and with --ask, it asks for each in
 turn until an empty answer.
 
   --responsibility NAME   make the directory NAME with a configuration
-                          and an intray, and declare it
+                          and an intray, and declare it; it runs the
+                          image this garden runs
   --project NAME          make the one-file project NAME.org where the
                           garden's projects belong
   --product PATH=REMOTE   declare the repository at REMOTE as mounted
@@ -33,17 +34,4 @@ HELP
 case "${1:-}" in
     help|-h|--help) usage; exit 0 ;;
 esac
-# A directory scope shares its repository's Git metadata. Mount that
-# repository so archive rules can be updated when invoked in a child.
-runner="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run"
-if [ -z "${CLANKOS_WORKSPACE:-}" ]; then
-    # Keep the image selected by the current scope before widening the mount.
-    if [ -z "${CLANKOS_IMAGE:-}" ]; then
-        selection=$("$runner" --show)
-        CLANKOS_IMAGE=$(printf '%s\n' "$selection" | sed -n 's/^image //p')
-        export CLANKOS_IMAGE
-    fi
-    CLANKOS_WORKSPACE=$(git rev-parse --show-toplevel) || exit 2
-    export CLANKOS_WORKSPACE
-fi
-exec "$runner" responsibility-tree "$@"
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" responsibility-tree "$@"

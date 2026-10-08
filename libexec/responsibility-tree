@@ -65,13 +65,28 @@ declare_child() {
         "$1" > "$1.new" && cat "$1.new" > "$1" && rm -f "$1.new"
 }
 
+# The image this node runs: that of the nearest configuration that
+# names one, from the working directory up to its repository's root.
+image=
+dir=$PWD
+top=$(git rev-parse --show-toplevel 2>/dev/null) || top=$PWD
+while :; do
+    found=$(config_of "$dir")
+    [ -z "$found" ] || image=$(sed -n 's/^image: \([^ ]*\)$/\1/p' "$found" | head -n 1)
+    [ -z "$image" ] && [ "$dir" != "$top" ] && [ "$dir" != / ] || break
+    dir=$(dirname -- "$dir")
+done
+
 add_responsibility() {
     name_ok "$1" || { echo "not a name: $1" >&2; return 1; }
     if [ -e "$1/.clanka" ] || [ -e "$1/.pos" ]; then
         echo "kept      $1/ (it has a configuration)"
     else
         mkdir -p "$1/.clanka"
-        printf 'pos: 2\nprojects: projects/\n' > "$1/.clanka/config.yml"
+        {
+            printf 'pos: 2\nprojects: projects/\n'
+            [ -z "$image" ] || printf 'image: %s\n' "$image"
+        } > "$1/.clanka/config.yml"
         echo "wrote     $1/.clanka/config.yml"
     fi
     if [ -e "$1/intray.org" ]; then

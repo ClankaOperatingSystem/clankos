@@ -1,0 +1,49 @@
+#!/bin/sh
+# refresh
+# Bring what ClankOS installs in the repository the working directory
+# is in to what this image holds. The protocol is docs/refresh.txt.
+# Exit: 0 done, 1 a name is taken, 2 usage, 3 a link cannot be made.
+if [ $# -ne 0 ]; then
+    echo "Usage: refresh" >&2
+    exit 2
+fi
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
+    --eval '
+(let ((root (pop command-line-args-left))
+      (source (pop command-line-args-left))
+      (taken 0))
+  (condition-case err
+      (seq-doseq (finding (alist-get (quote findings) (pos-tree-install root source)))
+        (let-alist finding
+          (when (equal .finding "name-taken")
+            (setq taken (1+ taken))
+            (message "clankos: name-taken %s (%s)" .path .detail))))
+    (pos-tree-refused
+     (if (and (eq (nth 1 err) (quote failed))
+              (string-match "\\`Cannot make a symbolic link at \\(.*\\): \\(.*\\)\\'"'"'"
+                            (nth 2 err)))
+         (progn
+           (message "clankos: cannot make a symbolic link at %s: %s
+
+ClankOS installs its skills as symbolic links, and this file system
+refused to make one. No skills were installed.
+
+Unix-like systems have had symbolic links since 1983. A system that
+cannot make one, or forbids you to make one without special
+privileges, is restricting what you may do with your own files.
+
+You deserve a system that respects your freedom. Run ClankOS on
+one where you control your computer and links work, such as
+GNU/Linux. If you must stay where you are for now, keep the garden
+on a file system that supports symbolic links, and grant yourself
+permission to create them."
+                    (match-string 1 (nth 2 err)) (match-string 2 (nth 2 err)))
+           (kill-emacs 3))
+       (message "clankos: refresh: %s: %s" (nth 1 err) (nth 2 err))
+       (kill-emacs 2))))
+  (when (> taken 0)
+    (message "clankos: each holds a name ClankOS links to what it installs; rename or remove it")
+    (kill-emacs 1)))' \
+    "$root" /usr/local/share/clankos/source

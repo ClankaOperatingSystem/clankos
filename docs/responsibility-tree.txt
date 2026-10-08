@@ -32,8 +32,9 @@ responsibility. To add beneath one of its responsibilities, it is run
 in that directory.
 
   - A responsibility NAME. The directory NAME is made, with
-    .clanka/config.yml saying its projects belong in projects/, and
-    intray.org. Its path is added to this garden's children.
+    .clanka/config.yml saying its projects belong in projects/ and
+    naming the image this garden runs, and intray.org. Its path is
+    added to this garden's children.
   - A project NAME. The file NAME.org is made where this garden's
     projects belong, with a title and headings for its outcome and
     tasks. Making the file is the commitment, and nothing declares it:
@@ -53,8 +54,7 @@ Afterwards poslib updates the owning repository's managed archive
 rules in Git's info/exclude, using each scope's own archive policy.
 This includes newly created responsibilities, whose archives default
 to uncommitted. Other ignore rules and already tracked files stay as
-they are. When run in a directory scope, the container mounts the
-owning Git repository so that its ignore rules are available.
+they are.
 
 A project that needs more than one file is given a directory and a
 configuration of its own. This command does not do that.

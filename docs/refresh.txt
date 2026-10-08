@@ -1,0 +1,81 @@
+refresh: keeping what ClankOS installs in a repository current
+
+refresh runs this protocol in the ClankOS container. poslib's
+doc/pos-directory.txt, section 6, defines what is installed, and the
+operation is its "install":
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What is installed
+
+The image holds a source: the scripts that start its commands, and its
+skills, with a version that changes when any of them does. In a
+repository that has a configuration at its root, a garden's or a
+mounted responsibility's or project's, the source is installed:
+
+    .clanka/auto/    a copy of the source. It is ClankOS's alone and is
+                     replaced whole when the image's version is
+                     another. What anyone else writes in it is lost.
+                     In a repository whose configuration is in .pos/,
+                     it is .pos/auto/
+    bin/NAME         where the configuration says "bin: bin", a link to
+                     each command in auto/bin/
+    .agents/skills/NAME
+                     a link to each skill in auto/skills/
+
+All of it is untracked, its paths in Git's info/exclude. So a new
+clone has none of it until a command or initiate has run there.
+
+A repository with no configuration is a product. Nothing is written in
+it.
+
+
+2. When it runs
+
+Every command but help runs refresh first, in the repository the
+working directory is in, so that a garden whose image is newer than
+what it has installed is brought to that image without being asked.
+initiate runs it once it has written the configuration. "clankos-run
+refresh" runs it alone.
+
+It uses no network and clones nothing. It also brings to the same
+state each configured repository mounted beneath the one it runs in.
+
+
+3. A name that is taken
+
+Where a link is to be made and something else has the name, a file, a
+directory or another link, refresh leaves it as it is and says so on
+stderr, with whether Git tracks it and the commit that added it:
+
+    clankos: name-taken bin/pos-capture (tracked, added in 1a2b3c4)
+
+It says so before every command, until the name is free: a coding
+agent may take what has the name for ClankOS's skill. The other links
+are made. A garden made by an earlier image has copies of the scripts
+in bin/, which are reported in this way; removing them lets the links
+be made.
+
+Where .claude/skills is an ordinary directory, the skill links are
+made there as well as in .agents/skills/, with a note,
+README.clankos, proposing that the directory's skills be moved to
+.agents/skills/ and the directory replaced by a link.
+
+
+4. Where links cannot be made
+
+On a file system that refuses a symbolic link, refresh says so, and
+nothing is linked. The command it ran before goes on.
+
+
+5. Exit status
+
+    0     done, or not in a Git repository
+    1     a name is taken
+    2     usage, or poslib refused
+    3     a link cannot be made
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
+
+Run before another command, its status is not that command's.

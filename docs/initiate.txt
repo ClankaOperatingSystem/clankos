@@ -18,7 +18,9 @@ repository. What makes a repository a garden is small:
                          and, as the tree grows, what is declared
                          beneath it
     intray.org           where tasks are captured, under "Unsorted"
-    bin/                 the scripts that start the commands
+    bin/                 links to the scripts that start the
+                         commands, which ClankOS installs in
+                         .clanka/auto/ and Git does not keep
     .gitignore           directories beginning with an underscore are
                          working material and are never committed
     AGENTS.md            a block that tells an agent this is a garden
@@ -59,8 +61,10 @@ Run at the root of a Git repository, it writes, in this order:
     has no entry, since that is what a configuration means by default;
   - in .gitignore, the line "_*/";
   - intray.org;
-  - bin/, or the directory --bin names: each script the image has for
-    starting its commands;
+  - .clanka/auto/, and in bin/, or the directory --bin names, a link
+    to each script the image has for starting its commands
+    (docs/refresh.txt). The configuration says where the links go, on
+    its line "bin: bin";
   - in AGENTS.md, one block between the lines
     "<!-- clankos: begin -->" and "<!-- clankos: end -->". The file is
     made if it is missing. In a file that is there, the block is added
@@ -74,8 +78,9 @@ Run at the root of a Git repository, it writes, in this order:
 It updates the managed archive block from the saved configuration,
 including in an existing garden. Other ignore rules and already
 tracked files stay as they are. Existing files are kept and reported,
-scripts that differ from the image's among them; of an existing
-AGENTS.md, all but the block is kept. It commits nothing: the diff is
+among them a file in bin/ that has the name of one of the image's
+scripts and is not its link; of an existing AGENTS.md, all but the
+block is kept. It commits nothing: the diff is
 read, and the commit made, by whoever ran it.
 
 It then has poslib read the configuration, and is refused if poslib
@@ -86,9 +91,11 @@ responsibility-tree unless --no-tree is given.
 4. Run again
 
 In a repository that already has a configuration, of either name,
-initiation keeps it and asks nothing. It adds the intray and each
-script that is missing, and writes the block in AGENTS.md. So it is
-also how a garden takes the scripts a newer image has added.
+initiation keeps it and asks nothing, adding only the line that says
+where the links to the scripts go if it has none. It adds the intray,
+installs the image's scripts and makes each link that is missing, and
+writes the block in AGENTS.md. So it is how a new clone of a garden,
+which has no links, is given them.
 
 
 5. In the container
