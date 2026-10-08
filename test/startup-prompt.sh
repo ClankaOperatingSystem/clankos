@@ -9,10 +9,17 @@ day() {
     date -d "$1 days" +%Y-%m-%d 2>/dev/null || date -v"$(printf '%+d' "$1")"d +%Y-%m-%d
 }
 
-mkdir -p .pos projects/alpha projects/beta responsibilities/home/.clanka responsibilities/garden/.clanka \
-    archives _tmp drafts
-# The root excludes a directory of its own besides the default ones.
-printf 'pos: 2\nprojects: projects/\nexclude:\n  - archives\n  - attic\n  - node_modules\n  - "_*"\n  - ".*"\n  - drafts\n' > .pos/config.yaml
+mkdir -p .pos projects/alpha projects/beta/.clanka projects/beta/methodologies/adr \
+    responsibilities/home/.clanka responsibilities/garden/.clanka archives _tmp drafts
+# The root excludes a directory of its own besides the default ones, and
+# declares beta, a project that is a directory with a configuration.
+printf 'pos: 2\nprojects: projects/\nexclude:\n  - archives\n  - attic\n  - node_modules\n  - "_*"\n  - ".*"\n  - drafts\nchildren:\n  - path: projects/beta\n' > .pos/config.yaml
+# beta uses a methodology, adr, which declares two kinds of canon and
+# holds an Org file of its own, which is not beta's.
+printf 'pos: 2\nmethodologies: methodologies\nchildren:\n  - path: methodologies/adr\n' > projects/beta/.clanka/config.yml
+printf 'methodology: 1\ncanon:\n  - kind: decision\n    at: decisions/\n    format: markdown\n    entrance: decisions/index.json\n  - kind: decision-index\n    at: decisions/index.json\n    format: json\n    derived: true\n' \
+    > projects/beta/methodologies/adr/methodology.yaml
+printf '* NEXT Inside the methodology\n' > projects/beta/methodologies/adr/README.org
 # A responsibility is known by its configuration, not by the name of
 # the directory holding it.
 printf 'pos: 2\nprojects: projects/\n' > responsibilities/home/.clanka/config.yml
@@ -44,6 +51,11 @@ check "next lists a NEXT item by its scope" grep -q '^  alpha  *NEXT Draft the o
 check "an archive is not read" sh -c '! grep -q Archived out'
 check "an underscore directory is not read" sh -c '! grep -q Generated out'
 check "a directory the configuration excludes is not read" sh -c '! grep -q Drafted out'
+check "a methodology's own file is not read" sh -c '! grep -q "Inside the methodology" out'
+check "the kinds a methodology declares are listed, with where to start" \
+    grep -q '^  projects/beta  *adr  *decision  *decisions/  *start at decisions/index.json$' out
+check "and a derived kind with its own file as its entrance" \
+    grep -q '^  projects/beta  *adr  *decision-index  *decisions/index.json  *start at decisions/index.json$' out
 check "scheduled lists an item in the horizon" grep -q '^  beta  *Scheduled:  *TODO Book the room$' out
 check "deadlines lists one beyond its warning" grep -q '^  beta  *Due in  40 days:  *TODO File the return$' out
 check "a review scheduled yesterday is one day late" \

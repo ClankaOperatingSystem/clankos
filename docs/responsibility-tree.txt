@@ -20,6 +20,11 @@ path. What is at the path says what it is:
     a configuration that names where methodologies belong      a project
     no configuration                                           a product
 
+and a path directly beneath a project's methodologies path is a
+methodology, whatever is there: a directory or a repository that
+supplies the project skills and commands, as poslib's
+doc/pos-directory.txt section 6 and doc/pos-methodology.txt have it.
+
 No folder name carries meaning, with one convention: a responsibility
 keeps its one-file projects where its configuration says they belong,
 which is projects/.

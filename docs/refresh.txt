@@ -63,6 +63,20 @@ README.clankos, proposing that the directory's skills be moved to
 .agents/skills/ and the directory replaced by a link.
 
 
+4. A project's methodologies
+
+A project's methodologies, each declared directly beneath its
+methodologies path, supply skills and commands the same way, by links
+to them where they lie, with nothing copied: poslib's
+doc/pos-directory.txt, section 6. The links are made in the project,
+at its repository's root beside the image's links when it is a
+repository, and in its own directory when it is a directory of one. A
+methodology whose skill is not named with the methodology's name and
+a hyphen is left out and said so on stderr, until it is renamed:
+
+    clankos: methodology-refused projects/p/methodologies/hello (a skill not named hello-NAME: greet)
+
+
 4. Where links cannot be made
 
 On a file system that refuses a symbolic link, refresh says so, and

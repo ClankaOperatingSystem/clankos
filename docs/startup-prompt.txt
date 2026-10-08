@@ -59,6 +59,17 @@ responsibility, and is not listed as one. A configuration that is
 refused is named after the count of files, as "Not read", and nothing
 beneath it is read.
 
+A methodology a project uses (poslib's doc/pos-methodology.txt) is not
+read: its own files are not the project's. Where it declares kinds of
+canon it maintains in the project, decision records in Markdown say,
+the report lists them after the count of files, one line per kind:
+
+    Canon of other kinds, not read:
+      PROJECT  METHODOLOGY  KIND  AT  start at ENTRANCE
+
+so that a session knows what the views do not cover and where to start
+reading it. Nothing of those kinds is in any view.
+
 The keywords are poslib's one sequence: BACKLOG, TODO, NEXT, WIP and
 BLOCKED are open; DONE and CANCELLED are done. A done item is in no
 view.
