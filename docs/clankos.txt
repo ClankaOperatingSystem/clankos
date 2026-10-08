@@ -55,6 +55,9 @@ image's own before it runs.
                           belong, and stranded tasks into it
     pos-dedupe            resolve tasks written more than once
     pos-sweep             retire the week's done items into the archive
+    pos-lint              report what is wrong in the Org files, and
+                          run the checks a project's methodologies
+                          supply
     startup-prompt        print what a session opens with: what is
                           next, dated, due, to be reviewed, and
                           captured and not yet placed

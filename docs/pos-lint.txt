@@ -1,0 +1,62 @@
+pos-lint: what is wrong in the Org files, and a methodology's checks
+
+bin/pos-lint runs this protocol in the ClankOS container. The command
+is poslib's pos-lint, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What is checked
+
+The working directory is the root. The files are the corpus poslib's
+doc/pos-directory.txt describes: every Org file under the root but
+those in the directories the configuration excludes, and those of a
+repository mounted within the tree, which that repository's own lint
+reports.
+
+Each file is checked for:
+
+  - a done entry, DONE or CANCELLED, with an open entry beneath it,
+    which the sweep would leave behind;
+  - a heading that starts with a retired keyword, one not in poslib's
+    sequence;
+  - a #+TODO line, which would give the file a sequence of its own;
+  - a copy of a task that dedupe has merged and not yet removed.
+
+Then the whole tree, for:
+
+  - an open task outside any file the sweep retires from;
+  - a task heading written in more than one file, each copy naming
+    the others.
+
+Then each methodology a project of the tree uses (poslib's
+doc/pos-methodology.txt): each check its declaration names is run in
+the project, and what it prints is reported among the findings.
+
+
+2. Findings
+
+One line each, sorted by file and then line:
+
+    FILE:LINE: MESSAGE
+
+FILE is relative to the root. A check's finding is as the check printed
+it, FILE made relative to the root; a line a check printed that is not
+of that form is a finding at the project; a check that exited 2 is a
+finding at the methodology, with what it printed on stderr. A
+declaration the lint cannot read, and a check named that the
+methodology's bin/ does not hold, are each a finding at the
+methodology.
+
+Nothing is changed, and nothing is written to the root.
+
+
+3. In the container
+
+The command runs in the working directory's repository, mounted at its
+own path. The root's pos-config.el is loaded if there is one. A
+methodology's check runs with the project as its working directory, as
+a program of the image: a check that needs what the image lacks exits
+2 and is reported so.
+
+Exit: 0 nothing to report, 1 findings, 2 usage, 255 an Emacs error, its
+message on stderr.

@@ -1,0 +1,8 @@
+#!/bin/sh
+# pos-lint
+# The protocol is docs/pos-lint.txt.
+[ $# -eq 0 ] || {
+    echo "Usage: pos-lint" >&2
+    exit 2
+}
+exec "$(dirname -- "$0")/pos-emacs" -f pos-lint-batch
