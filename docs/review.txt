@@ -6,7 +6,37 @@ the person, with the agent preparing what is to be read. The commands
 named here have protocols of their own.
 
 
-1. Three reviews, told by scope
+1. What a review reads, and how it is marked
+
+No file name carries meaning. The commands read every Org file of a
+scope, and what a heading is for is told by its tag, its keyword and
+its dates. The one exception is intray.org, the file pos-capture
+writes to.
+
+    :review:    a scheduled, repeating item: the occasion on which the
+                scope it lies in is reviewed. Marking it done
+                schedules the next.
+    :purpose:   what the scope is for, and the standard it holds. A
+                responsibility's purpose is read at its review and at
+                the root's.
+    :goal:      something the scope is working towards. Two kinds, told
+                by the keyword: a heading with a TODO keyword is a goal
+                that can be reached, and is marked DONE when it is,
+                with a DEADLINE if it has a date; a heading with no
+                keyword is a goal that is held, never done, which the
+                reachable ones serve.
+
+A goal links down to the projects and repeating tasks that advance it.
+Nothing links up. A review finds what the links leave out: a goal with
+no live project under it, an active project no goal names.
+
+A project is told by its file's STATUS (docs/responsibility-tree.txt)
+and needs no tag. A task is told by its keyword. A repeating task with
+a LOGBOOK is a habit; a :habit: tag may come later, so that a review
+can report how often it is kept.
+
+
+2. Three reviews, told by scope
 
 A review item is an open heading tagged :review: with a SCHEDULED
 date, in a file of the scope it reviews. What the review is of is the
@@ -15,58 +45,66 @@ kind of that scope. No tag or property names a kind of review.
     project          one project: its own file holds the item. Still
                      wanted; outcome still right; next action true;
                      review date right.
-    responsibility   an area and the projects under it: its Org
-                     entrance holds the item. Standard still met; the
-                     right projects running; nothing left dormant.
+    responsibility   an area and the projects under it: a file of the
+                     responsibility holds the item. Purpose still
+                     held; goals still wanted; the right projects
+                     running; nothing left dormant.
     the whole        the root: the person, the practice and the tree.
-                     life.org holds two items, a weekly one and a
-                     four-weekly one (sections 4 and 5).
+                     Two items, a weekly one and a four-weekly one
+                     (sections 5 and 6), in a file of the root.
 
 A container's review includes its children's: a responsibility's
 review looks over its projects, and the root's over everything.
 
 Only the root reviews the whole. A repository grafted into a garden is
-a responsibility of that garden, and has no life.org
-(docs/initiate.txt).
+a responsibility of that garden, and its reviews are a
+responsibility's.
 
 startup-prompt lists review items late or due in the next 7 days,
 projects', responsibilities' and the root's apart, and names each
-active project, responsibility and root that has none scheduled.
+active project, responsibility and root that has none scheduled. A
+new garden has none: the person writes the root's two items, in
+whichever file of the root they choose, as section 7 shows.
 
 
-2. Doing any review
+3. Doing any review
 
   - Read the scope: its Org files, and what startup-prompt lists for
     it.
   - Decide, and edit the files: keywords, dates, outcomes, next
-    actions. Capture what comes to mind with pos-capture rather than
-    holding it.
+    actions, goals. Capture what comes to mind with pos-capture rather
+    than holding it.
   - Write what was found where it will be read again: in the project
-    file, the responsibility's entrance, or life.org. A note on the
+    file, or beside the scope's purpose and goals. A note on the
     review item itself goes into its LOGBOOK when it is marked done.
   - Mark the item DONE. Its repeater moves the date forward; the next
     review is scheduled by doing this one.
   - A finding about ClankOS itself, a command that got in the way or
-    could do more, goes to an issue (section 7).
+    could do more, goes to an issue (section 8).
 
 
-3. A project or a responsibility
+4. A project or a responsibility
 
 A project's review asks whether the outcome is still wanted and still
 right; whether the next action is true, the one thing that would move
-it; whether the project is blocked, and on whom; and whether its review
-interval fits its pace. A project that has reached its outcome, or is
-no longer wanted, is closed: its outcome recorded, and the file's
-STATUS set to COMPLETE, or the file retired.
+it; whether the project is blocked, and on whom; which goal it
+advances; and whether its review interval fits its pace. A project
+that has reached its outcome, or is no longer wanted, is closed: its
+outcome recorded, and the file's STATUS set to COMPLETE, or the file
+retired.
 
-A responsibility's review asks whether the standard it holds is still
-being met; whether the projects under it are the right ones, and
-whether any has gone quiet without being closed; whether something it
-should hold has no project; and whether its own interval fits. Its
-projects' reviews are not repeated here; they have their own items.
+A responsibility's review asks whether its purpose is still the one
+held; whether each held goal is still wanted and each reachable goal
+is advancing, or reached; whether the projects under it are the right
+ones, and whether any has gone quiet without being closed; whether a
+goal has no project advancing it, or a project advances no goal; and
+whether its own interval fits. A responsibility may hold a review on
+someone else's cadence as well as its own, such as an employer's
+quarterly conversation, and each is its own item. Its projects'
+reviews are not repeated here; they have their own items.
 
 
-4. The weekly review
+5. The weekly review
 
 Fast and shallow: it keeps the inventory one that can be trusted. It
 is GTD's weekly review, in this garden's terms.
@@ -85,23 +123,25 @@ is GTD's weekly review, in this garden's terms.
     Get creative   Anything wanted but not committed to is written
                    down, in the intray or where it belongs.
 
-Then mark the weekly item done.
+Then mark the weekly item done. The daily review is reading
+startup-prompt; it needs no item.
 
 
-5. The four-weekly review
+6. The four-weekly review
 
 Slower and deeper. It falls on the same weekday as the weekly review,
 once every four weeks, and is done in the same sitting after it. The
 weekly pass asks whether the system is in order; this pass asks
 whether the practice helps.
 
-  - Each responsibility's entrance, in turn: is the standard still
-    the right one, and is the tree of responsibilities still the shape
-    of the life?
-  - life.org: Goals, for the next year or two, against what the
-    projects are actually doing; Vision, further out; Purpose and
-    principles, whether what is being done serves them. Write here
-    what is found; the headings are empty until the person fills them.
+  - Each responsibility's purpose and goals, in turn: is the purpose
+    still the right one, is each goal still wanted or advancing, and
+    is the tree of responsibilities still the shape of the life?
+  - The root's own goals, against what the projects are actually
+    doing; and the root's purpose, whether what is being done serves
+    it. Write here what is found.
+  - What has gone quiet: a scope whose swept done items have thinned
+    over the four weeks, and was not meant to rest.
   - The practice itself, over the four weeks:
         attention    was anything held in the head that should have
                      been captured, or captured and lost?
@@ -112,25 +152,40 @@ whether the practice helps.
         choice       did circumstances and purpose shape what was
                      chosen, or only what was visible?
         proportion   did the system cost more than it gave back?
-    An answer that points at ClankOS goes to an issue (section 7); one
+    An answer that points at ClankOS goes to an issue (section 8); one
     that points at the practice goes into how the person works.
 
 Then mark the four-weekly item done.
 
 
-6. Tuning
+7. Writing and tuning the items
+
+The root's two items, in any Org file of the root, on the same
+weekday:
+
+    * Reviews
+
+    ** TODO Weekly review                                     :review:
+    SCHEDULED: <2026-10-12 Mon ++1w>
+
+    ** TODO Monthly review                                    :review:
+    SCHEDULED: <2026-11-02 Mon ++4w>
+
+The four-weekly one is first due on the fourth weekly date, so that
+the first deep pass follows three shallow ones. A responsibility's
+item is the same, in a file of the responsibility, at its own
+interval.
 
 The person tunes a review by editing its item: the interval, the
 weekday, or removing the item. No configuration holds an interval.
 
-Each item written by initiate uses the ++ repeater, "++1w" and
-"++4w": a review done late is next due on its cadence, not a week
-from the day it was done ".+1w", and not left in the past "+1w". A
-longer horizon, quarterly or yearly, is one more item under Reviews in
-life.org, with a longer interval.
+Each uses the ++ repeater: a review done late is next due on its
+cadence, not a week from the day it was done ".+1w", and not left in
+the past "+1w". A longer horizon, quarterly or yearly, is one more
+item with a longer interval.
 
 
-7. Findings about ClankOS
+8. Findings about ClankOS
 
 Any review may find that ClankOS got in the way or could do more. Such
 a finding is an issue on the repository concerned, at
