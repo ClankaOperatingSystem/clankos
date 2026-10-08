@@ -54,7 +54,9 @@ Afterwards poslib updates the owning repository's managed archive
 rules in Git's info/exclude, using each scope's own archive policy.
 This includes newly created responsibilities, whose archives default
 to uncommitted. Other ignore rules and already tracked files stay as
-they are.
+they are. What ClankOS installs is then brought up to date
+(docs/refresh.txt), so that a responsibility or project just declared,
+whose repository is there, has the commands and skills.
 
 A project that needs more than one file is given a directory and a
 configuration of its own. This command does not do that.

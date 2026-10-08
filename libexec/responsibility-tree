@@ -176,6 +176,10 @@ if [ -n "$ask" ]; then
     done
 fi
 
+# What is declared now may be a repository that was not a moment ago,
+# when refresh ran before this command: install in it too.
+"$(dirname -- "$0")/refresh" || true
+
 # The owning repository holds the ignore rules, even when run in a child.
 tree_root=$(git rev-parse --show-toplevel) || refuse "not in a Git repository"
 # Apply archive rules only, then report what the tree still needs.

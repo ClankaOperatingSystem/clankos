@@ -132,9 +132,13 @@ before using it, and \`$bin/clankos-run help COMMAND\` for its protocol.
 These print what the garden's ClankOS image holds, so they describe
 the commands as they run here.
 
-The scripts in $bin/ are links ClankOS makes, and Git does not keep
-them. Where they are missing, as in a new clone, run this at the root
-of the repository, which makes them and changes nothing else:
+ClankOS's skills are in .agents/skills/, each named clankos-NAME. Each
+says when one of the commands is used and what to check.
+
+The scripts in $bin/ and those skills are links ClankOS makes, and Git
+does not keep them. Where they are missing, as in a new clone, run
+this at the root of the repository, which makes them and changes
+nothing else:
 
     sh -c "\$(curl -fsSL https://www.clankos.org/initiate.sh)"
 

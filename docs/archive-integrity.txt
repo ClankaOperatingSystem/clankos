@@ -75,6 +75,8 @@ copy of its events. The ledger stays in the workspace.
   - "keep ROOT" sends to its keeper each archive under ROOT that is to
     be kept by one, and removes the archive from disk once the keeper
     holds the ledger's head.
+  - "recall ROOT" brings back to disk each archive under ROOT that a
+    keeper keeps.
   - "sign-in URL" signs a person in to the keeper at URL. No other
     command opens a browser or asks anyone to sign in.
 
@@ -84,7 +86,26 @@ when it is about to expire; else none. POS_ARCHIVE_OFFLINE, set to
 anything, makes check ask no keeper.
 
 
-5. In the container
+5. Citing and reading
+
+A document cites a sealed file by its content, not by where it lies:
+
+  - "link PATH" prints the ipfs:// link to PATH, a sealed path in an
+    archive. A file is ipfs://CID. A file in an item sealed as a
+    directory is ipfs://CID/PATH, the CID being the directory's.
+  - "fetch LINK" prints the bytes of the file LINK names. The archive
+    is looked for in the working directory and then in each directory
+    above it. The file is read from disk, or from the archive's keeper
+    when a keeper keeps it, and bytes from a keeper are checked
+    against the CID. A CID that names a directory cannot be fetched:
+    one of its files is, by its path.
+
+A fetch that fails prints nothing and exits 1 or 2: the file could not
+be read, which is not to say that it is empty or was never sealed.
+fetch reads a file whose link is known. It does not search.
+
+
+6. In the container
 
 bin/archive-integrity gives its arguments to bin/clankos-run, which
 starts the container.
@@ -104,7 +125,7 @@ starts the container.
     the host, which every command's container mounts.
 
 
-6. Exit status
+7. Exit status
 
     0     done, or clean
     1     findings

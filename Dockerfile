@@ -71,13 +71,15 @@ COPY libexec/ /usr/local/libexec/clankos/
 COPY docs/ /usr/local/share/clankos/docs/
 
 # The source: what refresh installs in a garden, which is the scripts
-# that start the commands from a host. Its version is a hash of what it
-# holds, so that it changes when they do and at no other time. bin is
-# where the web site's initiate.sh looks for clankos-run.
+# that start the commands from a host, and the skills. Its version is a
+# hash of what it holds, so that it changes when they do and at no
+# other time. bin is where the web site's initiate.sh looks for
+# clankos-run.
 COPY bin/ /usr/local/share/clankos/source/bin/
+COPY skills/ /usr/local/share/clankos/source/skills/
 RUN cd /usr/local/share/clankos \
     && ln -s source/bin bin \
-    && (cd source && find bin -type f | LC_ALL=C sort | xargs sha256sum \
+    && (cd source && find bin skills -type f | LC_ALL=C sort | xargs sha256sum \
         | sha256sum | cut -c1-16) > source/version
 
 CMD ["emacs", "--version"]
