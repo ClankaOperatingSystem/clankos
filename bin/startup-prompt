@@ -11,6 +11,7 @@ Org files under the working directory, in the ClankOS container.
 "clankos-run help startup-prompt" prints the protocol.
 
   next                 every NEXT item
+  waiting              every WAITING item
   scheduled            items scheduled in the next 14 days, or late
   deadlines            every open deadline, however far off
   reviews              reviews late or due in the next 7 days, projects'

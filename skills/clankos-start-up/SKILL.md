@@ -14,8 +14,8 @@ Run the script by its path in this skill's directory, without changing
 directory: it reads the Org files beneath the directory it is run in,
 so run in a responsibility it shows that responsibility's work.
 
-It prints four prompts, then what is next, scheduled, due, to be
-reviewed, and captured and not yet placed. `scripts/clankos
+It prints four prompts, then what is next, waited for, scheduled, due,
+to be reviewed, and captured and not yet placed. `scripts/clankos
 startup-prompt --help` describes each view and `--view NAME`.
 
 ## What to get right
