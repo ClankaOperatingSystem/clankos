@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-lint
+       pos-lint --help
+
+Report what is wrong in the working directory's Org files, and run the
+checks its projects' methodologies supply, in the ClankOS container.
+"clankos-run help pos-lint" prints the protocol.
+
+Each finding is one line, FILE:LINE: MESSAGE, FILE relative to the
+working directory. Nothing is changed.
+
+Exit: 0 nothing to report, 1 findings, 2 usage, 255 Emacs error, its
+message on stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    '') ;;
+    help|-h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-lint
