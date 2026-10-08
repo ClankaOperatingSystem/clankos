@@ -25,6 +25,9 @@ printf ':PROPERTIES:\n:STATUS:   WIP\n:END:\n* TODO Book the room\nSCHEDULED: <%
     "$(day 5)" "$(day 40)" > projects/beta/project.org
 printf '* TODO Review the home :review:\nSCHEDULED: <%s>\n' "$(day 0)" > responsibilities/home/index.org
 printf '* TODO Prune the hedge\n' > responsibilities/garden/index.org
+# The root's reviews, in a file of the root's own naming.
+printf '* Reviews\n** TODO Weekly review :review:\nSCHEDULED: <%s ++1w>\n** TODO Monthly review :review:\nSCHEDULED: <%s ++4w>\n' \
+    "$(day 2)" "$(day 23)" > life.org
 printf '* NEXT Archived\n' > archives/old.org
 printf '* NEXT Generated\n' > _tmp/scratch.org
 # A responsibility and a project as responsibility-tree makes them.
@@ -36,7 +39,7 @@ find . -type f ! -name before | sort > before
 
 "$bin/startup-prompt" > out 2>/dev/null
 check "the prompts come first" test "$(head -1 out)" = "START-UP PROMPTS"
-check "the files read are counted" grep -q '^Files read: 7$' out
+check "the files read are counted" grep -q '^Files read: 8$' out
 check "next lists a NEXT item by its scope" grep -q '^  alpha  *NEXT Draft the outline$' out
 check "an archive is not read" sh -c '! grep -q Archived out'
 check "an underscore directory is not read" sh -c '! grep -q Generated out'
@@ -50,6 +53,11 @@ check "a review scheduled today is not late" \
 check "an active project with no review is named" grep -q '^  projects/beta  *WIP$' out
 check "a project with a review is not" sh -c '! grep -q "^  projects/alpha " out'
 check "a responsibility with no review is named" grep -q '^  responsibilities/garden$' out
+check "the root's reviews are listed as the root's" \
+    sh -c "grep -A2 '^Root reviews, late or due in the next 7 days\$' out | grep -q '^  life  *Scheduled:  *TODO Weekly review\$'"
+check "a root review beyond the window is not" sh -c '! grep -q "Monthly review" out'
+check "a root with a review is not named" \
+    sh -c "grep -A1 '^Root with a review to be scheduled\$' out | grep -q '^  (none)\$'"
 check "a responsibility is known by its configuration" grep -q '^  health$' out
 check "a project made by responsibility-tree is named" grep -q '^  health/projects/checkup  *COMMITTED$' out
 check "the intray lists what is captured, by its scope" \
