@@ -19,11 +19,12 @@ protocol.
   apply [--dry-run] [FILE]
       archive the done entries of each file marked sweep in FILE
   close [--apply]
-      print the seal plans of the swept weeks that have closed, for a
-      scope whose sweep is sealed; with --apply, seal them
+      print the seal plans of the swept weeks before the one being
+      swept, for a scope whose sweep is sealed; with --apply, seal
+      them
 
-FILE is sweep.org in the working directory unless given. --dry-run
-reports and changes nothing. The files are those the configuration
+FILE is sweep.org in the working directory unless given. --dry-run,
+before or after FILE, reports and changes nothing. The files are those the configuration
 allows, in the working directory's own repository.
 
 Exit: 0 done, 2 usage or a refusal, 255 Emacs error, its message on

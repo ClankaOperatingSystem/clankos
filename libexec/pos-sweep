@@ -8,8 +8,8 @@ usage() {
 emacs=$(dirname -- "$0")/pos-emacs
 case ${1:-} in
     plan) [ $# -le 2 ] || usage ;;
-    apply)
-        if [ "${2:-}" = --dry-run ]; then [ $# -le 3 ] || usage; else [ $# -le 2 ] || usage; fi ;;
+    # poslib reads --dry-run before or after FILE and refuses the rest.
+    apply) [ $# -le 3 ] || usage ;;
     close) [ $# -eq 1 ] || [ "${2:-}" = --apply ] && [ $# -le 2 ] || usage ;;
     *) usage ;;
 esac
