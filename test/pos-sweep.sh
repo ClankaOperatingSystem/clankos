@@ -24,6 +24,12 @@ check "plan changes no file" grep -q 'DONE Buy milk' intray.org
 "$bin/pos-sweep" apply --dry-run > out 2>/dev/null
 check "an apply dry run reports" grep -q '^Would sweep .*: archived 2, skipped 1' out
 check "an apply dry run changes nothing" grep -q 'DONE Buy milk' intray.org
+"$bin/pos-sweep" apply sweep.org --dry-run > out 2>/dev/null
+check "a dry run is read after the plan's name" grep -q '^Would sweep .*: archived 2, skipped 1' out
+check "and changes nothing" grep -q 'DONE Buy milk' intray.org
+check "another option after apply is usage" status 2 "$bin/pos-sweep" apply sweep.org --dryrun
+check "the plan carries a digest of each file's done entries" \
+    grep -q '^| sweep *| intray.org *| *1 *| [^|]* *| [0-9a-f]\{12\} *|$' sweep.org
 
 # The review: leave the project's file alone.
 sed -i.bak 's/^| sweep *| projects/| skip | projects/' sweep.org && rm -f sweep.org.bak

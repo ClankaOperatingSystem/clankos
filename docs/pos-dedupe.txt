@@ -53,7 +53,8 @@ and hidden and underscore directories are not in it.
 
 The report counts the groups resolved, the copies merged, the links
 relinked, the groups skipped as undecided, the groups with a copy the
-root may not write, which are left alone, the copies already gone,
+root may not write, or with a dropped ID linked from a file it may
+not write, which are left alone, the copies already gone,
 and the groups whose copies are no longer at their lines. A copy is
 found by its file, line and heading as the plan recorded them: if the
 files have changed since, its group is not resolved, and a new plan is

@@ -25,10 +25,10 @@ entry of the nearest configuration at or above it that has a sweep:
              or archive/orgmode: one directory for each ISO week, one
              file for each source, named by the source's path within
              the scope with _archive appended
-    sealed   the same files beneath _sweep/ in the scope; once the
-             week has closed, the week's directory is sealed into the
-             scope's archive at sweep/WEEK, on disk or with the
-             scope's keeper, as its archive is kept
+    sealed   the same files beneath _sweep/ in the scope; once
+             sweeps no longer write into a week's directory, it is
+             sealed into the scope's archive at sweep/WEEK, on disk
+             or with the scope's keeper, as its archive is kept
 
 A scope with no entry that says is retired by the nearest above it;
 with none anywhere, weekly beneath the root at archive/orgmode.
@@ -42,22 +42,24 @@ local time. A run before Sunday 23:00 sweeps the week before.
   - Plan. "plan [FILE]" writes FILE, an Org file titled with the week,
     with one table row for each file that has done entries:
 
-        | act   | file          | done | destination                               |
-        | sweep | intray.org    |    3 | archive/orgmode/2026-W40/intray.org_archive |
-        | skip  | work/todo.org |    0 | archive/orgmode/2026-W40/work/todo.org_archive |
+        | act   | file          | done | destination                                    | entries      |
+        | sweep | intray.org    |    3 | archive/orgmode/2026-W40/intray.org_archive    | 3f1c0a9d7b21 |
+        | skip  | work/todo.org |    0 | archive/orgmode/2026-W40/work/todo.org_archive |              |
 
     done counts the entries that would be archived, each with its
-    subtree. A file whose only done entries have open entries beneath
-    them is "skip" with 0, and those entries are named below the
-    table. Nothing is changed.
+    subtree, and entries is a digest of their text, which an apply
+    holds the file to. A file whose only done entries have open
+    entries beneath them is "skip" with 0, and those entries are
+    named below the table. Nothing is changed.
   - Review. A person or an agent edits act: "sweep" to archive the
     file's done entries, "skip" or "?" to leave the file.
   - Apply. "apply [FILE]" archives the done entries of each file marked
     sweep to its destination, each stamped with the week's boundary as
-    its ARCHIVE_TIME, and saves the files. A file whose count of done
-    entries differs from the plan's is left, as stale: it changed
-    since the review, and a new plan is needed. "apply --dry-run"
-    reports what it would do.
+    its ARCHIVE_TIME, and saves the files. A file whose done entries
+    are not the ones the plan showed, by their count or their digest,
+    is left, as stale: it changed since the review, and a new plan is
+    needed. "apply --dry-run" reports what it would do; the flag goes
+    before or after FILE, and any other option is usage.
 
 The report counts the entries archived, the entries that stayed for
 an open child, the files left as not sweep, and the files stale.
@@ -68,8 +70,9 @@ FILE is sweep.org in the root unless given.
 3. Closing a week
 
 For a scope whose sweep is sealed, "close" prints, as JSON, the seal
-plan of each week beneath its _sweep/ that is before the current
-week: the directory sealed into the scope's archive at sweep/WEEK,
+plan of each week beneath its _sweep/ that is before the week being
+swept, whose directory still takes sweeps until the next Sunday
+23:00: the directory sealed into the scope's archive at sweep/WEEK,
 as poslib's doc/formats.org specifies a seal. It changes nothing.
 "close --apply" seals them, each under the hash of its own plan, and
 prints each event written; a scope kept by a keeper sends the week
