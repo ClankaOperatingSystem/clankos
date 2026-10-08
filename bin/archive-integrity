@@ -45,6 +45,12 @@ HASH is what sha256sum, or shasum -a 256, prints for the plan file.
       with any path after the CID, from an archive of the working
       directory or of a directory above it: on disk, or from its
       keeper, checked against the CID
+  search ROOT QUERY [--mode MODE] [--limit N] [--within CID]
+      print each line QUERY is found on in the archives under ROOT, on
+      disk or at their keepers, as LINK:LINE:TEXT: grep's shape, with
+      the citation fetch takes in place of a path. MODE is literal or
+      regex; N caps the hits; CID restricts the search to what is
+      beneath one sealed item, file or archive. Exit 1 with no hit
   sign-in URL
       sign in to the keeper at URL and keep the token for later
       commands. Prints an address to open in a browser on this
