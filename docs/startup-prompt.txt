@@ -70,9 +70,9 @@ the report lists them after the count of files, one line per kind:
 so that a session knows what the views do not cover and where to start
 reading it. Nothing of those kinds is in any view.
 
-The keywords are poslib's one sequence: BACKLOG, TODO, NEXT, WIP and
-BLOCKED are open; DONE and CANCELLED are done. A done item is in no
-view.
+The keywords are poslib's one sequence: BACKLOG, TODO, NEXT, WIP,
+BLOCKED and WAITING are open; DONE and CANCELLED are done. A done item
+is in no view.
 
 After the prompts, "Files read: N" says how many files were read.
 
@@ -83,6 +83,7 @@ Each view is a title, then one line for each item: the item's scope,
 then the item. A view with no item says "(none)".
 
     next                 Every item whose keyword is NEXT.
+    waiting              Every item whose keyword is WAITING.
     scheduled            Items scheduled in the next 14 days, under
                          their dates, and those scheduled earlier and
                          still open, as late. Reviews and deadlines
