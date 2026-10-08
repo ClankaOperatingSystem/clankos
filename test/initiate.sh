@@ -76,6 +76,13 @@ check "a changed child policy removes its generated exclusion" sh -c '! git chec
 check "the evidence is kept" grep -qx evidence work/archives/evidence
 cd ..
 
+mkdir held && cd held && git init -q . && mkdir .clankos
+printf 'pos: 2\nprojects: projects/\n' > .clankos/config.yml
+"$bin/initiate" --no-tree < /dev/null > out 2>&1
+check "a configuration in .clankos makes this a garden already" grep -q '^kept      .clankos/config.yml' out
+check "and no second one is written" test ! -e .clanka
+cd ..
+
 mkdir pinned && cd pinned && git init -q . && printf 'node_modules/' > .gitignore
 printf '# Rules of this repository\n\nNever commit to master.' > AGENTS.md
 "$bin/initiate" --image v0.0.1 --archive remote --keeper https://keeper.example/ledgers/a < /dev/null > out 2>&1

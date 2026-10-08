@@ -90,7 +90,7 @@ responsibility-tree unless --no-tree is given.
 
 4. Run again
 
-In a repository that already has a configuration, of either name,
+In a repository that already has a configuration, of any of its names,
 initiation keeps it and asks nothing, adding only the line that says
 where the links to the scripts go if it has none. It adds the intray,
 installs the image's scripts and makes each link that is missing, and

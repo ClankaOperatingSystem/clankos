@@ -13,7 +13,7 @@ refuse() {
 }
 
 config=
-for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos/config.yml .pos/config.yaml .pos/config.yml; do
     if [ -f "$file" ]; then
         [ -z "$config" ] || refuse "two configurations: $config, $file"
         config=$file
@@ -43,7 +43,7 @@ path_ok() {
 
 # config_of DIR: the configuration file of the node at DIR, or nothing.
 config_of() {
-    for file in .clanka/config.yaml .clanka/config.yml .pos/config.yaml .pos/config.yml; do
+    for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos/config.yml .pos/config.yaml .pos/config.yml; do
         if [ -f "$1/$file" ]; then
             printf '%s\n' "$1/$file"
             return
@@ -79,7 +79,7 @@ done
 
 add_responsibility() {
     name_ok "$1" || { echo "not a name: $1" >&2; return 1; }
-    if [ -e "$1/.clanka" ] || [ -e "$1/.pos" ]; then
+    if [ -e "$1/.clanka" ] || [ -e "$1/.clankos" ] || [ -e "$1/.pos" ]; then
         echo "kept      $1/ (it has a configuration)"
     else
         mkdir -p "$1/.clanka"
