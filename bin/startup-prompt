@@ -12,6 +12,7 @@ Org files under the working directory, in the ClankOS container.
 
   next                 every NEXT item
   waiting              every WAITING item
+  someday              every SOMEDAY item: not committed to
   scheduled            items scheduled in the next 14 days, or late
   deadlines            every open deadline, however far off
   reviews              reviews late or due in the next 7 days, projects'
@@ -22,8 +23,8 @@ Org files under the working directory, in the ClankOS container.
                        captured and not yet placed
   all                  every TODO item
 
-With no --view, every view but all is printed. --view NAME, repeated,
-prints the prompts and those views only.
+With no --view, every view but someday and all is printed. --view
+NAME, repeated, prints the prompts and those views only.
 
 Reads; writes nothing. The files are those the configuration allows:
 not the excluded directories, archives and attics by default. The
