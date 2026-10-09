@@ -29,8 +29,8 @@ repository.
                      :purpose: and :goal: mark what a review reads
                      ("clankos-run help review").
 
-A task is an Org heading with a keyword. BACKLOG, TODO, NEXT, WIP,
-BLOCKED and WAITING are open; DONE and CANCELLED are done. Dates are Org's
+A task is an Org heading with a keyword. TODO, NEXT, WAITING and SOMEDAY
+are open; DONE and CANCELLED are done. Dates are Org's
 SCHEDULED and DEADLINE. The commands below capture tasks, move them
 and report them. Keywords, dates and tags are edited in the Org files.
 

@@ -31,7 +31,7 @@ printf ':PROPERTIES:\n:STATUS:   COMMITTED\n:END:\n* NEXT Draft the outline\n* T
 printf ':PROPERTIES:\n:STATUS:   WIP\n:END:\n* TODO Book the room\nSCHEDULED: <%s>\n* TODO File the return\nDEADLINE: <%s -3d>\n' \
     "$(day 5)" "$(day 40)" > projects/beta/project.org
 printf '* TODO Review the home :review:\nSCHEDULED: <%s>\n' "$(day 0)" > home/index.org
-printf '* TODO Prune the hedge\n* WAITING Hear from the roofer\n' > garden/index.org
+printf '* TODO Prune the hedge\n* WAITING Hear from the roofer\n* SOMEDAY Learn to weld\n' > garden/index.org
 # The root's reviews, in a file of the root's own naming.
 printf '* Reviews\n** TODO Weekly review :review:\nSCHEDULED: <%s ++1w>\n** TODO Monthly review :review:\nSCHEDULED: <%s ++4w>\n' \
     "$(day 2)" "$(day 23)" > life.org
@@ -50,6 +50,7 @@ check "the files read are counted" grep -q '^Files read: 8$' out
 check "next lists a NEXT item by its scope" grep -q '^  alpha  *NEXT Draft the outline$' out
 check "waiting lists a WAITING item by its scope" \
     sh -c "grep -A1 '^WAITING items\$' out | grep -q '^  garden/index  *WAITING Hear from the roofer\$'"
+check "someday is not printed unless named" sh -c '! grep -q "^SOMEDAY items" out'
 check "an archive is not read" sh -c '! grep -q Archived out'
 check "an underscore directory is not read" sh -c '! grep -q Generated out'
 check "a directory the configuration excludes is not read" sh -c '! grep -q Drafted out'
@@ -85,6 +86,9 @@ check "--view prints only the views named" sh -c '! grep -q "^NEXT items" all'
 
 rm -f out all
 check "nothing is written" sh -c 'find . -type f ! -name before | sort | diff - before'
+"$bin/startup-prompt" --view someday > someday 2>/dev/null
+check "--view someday lists a SOMEDAY item by its scope" \
+    sh -c "grep -A1 '^SOMEDAY items\$' someday | grep -q '^  garden/index  *SOMEDAY Learn to weld\$'"
 check "an unknown view is usage" status 2 "$bin/startup-prompt" --view bogus
 
 [ "$failures" -eq 0 ]
