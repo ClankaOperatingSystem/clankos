@@ -10,7 +10,7 @@ day() {
 }
 
 mkdir -p .pos projects/alpha projects/beta/.clanka projects/beta/methodologies/adr \
-    responsibilities/home/.clanka responsibilities/garden/.clanka archives _tmp drafts
+    home/.clanka garden/.clanka archives _tmp drafts
 # The root excludes a directory of its own besides the default ones, and
 # declares beta, a project that is a directory with a configuration.
 printf 'pos: 2\nprojects: projects/\nexclude:\n  - archives\n  - attic\n  - node_modules\n  - "_*"\n  - ".*"\n  - drafts\nchildren:\n  - path: projects/beta\n' > .pos/config.yaml
@@ -22,16 +22,16 @@ printf 'methodology: 1\ncanon:\n  - kind: decision\n    at: decisions/\n    form
 printf '* NEXT Inside the methodology\n' > projects/beta/methodologies/adr/README.org
 # A responsibility is known by its configuration, not by the name of
 # the directory holding it.
-printf 'pos: 2\nprojects: projects/\n' > responsibilities/home/.clanka/config.yml
-printf 'pos: 2\nprojects: projects/\n' > responsibilities/garden/.clanka/config.yml
+printf 'pos: 2\nprojects: projects/\n' > home/.clanka/config.yml
+printf 'pos: 2\nprojects: projects/\n' > garden/.clanka/config.yml
 printf '* NEXT Drafted\n' > drafts/d.org
 printf '* Unsorted\n** NEXT Answer the letter\n' > intray.org
 printf ':PROPERTIES:\n:STATUS:   COMMITTED\n:END:\n* NEXT Draft the outline\n* TODO Review Alpha :review:\nSCHEDULED: <%s>\n' \
     "$(day -1)" > projects/alpha/project.org
 printf ':PROPERTIES:\n:STATUS:   WIP\n:END:\n* TODO Book the room\nSCHEDULED: <%s>\n* TODO File the return\nDEADLINE: <%s -3d>\n' \
     "$(day 5)" "$(day 40)" > projects/beta/project.org
-printf '* TODO Review the home :review:\nSCHEDULED: <%s>\n' "$(day 0)" > responsibilities/home/index.org
-printf '* TODO Prune the hedge\n* WAITING Hear from the roofer\n' > responsibilities/garden/index.org
+printf '* TODO Review the home :review:\nSCHEDULED: <%s>\n' "$(day 0)" > home/index.org
+printf '* TODO Prune the hedge\n* WAITING Hear from the roofer\n' > garden/index.org
 # The root's reviews, in a file of the root's own naming.
 printf '* Reviews\n** TODO Weekly review :review:\nSCHEDULED: <%s ++1w>\n** TODO Monthly review :review:\nSCHEDULED: <%s ++4w>\n' \
     "$(day 2)" "$(day 23)" > life.org
@@ -49,7 +49,7 @@ check "the prompts come first" test "$(head -1 out)" = "START-UP PROMPTS"
 check "the files read are counted" grep -q '^Files read: 8$' out
 check "next lists a NEXT item by its scope" grep -q '^  alpha  *NEXT Draft the outline$' out
 check "waiting lists a WAITING item by its scope" \
-    sh -c "grep -A1 '^WAITING items\$' out | grep -q '^  responsibilities/garden/index  *WAITING Hear from the roofer\$'"
+    sh -c "grep -A1 '^WAITING items\$' out | grep -q '^  garden/index  *WAITING Hear from the roofer\$'"
 check "an archive is not read" sh -c '! grep -q Archived out'
 check "an underscore directory is not read" sh -c '! grep -q Generated out'
 check "a directory the configuration excludes is not read" sh -c '! grep -q Drafted out'
@@ -63,10 +63,10 @@ check "deadlines lists one beyond its warning" grep -q '^  beta  *Due in  40 day
 check "a review scheduled yesterday is one day late" \
     grep -q '^  alpha  *1 days late:  *TODO Review Alpha$' out
 check "a review scheduled today is not late" \
-    grep -q '^  responsibilities/home/index  *Scheduled:  *TODO Review the home$' out
+    grep -q '^  home/index  *Scheduled:  *TODO Review the home$' out
 check "an active project with no review is named" grep -q '^  projects/beta  *WIP$' out
 check "a project with a review is not" sh -c '! grep -q "^  projects/alpha " out'
-check "a responsibility with no review is named" grep -q '^  responsibilities/garden$' out
+check "a responsibility with no review is named" grep -q '^  garden$' out
 check "the root's reviews are listed as the root's" \
     sh -c "grep -A2 '^Root reviews, late or due in the next 7 days\$' out | grep -q '^  life  *Scheduled:  *TODO Weekly review\$'"
 check "a root review beyond the window is not" sh -c '! grep -q "Monthly review" out'
