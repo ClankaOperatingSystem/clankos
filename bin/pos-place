@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-place TARGET FILE UNDER [STATE]
+       pos-place --help
+
+Move one task to the end of a heading's children, and record the move,
+in the ClankOS container.
+"clankos-run help pos-place" prints the protocol.
+
+    pos-place intray.org:12 projects/roof.org Tasks NEXT
+    /path/to/projects/roof.org:9: NEXT Call the roofer
+
+TARGET is the task's ID, or FILE:LINE, as pos-state takes it. FILE
+holds the heading, from the working directory. UNDER is the heading's
+outline path, as 'Tasks' or 'Tasks/Mend the house', each name a
+heading's title without its state and tags. STATE, if given, is set as
+pos-state sets it.
+
+The task moves whole: heading, properties, body and children. The move
+is a line in its LOGBOOK drawer, with where it came from. Prints the
+task where it now is, then "Link to the old place: FILE:LINE" for each
+link that names the old place by file and title. It rewrites none; a
+link by ID follows the task.
+
+Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-place "$@"

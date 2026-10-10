@@ -1,0 +1,8 @@
+#!/bin/sh
+# pos-place TARGET FILE UNDER [STATE]
+# The protocol is docs/pos-place.txt.
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+    echo "Usage: pos-place TARGET FILE UNDER [STATE]" >&2
+    exit 2
+fi
+exec "$(dirname -- "$0")/pos-emacs" -l pos-place -f pos-place-batch "$@"

@@ -1,0 +1,79 @@
+pos-place: moving one task to where it belongs
+
+bin/pos-place runs this protocol in the ClankOS container. The command
+is poslib's pos-place, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+pos-refile moves many tasks out of an intray by a plan
+(docs/pos-refile.txt). pos-place moves one, at once, from any file.
+
+
+1. What is moved, and where
+
+"pos-place TARGET FILE UNDER [STATE]" moves the task TARGET names, as
+pos-state names one (docs/pos-state.txt): by its ID, or by FILE:LINE.
+
+FILE is the file that holds the heading the task goes beneath, from
+the working directory. It may be the task's own file. UNDER is that
+heading's outline path, slash-separated:
+
+    Tasks                    the top-level heading Tasks
+    Tasks/Mend the house     Mend the house, beneath Tasks
+
+Each name is a heading's whole title, without its state and tags.
+
+The task becomes the last child of that heading. It moves whole: its
+heading, properties, body and children, at the level of its new place.
+With STATE, it is set to that state as pos-state sets it.
+
+
+2. What is written
+
+The move is recorded in the task's LOGBOOK drawer, in Org's form for a
+refile, with the file and outline path it came from:
+
+    *** NEXT Call the roofer
+    :LOGBOOK:
+    - Refiled on [2030-03-04 Mon 09:15] \\
+      From intray.org, Unsorted
+    - State "NEXT"       from "TODO"       [2030-03-04 Mon 09:15]
+    :END:
+
+When two files are written, the one that gains the task is saved
+first.
+
+It prints the task where it now is:
+
+    /path/to/projects/roof.org:9: NEXT Call the roofer
+
+Then one line for each link, in any file read, that names the task's
+old place by file and title, or by title within its old file:
+
+    Link to the old place: /path/to/notes.org:14
+
+These are not rewritten: repair each by hand. A link by ID follows the
+task, since the ID moves with it, and is not listed.
+
+It is refused, and nothing is written, if:
+
+  - FILE has no heading at UNDER;
+  - that heading is the task, or within it;
+  - pos-state would refuse the task, the state or either file.
+
+
+3. In the container
+
+bin/pos-place gives its arguments to bin/clankos-run. The files are the
+host's, at their own paths, and are written as the invoking user. The
+lock the command takes while it writes is a file beside each file,
+which an editor on the host sees. It sees saved files only.
+
+
+4. Exit status
+
+    0     saved
+    2     usage
+    255   refused, or an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
