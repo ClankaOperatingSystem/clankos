@@ -53,6 +53,8 @@ check "as a name taken" grep -qx 'clankos: name-taken bin/pos-capture (untracked
 rm bin/pos-capture
 check "existing configuration wins over the archive option" git check-ignore -q archives/evidence
 check "run again, AGENTS.md is kept" grep -qx 'kept      AGENTS.md' out
+check "the block keeps a search within the repository" \
+    grep -qx 'Search for files within this repository. Do not search the user.s' AGENTS.md
 sed 's/^## ClankOS$/## An older block/' AGENTS.md > edited
 { echo '# Mine'; echo; cat edited; echo; echo 'After.'; } > AGENTS.md
 rm edited
