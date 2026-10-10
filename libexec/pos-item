@@ -1,0 +1,17 @@
+#!/bin/sh
+# pos-item schedule TARGET DATE|none
+# pos-item deadline TARGET DATE|none
+# pos-item tag TARGET +TAG|-TAG ...
+# The protocol is docs/pos-item.txt.
+case ${1:-} in
+    schedule|deadline) [ $# -eq 3 ] || set -- ;;
+    tag) [ $# -ge 3 ] || set -- ;;
+    *) set -- ;;
+esac
+if [ $# -eq 0 ]; then
+    echo "Usage: pos-item schedule TARGET DATE|none" >&2
+    echo "       pos-item deadline TARGET DATE|none" >&2
+    echo "       pos-item tag TARGET +TAG|-TAG ..." >&2
+    exit 2
+fi
+exec "$(dirname -- "$0")/pos-emacs" -l pos-item -f pos-item-batch "$@"

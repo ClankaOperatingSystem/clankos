@@ -35,7 +35,7 @@ repository.
 A task is an Org heading with a keyword. TODO, NEXT, WAITING and SOMEDAY
 are open; DONE and CANCELLED are done. Dates are Org's
 SCHEDULED and DEADLINE. The commands below capture tasks, move them
-and report them. Keywords, dates and tags are edited in the Org files.
+and report them, and set a task's state, dates and tags.
 
 The files are plain text and the garden is a Git repository. No
 command commits: the diff is read, and the commit made, by whoever ran
@@ -57,6 +57,8 @@ image's own before it runs.
     responsibility-tree   add responsibilities, projects and products
     pos-capture           add a task to the intray
     pos-state             set a task's state, and record the change
+    pos-item              set a task's scheduled date, deadline or
+                          tags
     pos-place             move one task to where it belongs
     pos-project           make a project's file, change its status,
                           promote it to a directory
