@@ -33,6 +33,14 @@ printf '* DONE Parent\n** TODO Child\n' > projects/p/project.org
 "$bin/pos-lint" > out 2> err
 check "a done entry with an open child is reported" grep -qx 'projects/p/project.org:1: done entry has open children' out
 
+printf '** NEXT Call the plumber\n** WAITING Hear back\n' >> intray.org
+"$bin/pos-lint" > out 2> err
+check "an intray item that is not TODO is reported" \
+    grep -qx 'intray.org:5: NEXT item in the intray: clarified, to be placed' out
+check "a WAITING item that says neither who nor since when is reported" \
+    grep -qx 'intray.org:6: WAITING item does not say who or what it waits on, or since when' out
+git checkout -q intray.org
+
 rm -f projects/p/project.org projects/p/methodologies/adr/methodology.yaml
 "$bin/pos-lint" > out 2> err
 check "a clean tree exits 0" test $? -eq 0
