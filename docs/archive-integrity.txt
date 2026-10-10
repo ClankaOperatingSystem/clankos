@@ -46,6 +46,26 @@ prints both. It is for a seal that needs no review.
 
 A plan records absolute paths. It is applied where it was made.
 
+Sealing rewrites the links in the item's own files, links by ID among
+them. The links to the item from the rest of the garden are rewritten
+by a second plan, so that none is left leading where nothing is:
+
+  - "links-into ROOT PATH" prints each link in the Org files under
+    ROOT that leads to PATH or into it, by file or by ID, and changes
+    nothing.
+  - "relink ROOT PLAN" prints the relink plan for PLAN, a saved seal
+    plan, as JSON. It is made while the item is still at its source,
+    before the seal is applied, so that both plans are read before
+    anything changes. It lists each file with such a link and each
+    link in it; links in a file of another repository are listed
+    apart and are not rewritten.
+  - "apply PLAN HASH" applies the relink plan after the seal. Each
+    link becomes the item's ipfs:// link, the path within the item
+    and a search option. It is refused before the seal is applied, and
+    if a file has changed since the plan was made.
+
+poslib's doc/formats.org specifies both plans, under "Sealing".
+
 
 3. Checking
 

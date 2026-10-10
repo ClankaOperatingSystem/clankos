@@ -35,6 +35,27 @@ check "search within one item sees that item alone" \
 check "a search that finds nothing exits 1" status 1 "$bin/archive-integrity" search . nothing-of-the-kind
 check "a search in a mode the image lacks is refused" status 2 "$bin/archive-integrity" search . Second --mode words
 
+mkdir trial
+printf ':PROPERTIES:\n:ID: trial-notes\n:END:\n* Result\n' > trial/notes.org
+printf 'See [[file:trial/notes.org::*Result][the result]] and [[id:trial-notes][the notes]].\n' > index.org
+"$bin/archive-integrity" links-into . trial > found 2> err
+check "links-into prints each link into a path, by file and by ID" \
+    test "$(sort found)" = "index.org:1: file:trial/notes.org::*Result -> trial/notes.org
+index.org:1: id:trial-notes -> trial/notes.org"
+"$bin/archive-integrity" seal trial archives/2026-01-03-trial > _seal/trial.json
+"$bin/archive-integrity" relink . _seal/trial.json > _seal/relink.json 2> err
+check "relink prints a plan of the links to the item" \
+    sh -c "grep -q '\"operation\":\"relink\"' _seal/relink.json && grep -q '\"file\":\"index.org\"' _seal/relink.json"
+check "a relink plan is refused before its seal is applied" \
+    status 2 "$bin/archive-integrity" apply _seal/relink.json "$(sha256 _seal/relink.json)"
+"$bin/archive-integrity" apply _seal/trial.json "$(sha256 _seal/trial.json)" >/dev/null 2>&1
+"$bin/archive-integrity" apply _seal/relink.json "$(sha256 _seal/relink.json)" > applied.json 2> err
+check "applied after the seal, it reports the files rewritten" grep -q '"rewritten":\["index.org"\]' applied.json
+item=$("$bin/archive-integrity" link archives/2026-01-03-trial)
+check "and each link cites the sealed item" \
+    test "$(cat index.org)" = "See [[$item/notes.org::*Result][the result]] and [[$item/notes.org][the notes]]."
+rm -f applied.json found index.org
+
 mkdir sub
 check "paths are relative to the working directory" \
     sh -c "cd sub && '$bin/archive-integrity' check ../archives >/dev/null"
