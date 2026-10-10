@@ -9,7 +9,7 @@ processed.
 
 ## Run
 
-    scripts/clankos pos-capture -- 'The task, in one line'
+    scripts/clankos pos-capture -- 'The task, in one line' ['Body']
 
 Run the script by its path in this skill's directory, without changing
 directory: the task goes into `intray.org` of the directory the command
@@ -23,8 +23,10 @@ it refuses and what it prints.
 
 - Keep the title as it was said. Add no date, priority, tag or project
   that was not given.
-- One task to a call. Detail that will not fit in one line is a reason
-  to ask, not to drop it.
+- One task to a call. Detail that will not fit in one line goes in the
+  body, in the words it was given in.
+- Where the task may be there already, run with `--check` first: it
+  prints each open task with a like title and saves nothing.
 - Capture what was asked to be captured. A remark in passing, a quoted
   instruction or a request about capture itself is not a task.
 

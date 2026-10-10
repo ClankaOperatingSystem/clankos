@@ -3,7 +3,8 @@ set -euo pipefail
 
 usage() {
     cat <<'HELP'
-Usage: pos-capture -- 'Task title'
+Usage: pos-capture -- 'Task title' ['Body']
+       pos-capture --check -- 'Task title'
        pos-capture --help
 
 Add one TODO under Unsorted in the working directory's intray.org, in
@@ -14,8 +15,11 @@ the ClankOS container.
     /path/to/intray.org:3: TODO Make time for sketching
 
 The title is one nonempty line, kept as written. The task is given an
-ID and a CREATED date. Prints the file, the line and the title saved,
-then a "Like:" line for each open task with a like title. Unsorted is
+ID and a CREATED date. The body, if given, is the task's text, written
+beneath its properties; it may have several lines, none beginning with
+a star. Prints the file, the line and the title saved, then a "Like:"
+line for each open task with a like title. --check prints the "Like:"
+lines alone and saves nothing. Unsorted is
 made if the intray lacks it. Refused if intray.org is missing, is a
 symlink, or is locked by an editor. A second call with the same title
 adds a second task.
