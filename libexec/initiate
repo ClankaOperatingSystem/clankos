@@ -113,8 +113,8 @@ else
     echo "wrote     intray.org"
 fi
 
-# AGENTS.md: one marked block, which sends its reader to the image's
-# own help. The file is made if it is missing; in a file that is there,
+# AGENTS.md: one marked block, which sends its reader to the skills,
+# and to the image's own help for what a garden is. The file is made if it is missing; in a file that is there,
 # only the block is written, and what surrounds it is kept.
 begin='<!-- clankos: begin -->'
 end='<!-- clankos: end -->'
@@ -126,14 +126,14 @@ $begin
 This repository is a ClankOS garden: a tree of responsibilities kept
 in Org files. Its commands are the scripts in $bin/.
 
-Before working in the garden, run \`$bin/clankos-run help\`. It says
-what a garden is and lists the commands. Run a command with \`--help\`
-before using it, and \`$bin/clankos-run help COMMAND\` for its protocol.
-These print what the garden's ClankOS image holds, so they describe
-the commands as they run here.
-
 ClankOS's skills are in .agents/skills/, each named clankos-NAME. Each
-says when one of the commands is used and what to check.
+says when a command is used, how to run it and what to check. Use the
+skill that fits the work in hand. The commands' help need not be read
+before that: a skill names the help it needs.
+
+For what a garden is, run \`$bin/clankos-run help\`. It prints what
+the garden's ClankOS image holds, so it describes the commands and the
+skills as they are here.
 
 Search for files within this repository. Do not search the user's
 home directory or the rest of the machine unless the user asks for

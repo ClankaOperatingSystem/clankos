@@ -31,8 +31,12 @@ check "what is installed names its version" test -s .clanka/auto/version
 check "Git keeps neither the links nor what is installed" \
     sh -c '! git status --porcelain --untracked-files=all | grep -q "bin/\|\.clanka/auto"'
 check "and reports the links" grep -qx 'linked    bin/pos-capture' out
-check "it makes AGENTS.md, which sends an agent to help" \
+check "it makes AGENTS.md, which sends an agent to the skills" \
+    grep -qF 'Use the' AGENTS.md
+check "and to help for what a garden is" \
     grep -qF 'run `bin/clankos-run help`' AGENTS.md
+check "and does not ask for every command's help to be read first" \
+    sh -c '! grep -q "Before working in the garden" AGENTS.md'
 check "and reports it" grep -qx 'wrote     AGENTS.md' out
 check "it commits nothing" test -z "$(git log --oneline 2>/dev/null)"
 check "what it wrote is the invoking user's" test "$(owner .clanka/config.yml)" = "$(id -u)"
