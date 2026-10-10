@@ -62,6 +62,37 @@ check "paths are relative to the working directory" \
 
 check "checkpoint records the heads" status 0 "$bin/archive-integrity" checkpoint .
 
+# Retiring a document: its open task is salvaged, and after the seal
+# and the relink the copy cites the sealed item.
+mkdir attic
+printf '* Unsorted\n' > intray.org
+printf '* Thinking\n** TODO Call the plumber\n** DONE Paint\n' > attic/note.org
+"$bin/archive-integrity" salvage . attic --dry-run > out 2> err
+check "a salvage dry run names the open task" grep -qx 'attic/note.org:2: TODO Call the plumber' out
+check "and writes nothing" grep -q '^\*\* TODO Call the plumber$' attic/note.org
+"$bin/archive-integrity" salvage . attic > out 2> err
+check "salvage copies the task to the intray" grep -q '^\*\* TODO Call the plumber$' intray.org
+check "the copy has an ID" grep -Eq '^:ID: +[0-9A-Fa-f-]{36}$' intray.org
+check "the copy cites where it stood" \
+    grep -qF 'Salvaged from [[file:attic/note.org::*Call the plumber][attic/note.org]]' intray.org
+check "the original is closed where it stood" grep -q '^\*\* CANCELLED Call the plumber$' attic/note.org
+check "and cites the copy by its ID" grep -q '^Salvaged to the intray: \[\[id:' attic/note.org
+check "a done task is left alone" grep -q '^\*\* DONE Paint$' attic/note.org
+check "a source outside the root is refused" status 2 "$bin/archive-integrity" salvage . /nowhere
+
+"$bin/archive-integrity" links-into . attic > out 2> err
+check "links-into lists the copy's link" grep -q '^intray.org:[0-9]*: file:attic/note.org::\*Call the plumber -> attic/note.org$' out
+"$bin/archive-integrity" seal attic archives/2026-01-03-attic > _seal/attic.json
+"$bin/archive-integrity" relink . _seal/attic.json > _seal/attic-relink.json
+check "relink prints a plan" grep -q '"operation":"relink"' _seal/attic-relink.json
+"$bin/archive-integrity" apply _seal/attic.json "$(sha256 _seal/attic.json)" > /dev/null
+"$bin/archive-integrity" apply _seal/attic-relink.json "$(sha256 _seal/attic-relink.json)" > out 2> err
+check "applying the relink names the files rewritten" grep -q '"rewritten":\["intray.org"\]' out
+item=$("$bin/archive-integrity" link archives/2026-01-03-attic)
+check "the copy cites the sealed item" \
+    grep -qF "Salvaged from [[$item/note.org::*Call the plumber][attic/note.org]]" intray.org
+check "check is clean after the retirement" status 0 "$bin/archive-integrity" check .
+
 chmod u+w archives/2026-01-01-note.txt
 echo "Changed." >> archives/2026-01-01-note.txt
 check "check finds a changed item" status 1 "$bin/archive-integrity" check .
