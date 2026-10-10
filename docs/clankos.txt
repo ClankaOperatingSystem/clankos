@@ -17,7 +17,8 @@ repository.
                      file where its responsibility's projects belong,
                      which is projects/.
     product          a repository the garden works on, under that
-                     repository's own rules.
+                     repository's own rules. Its Org files are read
+                     and never written.
     intray           intray.org: where a task is written the moment it
                      comes to mind, under "Unsorted", to be placed
                      later.
@@ -26,6 +27,8 @@ repository.
     review           a scheduled item tagged :review: in a scope's
                      file, of that scope: a project's, a
                      responsibility's, or the root's of the whole.
+                     Its COVERS property names other scopes it is
+                     the review of.
                      :purpose: and :goal: mark what a review reads
                      ("clankos-run help review").
 
@@ -59,8 +62,9 @@ image's own before it runs.
                           run the checks a project's methodologies
                           supply
     startup-prompt        print what a session opens with: what is
-                          next, dated, due, to be reviewed, and
-                          captured and not yet placed
+                          next, dated, due, to be reviewed, stuck,
+                          and captured and not yet placed; the
+                          projects; the views of a weekly review
     archive-integrity     seal items into an archive; check archives
     archive-migrate       rebuild an archive that has a legacy ledger
     clankos-run           run a command in the image; the others call

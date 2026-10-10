@@ -9,8 +9,8 @@ with: https://github.com/ClankaOperatingSystem/poslib
 
 A session opens by choosing what to do. The choice needs to know what
 is already waiting: what is next, what has a date, what is due, what is
-to be reviewed, what is captured and not yet placed. Finding that by opening each Org file is slow and
-misses things.
+to be reviewed, what is captured and not yet placed. Finding that by
+opening each Org file is slow and misses things.
 
 startup-prompt prints four prompts, for the choice, and then views of
 the saved Org files, for what is waiting. It chooses nothing and writes
@@ -40,21 +40,30 @@ poslib's doc/pos-directory.txt describes: every Org file under the
 root except those in the directories the configuration excludes,
 which by default are archives, attic, node_modules and names
 beginning with an underscore or a full stop, at any depth; hidden
-files, lock files and symbolic links are not read. A repository
-mounted beneath the root is read as part of it when it has a
-configuration of its own, and is a product, not read, when it has
-none.
+files, lock files and symbolic links are not read.
 
-A file belongs to a scope: the deepest project or responsibility on
-its path. A file under neither belongs to the root.
+The walk follows the declarations. From a directory with a
+configuration it enters the ordinary directories and each child the
+configuration declares. A declared child with a configuration of its
+own is read as that configuration says. A declared child with none is
+a product: its Org files are read as the product's, with the default
+exclusions. A directory with a configuration that nothing declares is
+not entered, and is named after the count of files, as "Not read".
+
+A file belongs to a scope: the deepest project, responsibility or
+product on its path. A file under none belongs to the root.
 
     responsibility   a directory beneath the root whose configuration
                      says where its projects belong, which is what
                      responsibility-tree makes
     project          what lies where that configuration says the
                      projects belong: NAME.org, or the directory NAME
+    product          a declared child with no configuration: a
+                     repository the garden works on. Its files are
+                     read and never written, and each keeps the
+                     keywords of its own #+TODO line
 
-A directory's name alone makes it neither. The root is a
+A directory's name alone makes it none of these. The root is a
 responsibility, and is not listed as one. A configuration that is
 refused is named after the count of files, as "Not read", and nothing
 beneath it is read.
@@ -79,9 +88,15 @@ After the prompts, "Files read: N" says how many files were read.
 4. The views
 
 Each view is a title, then one line for each item: the item's scope,
-then the item. A view with no item says "(none)".
+then the item. A view of more than one list has a title for each. A
+list with no item says "(none)".
 
-    next                 Every item whose keyword is NEXT.
+    next                 Every item whose keyword is NEXT, in three
+                         lists: projects', responsibilities', then
+                         the root's. A product's, and those of a
+                         directory whose configuration does not yet
+                         say what it is, are each in a further list,
+                         printed only when it has an item.
     waiting              Every item whose keyword is WAITING.
     someday              Every item whose keyword is SOMEDAY: what
                          is kept and not committed to, for a review
@@ -97,17 +112,46 @@ then the item. A view with no item says "(none)".
                          days: projects', then responsibilities', then
                          the root's, which review the whole tree.
     reviews-to-schedule  Active projects, then responsibilities, then
-                         the root, named ".", that have no review
-                         scheduled.
+                         the root, named ".", that no review covers.
+                         A path a review names that is no scope's is
+                         in a fourth list, printed only when there is
+                         one.
+    stuck                Projects whose STATUS is WIP and none of
+                         whose files has a NEXT or WAITING item.
+    projects             Each active project, three lines: its path,
+                         STATUS and the date of its next review; its
+                         first NEXT or WAITING item; and the first
+                         paragraph under its top-level heading
+                         "Outcome". What it lacks is a dash.
     intray               Every open item under the heading "Unsorted"
                          in a file named intray.org, the root's and
                          each scope's: what pos-capture has added and
                          nobody has yet placed.
+    finished             Every done item whose CLOSED date is today
+                         or in the 7 days before it, with that date.
+                         A done item with no CLOSED date is not
+                         listed.
     all                  Every open item.
 
 A review item is an open heading tagged :review: with a scheduled
 date, in a file of the scope it reviews; which file is the person's
-choice ("clankos-run help review"). An active project is one
+choice ("clankos-run help review"). It covers that scope. It also
+covers each scope its COVERS property names, by paths from the
+directory of its own file, apart by spaces, a space within a path
+written %20:
+
+    * TODO Review the shop :review:
+    SCHEDULED: <2030-03-04 Mon +1w>
+    :PROPERTIES:
+    :COVERS:   shop projects/ledger
+    :END:
+
+In work/index.org that heading covers work, work/shop and
+work/projects/ledger. This is for a scope whose review is kept in the
+scope above it, as when the scope is a repository other people share.
+Nothing is inherited: a review covers no scope it does not name.
+
+An active project is one
 whose project file has, before its first heading, a STATUS property of
 COMMITTED or WIP, in a property drawer that begins the file:
 
@@ -122,25 +166,50 @@ the segments named projects, and with the file's name added unless it
 is project.org: projects/alpha/project.org is "alpha", and
 projects/alpha/notes.org is "alpha/notes".
 
-With no --view, every view but someday and all is printed, in the order
-above.
+With no --view, every view but someday, projects, finished and all is
+printed, in the order above.
 "--view NAME", repeated, prints the prompts and those views only.
+"--weekly" stands for the views of a weekly review, in the order the
+review reads them: intray, next, waiting, scheduled, deadlines,
+reviews, stuck, reviews-to-schedule, someday, finished.
 
 
-5. Settings
+5. The views as JSON
+
+"--json" prints one line of JSON in place of the text, for a program
+to read:
+
+    files_read   the count of files read
+    not_read     path and reason for each configuration not read
+    views        each view named, with what it lists, in the order of
+                 its text
+
+In a view of items each element has scope, scope_kind, file, line, id,
+state, title, tags, scheduled, deadline, closed, properties and body.
+The dates are as written; what an item lacks is null. In
+reviews-to-schedule, stuck and projects, which list scopes, each has
+scope, scope_kind and status; in projects, review, next and outcome
+too. A view named twice is given once.
+
+
+6. Settings
 
 The root's pos-config.el, if it has one, is loaded. It can set:
 
-    pos-startup-scheduled-days         14
-    pos-startup-review-days            7
-    pos-startup-review-tag             "review"
-    pos-startup-active-statuses        ("COMMITTED" "WIP")
+    pos-startup-scheduled-days             14
+    pos-startup-review-days                7
+    pos-startup-finished-days              7
+    pos-startup-review-tag                 "review"
+    pos-startup-review-covers-property     "COVERS"
+    pos-startup-active-statuses            ("COMMITTED" "WIP")
+    pos-startup-stuck-statuses             ("WIP")
+    pos-startup-next-action-states         ("NEXT" "WAITING")
 
 Which directories are read is not a setting here: the configuration
 declares it, under exclude.
 
 
-6. In the container
+7. In the container
 
 bin/startup-prompt gives its arguments to bin/clankos-run. The files
 are the host's, at their own paths. The container is given the host's
@@ -150,7 +219,7 @@ day as on the host. pos-config.el is Lisp, and is run in the container.
 The report is on stdout. Emacs's own messages are on stderr.
 
 
-7. Exit status
+8. Exit status
 
     0     printed
     2     usage

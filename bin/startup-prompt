@@ -3,31 +3,42 @@ set -euo pipefail
 
 usage() {
     cat <<'HELP'
-Usage: startup-prompt [--view NAME] ...
+Usage: startup-prompt [--json] [--weekly] [--view NAME] ...
        startup-prompt --help
 
 Print what a session opens with: four prompts, then views of the saved
 Org files under the working directory, in the ClankOS container.
 "clankos-run help startup-prompt" prints the protocol.
 
-  next                 every NEXT item
+  next                 every NEXT item: projects', responsibilities'
+                       and the root's apart
   waiting              every WAITING item
   someday              every SOMEDAY item: not committed to
   scheduled            items scheduled in the next 14 days, or late
   deadlines            every open deadline, however far off
   reviews              reviews late or due in the next 7 days, projects'
                        and responsibilities' apart
-  reviews-to-schedule  active projects, and responsibilities, with no
-                       review scheduled
+  reviews-to-schedule  active projects, responsibilities and the
+                       root that no review covers
+  stuck                projects with STATUS WIP and no NEXT or WAITING
+                       item
+  projects             each active project: its status, next review,
+                       next action and outcome
   intray               every open item under Unsorted in an intray.org:
                        captured and not yet placed
+  finished             items closed in the last 7 days
   all                  every TODO item
 
-With no --view, every view but someday and all is printed. --view
-NAME, repeated, prints the prompts and those views only.
+With no --view, every view but someday, projects, finished and all is
+printed. --view NAME, repeated, prints the prompts and those views
+only. --weekly stands for the views of a weekly review: intray, next,
+waiting, scheduled, deadlines, reviews, stuck, reviews-to-schedule,
+someday, finished. --json prints the views as one line of JSON in
+place of the text.
 
 Reads; writes nothing. The files are those the configuration allows:
-not the excluded directories, archives and attics by default. The
+not the excluded directories, archives and attics by default. A
+product's Org files are read. The
 working directory's pos-config.el, if it has one, is loaded and can
 change the horizons.
 

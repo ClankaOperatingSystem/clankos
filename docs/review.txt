@@ -60,9 +60,23 @@ Only the root reviews the whole. A repository grafted into a garden is
 a responsibility of that garden, and its reviews are a
 responsibility's.
 
+A review item may be kept in the scope above the one it reviews, as
+when the scope is a repository other people share and the review is
+one person's. The item then names the scope in a COVERS property, by
+its path from the directory of the item's file:
+
+    * TODO Review the shop :review:
+    SCHEDULED: <2030-03-04 Mon +1w>
+    :PROPERTIES:
+    :COVERS:   shop
+    :END:
+
+It is still listed among the reviews of the scope whose file holds
+it. An item covers its own scope and those it names, and no other.
+
 startup-prompt lists review items late or due in the next 7 days,
 projects', responsibilities' and the root's apart, and names each
-active project, responsibility and root that has none scheduled. A
+active project, responsibility and root that no review covers. A
 new garden has none: the person writes the root's two items, in
 whichever file of the root they choose, as section 7 shows.
 
@@ -113,13 +127,16 @@ is GTD's weekly review, in this garden's terms.
                    pos-capture. Empty the intray with pos-refile, each
                    item placed or dropped. Retire the week's done items
                    with pos-sweep.
-    Get current    Read startup-prompt. Every NEXT item is still the
-                   next thing. Scheduled items and deadlines are right.
-                   Every late review is done or rescheduled. Every
-                   active project and responsibility named as having
-                   no review gets one. Look back over the week's
-                   calendar for what it left behind, and forward for
-                   what is coming.
+    Get current    Read "startup-prompt --weekly". Every NEXT item
+                   is still the next thing. Every WAITING item is
+                   still waited for. Scheduled items and deadlines
+                   are right. Every late review is done or
+                   rescheduled. Every project named as having no
+                   next action gets one. Every active project and
+                   responsibility named as having no review gets
+                   one. Look back over what was finished, and over
+                   the week's calendar for what it left behind,
+                   and forward for what is coming.
     Get creative   Anything wanted but not committed to is written
                    down, in the intray or where it belongs.
 
