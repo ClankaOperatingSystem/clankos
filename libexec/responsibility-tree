@@ -47,6 +47,10 @@ name_ok() {
         ''|.|..|.*|*[!A-Za-z0-9._-]*) return 1 ;;
     esac
 }
+# not_a_name TEXT: say that TEXT was refused, and what a name is.
+not_a_name() {
+    echo "not a name: $1 (a name is letters, digits, dot, dash and underscore, and does not begin with a dot)" >&2
+}
 # path_ok PATH: each of its parts a name.
 path_ok() {
     rest=$1
@@ -95,7 +99,7 @@ while :; do
 done
 
 add_responsibility() {
-    name_ok "$1" || { echo "not a name: $1" >&2; return 1; }
+    name_ok "$1" || { not_a_name "$1"; return 1; }
     if [ -e "$1/.clanka" ] || [ -e "$1/.clankos" ] || [ -e "$1/.pos" ]; then
         echo "kept      $1/ (it has a configuration)"
     else
@@ -121,7 +125,7 @@ add_responsibility() {
 }
 
 add_project() {
-    name_ok "$1" || { echo "not a name: $1" >&2; return 1; }
+    name_ok "$1" || { not_a_name "$1"; return 1; }
     file=$projects/$1.org
     if [ -e "$file" ] || [ -e "$projects/$1" ]; then
         echo "kept      $projects/$1 (it is there)"
@@ -135,8 +139,12 @@ add_project() {
 add_product() {
     path=${1%%=*}
     remote=${1#*=}
-    if [ "$path" = "$1" ] || [ -z "$remote" ] || ! path_ok "$path"; then
+    if [ "$path" = "$1" ] || [ -z "$remote" ]; then
         echo "not PATH=REMOTE: $1" >&2
+        return 1
+    fi
+    if ! path_ok "$path"; then
+        echo "not a path of names: $path (a name is letters, digits, dot, dash and underscore, and does not begin with a dot)" >&2
         return 1
     fi
     # A node declares what is directly beneath it: the entry goes in the
