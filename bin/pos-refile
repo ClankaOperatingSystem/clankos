@@ -3,8 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<'HELP'
-Usage: pos-refile stranded [--dry-run]
-       pos-refile plan [FILE]
+Usage: pos-refile plan [FILE]
        pos-refile apply [--dry-run] [FILE]
        pos-refile --help
 
@@ -12,10 +11,6 @@ Move tasks to where they belong among the Org files of the working
 directory, in the ClankOS container.
 "clankos-run help pos-refile" prints the protocol.
 
-  stranded [--dry-run]
-      move each open task in an Org file outside the covered
-      directories into intray.org under Unsorted, with a link back to
-      where it was
   plan [FILE]
       write one table of every intray entry to FILE, each with a
       suggested target file

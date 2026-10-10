@@ -59,7 +59,7 @@ image's own before it runs.
     pos-project           make a project's file, change its status,
                           promote it to a directory
     pos-refile            move tasks from the intray to where they
-                          belong, and stranded tasks into it
+                          belong
     pos-dedupe            resolve tasks written more than once
     pos-sweep             retire the week's done items into the archive
     pos-lint              report what is wrong in the Org files, and

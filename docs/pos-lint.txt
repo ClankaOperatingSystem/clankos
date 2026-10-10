@@ -34,7 +34,6 @@ tree, a #+TODO line is not reported: the line is that file's own.
 
 Then the whole tree, for:
 
-  - an open task outside any file the sweep retires from;
   - a task heading written in more than one file, each copy naming
     the others.
 

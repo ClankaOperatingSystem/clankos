@@ -1,8 +1,8 @@
 #!/bin/sh
-# pos-refile stranded [--dry-run] | plan [FILE] | apply [--dry-run] [FILE]
+# pos-refile plan [FILE] | apply [--dry-run] [FILE]
 # The protocol is docs/pos-refile.txt.
 usage() {
-    echo "Usage: pos-refile stranded [--dry-run] | plan [FILE] | apply [--dry-run] [FILE]" >&2
+    echo "Usage: pos-refile plan [FILE] | apply [--dry-run] [FILE]" >&2
     exit 2
 }
 emacs=$(dirname -- "$0")/pos-emacs
@@ -20,9 +20,6 @@ if [ ! -f intray.org ]; then
 fi
 # The plan's file reaches Lisp as an argument, not as quoted text.
 case $command in
-    stranded)
-        [ $# -eq 0 ] || usage
-        exec "$emacs" --eval "(pos-refile-stranded-batch $dry)" ;;
     plan)
         [ "$dry" = nil ] || usage
         exec "$emacs" --eval '(pos-refile-plan-batch (expand-file-name (pop command-line-args-left)))' \
