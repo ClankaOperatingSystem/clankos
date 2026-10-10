@@ -30,8 +30,6 @@ It prints one finding a line, as `FILE:LINE: MESSAGE`.
   place skill moves it; a done one waits for the sweep.
 - **A WAITING item that does not say who or what, or since when.** Ask
   the person, and write the answer in the item.
-- **An open task outside the files the sweep retires from.** The place
-  skill's `stranded` brings it into the intray.
 - **A methodology's finding.** It is that methodology's to explain.
 
 ## What to get right

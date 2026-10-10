@@ -1,6 +1,6 @@
 ---
 name: clankos-place
-description: Move the tasks in a garden's intray to the files they belong in, and bring tasks written where nobody will find them into the intray. Use when asked to process, clear or sort an intray, or to place a captured task. Not for capturing a task, and not for deciding what a task means, which the person does.
+description: Move the tasks in a garden's intray to the files they belong in. Use when asked to process, clear or sort an intray, or to place a captured task. Not for capturing a task, and not for deciding what a task means, which the person does.
 ---
 
 An intray holds what was captured and not yet placed. Placing is done
@@ -36,10 +36,6 @@ ID or its file and line, the file and heading it goes beneath, and the
 state it then has. It records where the task came from and prints each
 link that names the old place. `scripts/clankos pos-place --help` has
 the rest.
-
-`stranded --dry-run` lists open tasks in files the garden does not
-read, and `stranded` moves them into the intray. That step has no plan
-and edits the files in place.
 
 ## What to get right
 

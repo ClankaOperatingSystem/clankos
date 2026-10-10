@@ -17,26 +17,14 @@ under "Unsorted". The root's pos-config.el, if it has one, sets:
                        root: a heading the pattern matches is suggested
                        for that file
 
-There are two movements: into the intray, of tasks written where
-nobody will find them; and out of it, to the files they belong in.
+A task in a directory the corpus does not read, an attic or an
+archive, is left there on purpose and is not looked for. The open
+tasks of a document that is about to be sealed are brought into the
+intray by "archive-integrity salvage" ("clankos-run help
+archive-integrity").
 
 
-2. Into the intray: stranded tasks
-
-A stranded task is an open task in an Org file the corpus does not
-read: in an attic, an archive, or a directory beginning with an
-underscore.
-
-"stranded" moves each one into intray.org under Unsorted, and writes
-below its heading a link back to the file and heading it came from.
-"stranded --dry-run" lists them, by file and line, and changes
-nothing.
-
-This step has no plan. It edits the files in place, and the change is
-reviewed as a diff.
-
-
-3. Out of the intray: plan, review, apply
+2. Out of the intray: plan, review, apply
 
   - Plan. "plan [FILE]" writes FILE, an Org file with one table row
     for each entry of the intray, and each entry quoted in full below
@@ -67,17 +55,16 @@ and a new plan is needed.
 FILE is refile.org in the root unless given.
 
 
-4. In the container
+3. In the container
 
 bin/pos-refile gives its arguments to bin/clankos-run. The files are
 the host's, at their own paths, and are written as the invoking user.
 pos-config.el is Lisp, and is run in the container.
 
-The report is on stdout. Emacs's own messages, among them a second
-copy of the stranded report, are on stderr.
+The report is on stdout. Emacs's own messages are on stderr.
 
 
-5. Exit status
+4. Exit status
 
     0     done
     2     usage, or no intray.org in the working directory

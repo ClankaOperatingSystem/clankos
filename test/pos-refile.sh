@@ -4,24 +4,13 @@
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
 
-mkdir .pos work attic
+mkdir .pos work
 echo "(setq pos-refile-rules '((\"invoice\" . \"work/todo.org\")))" > pos-config.el
 printf '#+TITLE: Intray\n\n* Unsorted\n** TODO Send the invoice\n** TODO Buy milk\n' > intray.org
 printf '#+TITLE: Work\n\n* Tasks\n' > work/todo.org
-# A task in a directory no command reads is stranded.
-printf '#+TITLE: A note\n\n* Thinking\n** TODO Call the plumber\n' > attic/note.org
-
-"$bin/pos-refile" stranded --dry-run > out 2>/dev/null
-check "a dry run names the stranded task" grep -q 'attic/note.org:4 Call the plumber' out
-check "a dry run changes nothing" grep -q 'Call the plumber' attic/note.org
-
-"$bin/pos-refile" stranded >/dev/null 2>&1
-check "stranded moves the task to the intray" grep -q '^\*\* TODO Call the plumber$' intray.org
-check "stranded links back to where it was" grep -qF '[[file:attic/note.org::*Thinking]' intray.org
-check "stranded takes the task from its file" sh -c '! grep -q "Call the plumber" attic/note.org'
 
 "$bin/pos-refile" plan > out 2>/dev/null
-check "plan reports the entries written" grep -q '^3 intray entries written to refile.org$' out
+check "plan reports the entries written" grep -q '^2 intray entries written to refile.org$' out
 check "plan suggests the rule's file" \
     grep -q '^| move *| *4 *| Send the invoice *| work/todo.org ' refile.org
 check "plan leaves the rest undecided" grep -q '^| ? *| *5 *| Buy milk ' refile.org
@@ -41,8 +30,9 @@ check "apply leaves an undecided entry" grep -q 'Buy milk' intray.org
 
 mkdir empty
 check "a directory without an intray is refused" \
-    sh -c "cd empty && '$bin/pos-refile' stranded >/dev/null 2>&1; [ \$? -eq 2 ]"
+    sh -c "cd empty && '$bin/pos-refile' plan >/dev/null 2>&1; [ \$? -eq 2 ]"
 check "a refusal makes no intray" test ! -e empty/intray.org
 check "an unknown command is usage" status 2 "$bin/pos-refile" bogus
+check "stranded is no longer a command" status 2 "$bin/pos-refile" stranded
 
 [ "$failures" -eq 0 ]
