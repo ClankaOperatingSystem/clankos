@@ -23,8 +23,15 @@ HASH is what sha256sum, or shasum -a 256, prints for the plan file.
       print the plan to seal SOURCE at DESTINATION, in an archive
   write-new DESTINATION [--apply]
       print the plan to seal a new record, read from standard input
+  links-into ROOT PATH
+      print each link in the Org files under ROOT that leads to PATH
+      or into it, by file or by ID, as FILE:LINE: LINK -> FILE
+  relink ROOT PLAN
+      print the plan to rewrite the links to the item PLAN seals, a
+      saved seal plan, in the Org files under ROOT. Made before PLAN is
+      applied, and applied after it
   apply PLAN HASH
-      apply a reviewed plan, named by its hash
+      apply a reviewed plan, a seal's or a relink's, named by its hash
   check ROOT
       report every archive under ROOT, as JSON
   checkpoint ROOT

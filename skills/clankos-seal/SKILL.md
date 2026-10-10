@@ -33,6 +33,19 @@ what a plan holds, what is refused and why.
 
 Then run `check .` and, when it is clean, `checkpoint .`.
 
+## Links to the item from elsewhere
+
+Sealing an item that lies in the garden moves it, so a link to it from
+another file would lead nowhere. Before applying the seal:
+
+1. `links-into . SOURCE` shows which files link to the item.
+2. If any does, `relink . PLAN`, with the saved seal plan, prints a
+   second plan. Save and read it as the first.
+
+Apply the seal plan, then the relink plan, each with `apply PLAN HASH`.
+The links then cite the sealed item. A new record made with
+`write-new` was never linked to, and needs none of this.
+
 ## What to get right
 
 - Name the destination as the archive's other items are named. Look
