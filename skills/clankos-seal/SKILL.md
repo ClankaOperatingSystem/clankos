@@ -33,6 +33,19 @@ what a plan holds, what is refused and why.
 
 Then run `check .` and, when it is clean, `checkpoint .`.
 
+## Open tasks in the item
+
+A document that was worked in, an attic or a set of notes, may hold
+open tasks. Before planning its seal:
+
+1. `salvage . SOURCE --dry-run` lists them. Close each one that is
+   dead, in the file. Place each one whose place is plain, with the
+   place skill. Ask the person where it is not plain.
+2. `salvage . SOURCE` copies each task still open to the intray and
+   leaves the original CANCELLED, each citing the other.
+
+Each copy links to the document, so it then needs the relink below.
+
 ## Links to the item from elsewhere
 
 Sealing an item that lies in the garden moves it, so a link to it from
@@ -52,6 +65,8 @@ The links then cite the sealed item. A new record made with
   before choosing.
 - After an interruption, apply the same saved plan. Do not make a
   second plan for an item that already has one.
+- Salvage before planning the seal, never after: it changes the files
+  the plan records.
 - Never edit a sealed file. A correction is a new record that cites
   the old one, which `link PATH` gives the citation for.
 - A finding from `check` is reported. It is not repaired by rewriting

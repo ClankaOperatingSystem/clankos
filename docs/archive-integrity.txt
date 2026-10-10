@@ -66,6 +66,24 @@ by a second plan, so that none is left leading where nothing is:
 
 poslib's doc/formats.org specifies both plans, under "Sealing".
 
+A document that leaves the garden's working files may also hold open
+tasks. Salvage keeps them, and is run before the seal is planned,
+since it changes the files the plan records:
+
+  - "salvage ROOT SOURCE" copies each open task of SOURCE, with what
+    is beneath it, to the end of Unsorted in intray.org at ROOT. The
+    copy keeps the task's state and takes its ID, and says where it
+    was salvaged from, by a link to the file and heading. The original
+    is left CANCELLED where it stood, with a line that cites the copy
+    by its ID. "--dry-run" lists the tasks, as FILE:LINE: STATE TITLE,
+    and writes nothing.
+
+A task that is dead is closed by hand first, and one whose place is
+known is placed there; salvage takes what is left. The link in a
+salvaged copy is one the relink plan rewrites, so the order is:
+salvage; plan the seal; plan the relink; apply the seal; apply the
+relink.
+
 
 3. Checking
 

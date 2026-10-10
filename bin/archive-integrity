@@ -19,10 +19,19 @@ SHA-256.
 
 HASH is what sha256sum, or shasum -a 256, prints for the plan file.
 
+To retire a document that others link to or that holds open tasks:
+salvage, plan the seal, plan the relink from it, then apply the seal
+and the relink.
+
   seal SOURCE DESTINATION [--apply]
       print the plan to seal SOURCE at DESTINATION, in an archive
   write-new DESTINATION [--apply]
       print the plan to seal a new record, read from standard input
+  salvage ROOT SOURCE [--dry-run]
+      copy each open task of SOURCE, a file or directory about to be
+      sealed, to intray.org at ROOT, and close the original where it
+      stands, each citing the other; run before the seal is planned.
+      --dry-run lists the tasks and writes nothing
   links-into ROOT PATH
       print each link in the Org files under ROOT that leads to PATH
       or into it, by file or by ID, as FILE:LINE: LINK -> FILE
