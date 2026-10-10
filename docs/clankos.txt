@@ -78,16 +78,29 @@ image's own before it runs.
 A coding agent finds ClankOS's skills in .agents/skills/ of a garden,
 and of each responsibility and project that is a repository of its
 own, so that a session has the same ones wherever in the tree it is
-started. Each is named clankos-NAME and says when a command is used
-and what to check; the command's --help says how.
+started. Each is named clankos-NAME and says when a command is used,
+how to run it and what to check. An agent reads the skill that fits
+the work in hand, and the help that skill names; it does not read
+every command's help first.
 
     clankos-start-up        open a session: what is waiting, and what
                             to do
     clankos-capture         add a task to the intray
+    clankos-place           move the intray's tasks to where they
+                            belong
+    clankos-dedupe          resolve tasks written more than once
+    clankos-sweep           retire the week's done items
+    clankos-lint            report what is wrong in the Org files
+    clankos-tree            add a responsibility, a project or a
+                            product
+    clankos-review          review a project, a responsibility or the
+                            whole garden
     clankos-seal            seal a record or evidence into an archive
     clankos-read-evidence   read an archived file cited by ipfs://
     clankos-search-evidence find where words occur in the archives, on
                             disk or kept, and cite each hit
+    clankos-migrate-archive rebuild an archive that has a legacy
+                            ledger
 
 They are links to what is installed in .clanka/auto/, as the scripts
 are (docs/refresh.txt). A skill of the repository's own that is not

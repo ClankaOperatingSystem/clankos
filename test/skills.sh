@@ -13,6 +13,8 @@ for skill in "$repo"/skills/*/; do
     check "$name has a description on one line, with no colon a YAML reader would trip on" \
         sh -c "sed -n '3p' '$skill/SKILL.md' | grep -q '^description: [^:]*\(:[^ ][^:]*\)*\$'"
     check "$name carries the script that runs the commands" test -x "$skill/scripts/clankos"
+    check "$name is listed in the image's account of a garden" \
+        grep -q "^    $name " "$repo/docs/clankos.txt"
 done
 
 mkdir garden && cd garden && git init -q .
