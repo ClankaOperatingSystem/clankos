@@ -20,7 +20,17 @@ Each file is checked for:
   - a heading that starts with a retired keyword, one not in poslib's
     sequence;
   - a #+TODO line, which would give the file a sequence of its own;
-  - a copy of a task that dedupe has merged and not yet removed.
+  - a copy of a task that dedupe has merged and not yet removed;
+  - in an intray.org, an item under Unsorted that is not TODO: one
+    that is NEXT, WAITING or SOMEDAY has been clarified and is to be
+    placed, and a done one is to be retired;
+  - a WAITING item that does not say who or what it waits on, in a
+    DELEGATED_TO property or in its own text, or since when, in the
+    record of its change to WAITING or a date in its own text.
+
+A product's Org files are among those checked. In a file the root's
+repository does not hold, a product's or another repository's of the
+tree, a #+TODO line is not reported: the line is that file's own.
 
 Then the whole tree, for:
 
