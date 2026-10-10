@@ -12,7 +12,7 @@ Pull the ClankOS image into the local Docker, replacing any older copy
 of the same tag, and print the Emacs version it holds. The image is
 $image.
 TAG is latest unless given: latest follows the master branch, and a
-version such as v0.0.0 does not change.
+version such as v0.0.1 does not change.
 
 Needs docker on PATH, a running Docker, and the network.
 Exit: 0 installed, 1 Docker error (inspect stderr), 2 usage,
