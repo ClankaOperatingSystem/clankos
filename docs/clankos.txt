@@ -87,6 +87,17 @@ how to run it and what to check. An agent reads the skill that fits
 the work in hand, and the help that skill names; it does not read
 every command's help first.
 
+ClankOS does not limit what a coding agent can read. Its commands run
+in a container that is given the garden, and the cache and sign-in
+directories ClankOS keeps for itself, and no other file of the user's.
+The agent itself runs on the machine as the user, and its
+search and shell tools reach whatever the user can. The block initiate
+writes in AGENTS.md tells it to search within the repository, which
+it can ignore. To hold it to the garden, use the agent's own settings:
+start it in the garden's directory, and set its permissions or sandbox
+so that it reads and writes only there. The agent's own documentation
+says how.
+
     clankos-start-up        open a session: what is waiting, and what
                             to do
     clankos-capture         add a task to the intray
