@@ -1,0 +1,81 @@
+pos-item: setting a task's dates and tags
+
+bin/pos-item runs this protocol in the ClankOS container. The commands
+are poslib's pos-set-date and pos-set-tags, at the commit the image
+was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. Naming a task
+
+Each form works on one task, which TARGET names as pos-state names
+one (docs/pos-state.txt): by its ID, or by FILE:LINE, the file from
+the working directory and the line of the task's heading.
+
+
+2. Dates
+
+"pos-item schedule TARGET DATE" sets the task's scheduled date, and
+"pos-item deadline TARGET DATE" its deadline. DATE is one argument:
+
+    2030-03-04        that day
+    '2030-03-04 +1w'  that day, with an Org repeater: +1w, ++1w or
+                      .+1w, counted in h, d, w, m or y
+    none              the date is removed
+
+A date given without a repeater keeps the repeater the task has, as
+Org does. The date is written on the task's planning line, the line
+after its heading, by Org's own command:
+
+    ** TODO Send the invoice
+    SCHEDULED: <2030-03-04 Mon>
+
+It prints the file, the line, the state and title of the task, and the
+date it now has, or nothing after the title when the date was removed:
+
+    /path/to/tasks.org:12: TODO Send the invoice SCHEDULED: <2030-03-04 Mon>
+
+
+3. Tags
+
+"pos-item tag TARGET +TAG|-TAG ..." changes the task's own tags. +TAG
+adds a tag and -TAG removes one; several may be given. A tag is
+letters, digits and any of _ @ # %. Adding a tag the task has, and
+removing one it lacks, change nothing. The heading is written by Org's
+own command. It prints the task with the tags it now has:
+
+    /path/to/tasks.org:12: TODO Send the invoice :phone:
+
+
+4. What is not written
+
+Nothing is recorded in the task's LOGBOOK drawer. Nothing else in the
+file is changed, and no backup or autosave file is written.
+
+It is refused, and nothing is written, if:
+
+  - DATE is not written as above, or names a day its month lacks;
+  - a tag change has no sign, or its tag holds another character;
+  - the ID is on no heading, or on two;
+  - LINE is not the heading of a task;
+  - the file is not one the tree reads, is another repository's, or is
+    a symlink;
+  - an editor holds a lock on the file. Save it there first.
+
+
+5. In the container
+
+bin/pos-item gives its arguments to bin/clankos-run. The files are the
+host's, at their own paths, and are written as the invoking user. The
+lock the command takes while it writes is a file beside each file,
+which an editor on the host sees. It sees saved files only.
+
+
+6. Exit status
+
+    0     saved
+    2     usage
+    255   refused, or an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-item schedule TARGET DATE|none
+       pos-item deadline TARGET DATE|none
+       pos-item tag TARGET +TAG|-TAG ...
+       pos-item --help
+
+Set one task's scheduled date, its deadline or its tags with Org's own
+commands, in the ClankOS container.
+"clankos-run help pos-item" prints the protocol.
+
+    pos-item schedule intray.org:12 2030-03-04
+    /path/to/intray.org:12: TODO Send the invoice SCHEDULED: <2030-03-04 Mon>
+
+    pos-item tag intray.org:12 +phone -errand
+    /path/to/intray.org:12: TODO Send the invoice :phone:
+
+TARGET is the task's ID, or FILE:LINE, the file from the working
+directory and the line of the task's heading. DATE is YYYY-MM-DD, or
+'YYYY-MM-DD +1w' with a repeater; none removes the date. +TAG adds a
+tag and -TAG removes one.
+
+Prints the file, the line, the state and title of the task, and the
+date or the tags it now has.
+
+Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-item "$@"
