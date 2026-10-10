@@ -34,15 +34,19 @@ project's file.
 - Present one item at a time, with what bears on it and a suggestion
   where there is one. The decision is the person's.
 - Record each decision in the item's own file as it is given: a
-  keyword, a date, an outcome, a next action.
+  keyword, a date, an outcome, a next action. `scripts/clankos
+  pos-state` sets a task's state and records the change, and
+  `scripts/clankos pos-project status` a project's.
 - Capture what comes to mind with the capture skill. Do not hold it.
 - A container's review looks over its children's and does not repeat
   them: a project with a review item of its own is reviewed there.
 
 ## Close
 
-Mark the review item DONE in its file. Its repeater moves the date on,
-so the next review is scheduled by finishing this one. If the review
+Mark the review item done with
+`scripts/clankos pos-state FILE:LINE DONE 'What was reviewed'`. Its
+repeater moves the date on, so the next review is scheduled by
+finishing this one, and the note is kept with the item. If the review
 stopped early, leave the item as it is, so that it stays due.
 
 ## Afterwards
