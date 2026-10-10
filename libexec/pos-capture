@@ -6,6 +6,9 @@ if [ "${1:-}" = --check ]; then
     check=1
     shift
 fi
+if [ $# -ge 1 ] && [ "$1" != -- ]; then
+    echo "pos-capture: put -- before the title" >&2
+fi
 if [ $# -lt 2 ] || [ $# -gt 3 ] || [ "$1" != -- ] || { [ -n "$check" ] && [ $# -ne 2 ]; }; then
     echo "Usage: pos-capture -- 'Task title' ['Body']" >&2
     echo "       pos-capture --check -- 'Task title'" >&2
