@@ -50,7 +50,7 @@ in that directory.
     added: to this garden's children, or, where a responsibility of
     this garden is on the way to PATH, to that responsibility's, since
     a node declares only what is directly beneath it. The repository
-    is not cloned.
+    is cloned afterwards, outside the container (section 5).
 
 A name is one part of a path: letters, digits, dot, dash and
 underscore, not beginning with a dot. Existing configuration and
@@ -85,10 +85,36 @@ poslib's plan of the tree is read, and printed from it:
     to clone  a declared repository that is not there yet
 
 
-5. Exit status
+5. Cloning
+
+The container holds none of the user's Git credentials, so nothing is
+cloned in it. bin/responsibility-tree, which starts the container,
+clones afterwards with the git of the machine it runs on: each
+repository the report gave as to clone, at its declared remote and
+branch, from the root of the repository the garden is in. Each is
+reported:
+
+    cloned    PATH from REMOTE
+    not cloned PATH from REMOTE    on standard error, after git's own
+                                   message
+
+A cloned repository can hold a configuration that declares more
+repositories. So the container is asked again what is still to clone,
+with "responsibility-tree --to-clone", which changes nothing and
+prints a line for each: path, remote and branch, a tab between. This
+goes on until a round clones nothing. A repository that could not be
+cloned is tried once in a run, and again at the next.
+
+With --no-clone, nothing is cloned and the report stands as it is.
+initiate asks for the tree inside the container and clones nothing:
+run bin/responsibility-tree afterwards.
+
+
+6. Exit status
 
     0     done
-    1     a name or a path was refused; the rest was done
+    1     a name or a path was refused, or a repository was not
+          cloned; the rest was done
     2     not a garden, not a responsibility, or usage
     125   Docker failed to run the container
     126   the workspace is not visible in the container
