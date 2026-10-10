@@ -22,7 +22,17 @@ where the task belongs; pos-refile moves it later.
 
 "pos-capture -- TITLE" adds "** TODO TITLE" at the end of Unsorted and
 saves the file. It makes Unsorted, at the end of the file, if the intray
-lacks it. It prints the file, the line and the title:
+lacks it. The task is given two properties: ID, a new Org ID, by which
+a link or a command names it wherever it is later moved; and CREATED,
+the time of capture:
+
+    ** TODO Make time for sketching
+    :PROPERTIES:
+    :ID:       6f1c1e0a-3f0b-4c52-9d0e-2a4b8c1d7e55
+    :CREATED:  [2030-03-04 Mon 09:15]
+    :END:
+
+It prints the file, the line and the title:
 
     /path/to/intray.org:3: TODO Make time for sketching
 
@@ -35,8 +45,16 @@ It is refused, and nothing is written, if:
   - intray.org is missing, or is a symlink;
   - an editor holds a lock on intray.org. Save the intray there first.
 
-It does not look for a task of the same title: a second call adds a
-second task. pos-dedupe finds those.
+It refuses no title for being there already: a second call adds a
+second task, which pos-dedupe finds. It does say what is like it.
+After the line above it prints one line for each open task, in any
+file read, whose title has most of its words in common with TITLE:
+
+    Like: /path/to/projects/art.org:7: NEXT Make time to sketch
+
+The tasks are those there before the capture. The share of words that
+makes two titles like is pos-capture-like-share, 0.6, which the
+working directory's pos-config.el can set.
 
 It sees saved files only: text typed into an editor and not yet saved
 is not seen.

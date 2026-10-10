@@ -13,10 +13,12 @@ the ClankOS container.
     pos-capture -- 'Make time for sketching'
     /path/to/intray.org:3: TODO Make time for sketching
 
-The title is one nonempty line, kept as written. Prints the file, the line and the title
-saved. Unsorted is made if the intray lacks it. Refused if intray.org
-is missing, is a symlink, or is locked by an editor. A second call with
-the same title adds a second task.
+The title is one nonempty line, kept as written. The task is given an
+ID and a CREATED date. Prints the file, the line and the title saved,
+then a "Like:" line for each open task with a like title. Unsorted is
+made if the intray lacks it. Refused if intray.org is missing, is a
+symlink, or is locked by an editor. A second call with the same title
+adds a second task.
 
 Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
 stderr; 125, 126 and 127 are clankos-run's.
