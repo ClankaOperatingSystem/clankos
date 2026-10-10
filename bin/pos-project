@@ -18,7 +18,7 @@ directory, in the ClankOS container.
 
 create   NAME.org where WITHIN's projects belong. WITHIN is "." or the
          path of a responsibility. NAME is lower-case letters, digits
-         and hyphens. OUTCOME goes under the file's Outcome heading.
+         and hyphens. OUTCOME is one line, the file's OUTCOME property.
          REVIEW is the first review's date, YYYY-MM-DD. NEXT is the
          next action's title.
 status   set PROJECT's STATUS to COMMITTED, WIP or DONE and record
