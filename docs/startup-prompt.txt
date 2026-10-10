@@ -164,7 +164,8 @@ responsibility-tree gives a new project that drawer.
 The label of a line is its file's directory under the root, without
 the segments named projects, and with the file's name added unless it
 is project.org: projects/alpha/project.org is "alpha", and
-projects/alpha/notes.org is "alpha/notes".
+projects/alpha/notes.org is "alpha/notes". A project.org at the root
+itself is ".".
 
 With no --view, every view but someday, projects, finished and all is
 printed, in the order above.
