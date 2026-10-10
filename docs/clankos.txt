@@ -46,7 +46,9 @@ it.
 
 Each is a script in the garden's bin/, run from the directory it is to
 work on. Run from a responsibility's directory, a command works on
-that responsibility. The scripts are links to what ClankOS installs in
+that responsibility: there the script is ../bin/NAME, a task is
+captured to that responsibility's intray, and a report names projects
+from that directory. The scripts are links to what ClankOS installs in
 .clanka/auto/, which Git does not keep and each command brings to the
 image's own before it runs.
 
