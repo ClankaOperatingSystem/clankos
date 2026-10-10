@@ -30,6 +30,13 @@ plan's table, what is moved and what is left.
 3. **Apply.** `apply --dry-run` reports what would move; `apply` moves
    each `move` entry with its subtree.
 
+One task is moved at once, with no plan, by
+`scripts/clankos pos-place TARGET FILE UNDER [STATE]`: the task by its
+ID or its file and line, the file and heading it goes beneath, and the
+state it then has. It records where the task came from and prints each
+link that names the old place. `scripts/clankos pos-place --help` has
+the rest.
+
 `stranded --dry-run` lists open tasks in files the garden does not
 read, and `stranded` moves them into the intray. That step has no plan
 and edits the files in place.

@@ -37,9 +37,12 @@ addition writes.
 - Run the command in the responsibility the addition belongs to.
 - Give the options. Run with none at a terminal, the command asks
   questions, which an agent cannot answer.
-- After adding a project, write its outcome and its next action in the
-  file, and schedule its review. The start-up views name a project
-  that has no review.
+- A project whose outcome and first review are known is made whole by
+  `scripts/clankos pos-project create`, with its outcome, review and
+  next action. After `--project`, write those in the file by hand. The
+  start-up views name a project that has no review.
+- A project that needs more than one file is promoted with
+  `scripts/clankos pos-project promote`.
 - Ask before adding a responsibility. It changes the shape of the
   garden.
 

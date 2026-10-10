@@ -54,6 +54,10 @@ image's own before it runs.
                           add what a newer image has
     responsibility-tree   add responsibilities, projects and products
     pos-capture           add a task to the intray
+    pos-state             set a task's state, and record the change
+    pos-place             move one task to where it belongs
+    pos-project           make a project's file, change its status,
+                          promote it to a directory
     pos-refile            move tasks from the intray to where they
                           belong, and stranded tasks into it
     pos-dedupe            resolve tasks written more than once
