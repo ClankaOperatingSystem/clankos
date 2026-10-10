@@ -1,0 +1,8 @@
+#!/bin/sh
+# pos-state TARGET STATE [NOTE]
+# The protocol is docs/pos-state.txt.
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    echo "Usage: pos-state TARGET STATE ['Note']" >&2
+    exit 2
+fi
+exec "$(dirname -- "$0")/pos-emacs" -l pos-state -f pos-state-batch "$@"

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-state TARGET STATE ['Note']
+       pos-state --help
+
+Set one task's state with Org's own command, and record the change, in
+the ClankOS container.
+"clankos-run help pos-state" prints the protocol.
+
+    pos-state intray.org:12 DONE 'Sent on Tuesday'
+    /path/to/intray.org:12: DONE Send the invoice
+
+TARGET is the task's ID, or FILE:LINE, the file from the working
+directory and the line of the task's heading. STATE is TODO, NEXT,
+WAITING, SOMEDAY, DONE or CANCELLED. The note is one line.
+
+DONE and CANCELLED add CLOSED. A repeating task set to DONE has its
+date moved on by its own repeater and is TODO again, which is how a
+review item is marked done. The change is a line in the task's LOGBOOK
+drawer, with the note beneath it. Prints the file, the line, and the
+state and title the task now has.
+
+Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-state "$@"

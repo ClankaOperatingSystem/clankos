@@ -1,0 +1,76 @@
+pos-state: setting a task's state
+
+bin/pos-state runs this protocol in the ClankOS container. The command
+is poslib's pos-set-state, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. Naming a task
+
+"pos-state TARGET STATE [NOTE]" works on one task. TARGET names it:
+
+    an ID        the value of the task's ID property, which pos-capture
+                 gives each task. It is looked for in every Org file
+                 the working directory's tree reads.
+    FILE:LINE    the file, from the working directory, and the line of
+                 the task's heading
+
+An ID names the task wherever it has been moved. A line is true only
+until the file changes above it.
+
+
+2. What is written
+
+STATE is one of the garden's keywords: TODO, NEXT, WAITING, SOMEDAY,
+DONE, CANCELLED. The state is set by Org's own command, so what Org
+does on a change is done:
+
+  - DONE and CANCELLED add a CLOSED date;
+  - a repeating task set to DONE has its SCHEDULED or DEADLINE moved
+    on by its own repeater, is TODO again, and takes a LAST_REPEAT
+    property. A review item is marked done this way.
+
+Each change is recorded in the task's LOGBOOK drawer, in Org's form,
+with NOTE, one line, beneath it when one is given:
+
+    ** WAITING Call the roofer
+    :LOGBOOK:
+    - State "WAITING"    from "TODO"       [2030-03-04 Mon 09:15] \\
+      Asked by phone
+    :END:
+
+It prints the file, the line, and the state and title the task now
+has:
+
+    /path/to/tasks.org:12: WAITING Call the roofer
+
+Nothing else in the file is changed, and no backup or autosave file is
+written. A keyword changed by editing the file is not recorded.
+
+It is refused, and nothing is written, if:
+
+  - STATE is not one of the keywords, or is the state the task has;
+  - the ID is on no heading, or on two;
+  - LINE is not the heading of a task;
+  - the file is not one the tree reads, is another repository's, or is
+    a symlink;
+  - an editor holds a lock on the file. Save it there first;
+  - NOTE holds a newline or another control character.
+
+
+3. In the container
+
+bin/pos-state gives its arguments to bin/clankos-run. The files are the
+host's, at their own paths, and are written as the invoking user. The
+lock the command takes while it writes is a file beside each file,
+which an editor on the host sees. It sees saved files only.
+
+
+4. Exit status
+
+    0     saved
+    2     usage
+    255   refused, or an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
