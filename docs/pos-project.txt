@@ -18,24 +18,21 @@ NAME.org where the configuration of WITHIN says its projects belong.
               responsibility beneath it
     NAME      lower-case letters, digits and hyphens
     TITLE     one line
-    OUTCOME   the text under the file's Outcome heading; it may have
-              several paragraphs, and no line beginning with a star
+    OUTCOME   one line saying what is so when the project is done;
+              the file's OUTCOME property
     REVIEW    the date of the first review, YYYY-MM-DD
     NEXT      the title of the next action; optional
 
-The file has a new Org ID, the STATUS COMMITTED and the date it was
-made:
+The file has a new Org ID, the STATUS COMMITTED, the outcome and the
+date it was made, as properties:
 
     :PROPERTIES:
     :ID:       3637222e-aa72-4bbc-a913-824b1f344f47
     :STATUS:   COMMITTED
+    :OUTCOME:  The roof does not leak.
     :CREATED:  [2030-01-10 Thu]
     :END:
     #+TITLE: Mend the roof
-
-    * Outcome
-
-    The roof does not leak.
 
     * NEXT Call the roofer
     * TODO Review Mend the roof :review:

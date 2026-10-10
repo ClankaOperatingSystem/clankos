@@ -41,11 +41,11 @@ in that directory.
     naming the image this garden runs, and intray.org. Its path is
     added to this garden's children.
   - A project NAME. The file NAME.org is made where this garden's
-    projects belong, with a title and headings for its outcome and
-    tasks. Making the file is the commitment, and nothing declares it:
-    the file begins with a property drawer whose STATUS is COMMITTED,
-    by which startup-prompt lists the project until it has a review
-    scheduled.
+    projects belong, with a title and a heading for its tasks. Making
+    the file is the commitment, and nothing declares it: the file
+    begins with a property drawer whose STATUS is COMMITTED, by which
+    startup-prompt lists the project until it has a review scheduled,
+    and whose OUTCOME is empty, to be written as one line.
   - A product PATH=REMOTE. An entry with that path and remote is
     added: to this garden's children, or, where a responsibility of
     this garden is on the way to PATH, to that responsibility's, since

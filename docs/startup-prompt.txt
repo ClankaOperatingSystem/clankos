@@ -120,9 +120,10 @@ list with no item says "(none)".
                          whose files has a NEXT or WAITING item.
     projects             Each active project, three lines: its path,
                          STATUS and the date of its next review; its
-                         first NEXT or WAITING item; and the first
-                         paragraph under its top-level heading
-                         "Outcome". What it lacks is a dash.
+                         first NEXT or WAITING item; and its outcome,
+                         which is the OUTCOME property of its file,
+                         with any OUTCOME+ lines joined to it. What
+                         it lacks is a dash.
     intray               Every open item under the heading "Unsorted"
                          in a file named intray.org, the root's and
                          each scope's: what pos-capture has added and

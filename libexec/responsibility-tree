@@ -131,7 +131,7 @@ add_project() {
         echo "kept      $projects/$1 (it is there)"
     else
         mkdir -p "$projects"
-        printf ':PROPERTIES:\n:STATUS: COMMITTED\n:END:\n#+TITLE: %s\n\n* Outcome\n\n* Tasks\n' "$1" > "$file"
+        printf ':PROPERTIES:\n:STATUS: COMMITTED\n:OUTCOME:\n:END:\n#+TITLE: %s\n\n* Tasks\n' "$1" > "$file"
         echo "wrote     $file"
     fi
 }

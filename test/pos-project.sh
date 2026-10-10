@@ -13,7 +13,9 @@ git init -q .
 check "create prints the file made" grep -qx 'projects/mend-roof.org' out
 check "the file has an ID" grep -Eq '^:ID: +[0-9A-Fa-f-]{36}$' projects/mend-roof.org
 check "the status of a project not begun" grep -q '^:STATUS: *COMMITTED$' projects/mend-roof.org
-check "its outcome" grep -qx 'The roof does not leak.' projects/mend-roof.org
+check "its outcome, as a property" \
+    grep -Eq '^:OUTCOME: +The roof does not leak\.$' projects/mend-roof.org
+check "and no Outcome heading" sh -c "! grep -q '^\* Outcome' projects/mend-roof.org"
 check "its next action" grep -qx '\* NEXT Call the roofer' projects/mend-roof.org
 check "and its review, scheduled" grep -qx 'SCHEDULED: <2030-03-01 Fri>' projects/mend-roof.org
 "$bin/startup-prompt" --view projects > out 2> err
@@ -23,6 +25,9 @@ check "startup-prompt lists the project with what it was made with" \
 "$bin/pos-project" create health checkup 'Have a checkup' 'Seen by the doctor.' 2030-04-01 > out 2> err
 check "a responsibility's project goes where its projects belong" \
     test -f health/projects/checkup.org
+check "an outcome of two lines is refused" \
+    sh -c "! '$bin/pos-project' create . two-lines 'Two' 'One.
+Two.' 2030-03-01 >/dev/null 2>&1"
 check "a name that is taken is refused" \
     sh -c "! '$bin/pos-project' create . mend-roof 'Again' 'Outcome.' 2030-03-01 >/dev/null 2>&1"
 

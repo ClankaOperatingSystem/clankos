@@ -19,7 +19,9 @@ check "a responsibility is declared, with no remote" \
     sh -c "grep -A1 '^  - path: health\$' .clanka/config.yml | tail -n 1 | grep -qv remote"
 check "a project is one file where projects belong" grep -qx '#+TITLE: kitchen' projects/kitchen.org
 check "a project is committed, in a drawer that begins its file" \
-    test "$(sed -n 1,3p projects/kitchen.org | tr '\n' '|')" = ':PROPERTIES:|:STATUS: COMMITTED|:END:|'
+    test "$(sed -n 1,4p projects/kitchen.org | tr '\n' '|')" = ':PROPERTIES:|:STATUS: COMMITTED|:OUTCOME:|:END:|'
+check "with an outcome to be written, and no Outcome heading" \
+    sh -c "! grep -q '^\* Outcome' projects/kitchen.org"
 check "so startup-prompt lists it as wanting a review" \
     sh -c "'$bin/startup-prompt' --view reviews-to-schedule 2>/dev/null | grep -q '^  projects/kitchen  *COMMITTED\$'"
 check "a project is not declared" sh -c '! grep -q kitchen .clanka/config.yml'
