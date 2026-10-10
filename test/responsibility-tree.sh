@@ -103,6 +103,14 @@ check "run again, nothing more is cloned" sh -c '! grep -q "^cloned" out'
 check "and what cannot be cloned is tried again" grep -qx "not cloned gone from $remotes/gone" out
 cd ..
 
+mkdir -p naming/.clanka && cd naming && git init -q .
+printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+"$bin/responsibility-tree" --no-clone --responsibility 'Family Finances' > out 2>&1
+check "a name with a space is refused" test $? -eq 1
+check "and the refusal says what a name is" \
+    grep -qx 'not a name: Family Finances (a name is letters, digits, dot, dash and underscore, and does not begin with a dot)' out
+cd ..
+
 mkdir plain && (cd plain && git init -q .)
 check "a repository that is no garden is refused" \
     sh -c "cd plain && '$bin/responsibility-tree' --project x >/dev/null 2>&1; [ \$? -eq 2 ]"
