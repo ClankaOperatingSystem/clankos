@@ -135,6 +135,10 @@ the commands as they run here.
 ClankOS's skills are in .agents/skills/, each named clankos-NAME. Each
 says when one of the commands is used and what to check.
 
+Search for files within this repository. Do not search the user's
+home directory or the rest of the machine unless the user asks for
+that.
+
 The scripts in $bin/ and those skills are links ClankOS makes, and Git
 does not keep them. Where they are missing, as in a new clone, run
 this at the root of the repository, which makes them and changes
