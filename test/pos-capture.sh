@@ -29,6 +29,20 @@ check "and the task is added all the same" \
     test "$(grep -c '^\*\* TODO Make time for sketching$' intray.org)" = 2
 rm -f again
 
+"$bin/pos-capture" -- 'Call the roofer' 'The gutter leaks.
+
+By the door.' >/dev/null 2>&1
+check "a body is written beneath the task's properties" \
+    sh -c "grep -A8 'TODO Call the roofer' intray.org | tr '\n' '|' | grep -q ':END:|The gutter leaks.||By the door.|'"
+check "a body that would make a heading is refused" \
+    sh -c "! '$bin/pos-capture' -- 'A task' '* A heading' >/dev/null 2>&1"
+cp intray.org before
+"$bin/pos-capture" --check -- 'Call roofer' > again 2>/dev/null
+check "--check prints the like tasks" grep -q "^Like: .*TODO Call the roofer\$" again
+check "and saves nothing" cmp -s before intray.org
+check "--check takes no body" status 2 "$bin/pos-capture" --check -- 'Call roofer' 'A body'
+rm -f again before
+
 mkdir scope
 printf '#+TITLE: Scope intray\n' > scope/intray.org
 (cd scope && "$bin/pos-capture" -- 'In the scope' >/dev/null 2>&1)

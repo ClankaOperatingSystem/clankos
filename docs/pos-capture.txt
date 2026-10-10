@@ -36,12 +36,19 @@ It prints the file, the line and the title:
 
     /path/to/intray.org:3: TODO Make time for sketching
 
+"pos-capture -- TITLE BODY" writes BODY beneath the task's properties,
+less surrounding blank lines. It is for what will not fit in a title,
+the words a task was given in among it. It may have several paragraphs.
+
 TITLE is kept as written, less surrounding spaces. Nothing else in the
 file is changed, and no backup or autosave file is written.
 
 It is refused, and nothing is written, if:
 
   - TITLE is empty or holds a newline or another control character;
+  - a line of BODY begins with a star, which Org would read as a
+    heading, or BODY holds a control character other than a newline
+    or a tab;
   - intray.org is missing, or is a symlink;
   - an editor holds a lock on intray.org. Save the intray there first.
 
@@ -51,6 +58,9 @@ After the line above it prints one line for each open task, in any
 file read, whose title has most of its words in common with TITLE:
 
     Like: /path/to/projects/art.org:7: NEXT Make time to sketch
+
+"pos-capture --check -- TITLE" prints those lines alone and saves
+nothing, for when a task may be there already.
 
 The tasks are those there before the capture. The share of words that
 makes two titles like is pos-capture-like-share, 0.6, which the

@@ -1,9 +1,15 @@
 #!/bin/sh
-# pos-capture -- TITLE
+# pos-capture [--check] -- TITLE [BODY]
 # The protocol is docs/pos-capture.txt.
-if [ $# -ne 2 ] || [ "$1" != -- ]; then
-    echo "Usage: pos-capture -- 'Task title'" >&2
+check=
+if [ "${1:-}" = --check ]; then
+    check=1
+    shift
+fi
+if [ $# -lt 2 ] || [ $# -gt 3 ] || [ "$1" != -- ] || { [ -n "$check" ] && [ $# -ne 2 ]; }; then
+    echo "Usage: pos-capture -- 'Task title' ['Body']" >&2
+    echo "       pos-capture --check -- 'Task title'" >&2
     exit 2
 fi
-POS_CAPTURE_ROOT=$PWD POS_CAPTURE_TITLE=$2 \
+POS_CAPTURE_ROOT=$PWD POS_CAPTURE_TITLE=$2 POS_CAPTURE_BODY=${3:-} POS_CAPTURE_CHECK=$check \
     exec "$(dirname -- "$0")/pos-emacs" -l pos-capture -f pos-capture-batch
