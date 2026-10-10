@@ -54,5 +54,7 @@ check "a missing intray is refused" \
 check "a refusal makes no intray" test ! -e empty/intray.org
 check "an empty title is refused" sh -c "! '$bin/pos-capture' -- ' ' >/dev/null 2>&1"
 check "a title without -- is usage" status 2 "$bin/pos-capture" 'No dashes'
+check "and is told to put -- before the title" \
+    sh -c "'$bin/pos-capture' 'No dashes' 2>&1 | grep -qx 'pos-capture: put -- before the title'"
 
 [ "$failures" -eq 0 ]
