@@ -1,0 +1,13 @@
+#!/bin/sh
+# pos-project create WITHIN NAME TITLE OUTCOME REVIEW [NEXT]
+#           | status PROJECT STATUS [NOTE] | promote PROJECT
+# The protocol is docs/pos-project.txt.
+case "${1:-}:$#" in
+    create:6|create:7|status:3|status:4|promote:2) ;;
+    *)
+        echo "Usage: pos-project create WITHIN NAME TITLE OUTCOME REVIEW [NEXT]" >&2
+        echo "       pos-project status PROJECT STATUS ['Note']" >&2
+        echo "       pos-project promote PROJECT" >&2
+        exit 2 ;;
+esac
+exec "$(dirname -- "$0")/pos-emacs" -l pos-project -f pos-project-batch "$@"

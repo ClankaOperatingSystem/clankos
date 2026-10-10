@@ -1,0 +1,107 @@
+pos-project: a project's file, its status and its promotion
+
+bin/pos-project runs this protocol in the ClankOS container. The
+commands are poslib's, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+responsibility-tree --project also makes a project's file, with a
+title and empty headings (docs/responsibility-tree.txt). pos-project
+create makes one with what startup-prompt reads of a project.
+
+
+1. Making a project's file
+
+"pos-project create WITHIN NAME TITLE OUTCOME REVIEW [NEXT]" makes
+NAME.org where the configuration of WITHIN says its projects belong.
+
+    WITHIN    "." for the working directory, or the path of a
+              responsibility beneath it
+    NAME      lower-case letters, digits and hyphens
+    TITLE     one line
+    OUTCOME   the text under the file's Outcome heading; it may have
+              several paragraphs, and no line beginning with a star
+    REVIEW    the date of the first review, YYYY-MM-DD
+    NEXT      the title of the next action; optional
+
+The file has a new Org ID, the STATUS COMMITTED and the date it was
+made:
+
+    :PROPERTIES:
+    :ID:       3637222e-aa72-4bbc-a913-824b1f344f47
+    :STATUS:   COMMITTED
+    :CREATED:  [2030-01-10 Thu]
+    :END:
+    #+TITLE: Mend the roof
+
+    * Outcome
+
+    The roof does not leak.
+
+    * NEXT Call the roofer
+    * TODO Review Mend the roof :review:
+    SCHEDULED: <2030-03-01 Fri>
+
+It prints the file made, from the working directory. Making the file
+is the commitment; nothing declares it.
+
+It is refused, and nothing is written, if WITHIN is not the working
+directory or a responsibility of its tree, names no place for
+projects, or is another repository's; if NAME is taken, by a file or
+a directory; or if an argument is not as the table has it.
+
+
+2. Changing a project's status
+
+"pos-project status PROJECT STATUS [NOTE]" sets the STATUS of a
+project's file. PROJECT is the project's path as startup-prompt prints
+it, as projects/mend-roof. STATUS is COMMITTED, a project not begun;
+WIP, one begun; or DONE, one closed. Any may follow any other.
+
+The change is recorded, with its time and NOTE, at the head of a
+LOGBOOK drawer beneath the file's properties:
+
+    :LOGBOOK:
+    - Status "WIP"        from "COMMITTED"  [2030-01-12 Sat 09:15] \\
+      Rang the roofer
+    :END:
+
+It prints the file and both statuses. It is refused if STATUS is not
+one of the three, or is the one the project has; if PROJECT is no
+project's path, or none of its files has a STATUS; or if the file
+could not be written, as pos-state refuses one (docs/pos-state.txt).
+
+
+3. Promoting a one-file project
+
+"pos-project promote PROJECT" moves PROJECT.org to
+PROJECT/project.org, for a project that needs more than one file. The
+project's path does not change.
+
+Path links are kept whole: each relative link in the project's file
+is rewritten to lead where it led, and each link to the file from
+another file of the same repository is rewritten to the new place. A
+link by ID needs no rewriting. No README and no configuration is
+written, and Git is not told of the move.
+
+It prints the new file, then "Links rewritten: FILE: COUNT" for each
+file changed. It is refused, and nothing is moved, if PROJECT is not a
+one-file project, a directory of that name is there already, or a
+file to be written has unsaved changes in an editor.
+
+
+4. In the container
+
+bin/pos-project gives its arguments to bin/clankos-run. The files are the
+host's, at their own paths, and are written as the invoking user. The
+lock the command takes while it writes is a file beside each file,
+which an editor on the host sees. It sees saved files only.
+
+
+5. Exit status
+
+    0     saved
+    2     usage
+    255   refused, or an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

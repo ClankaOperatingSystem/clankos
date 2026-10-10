@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-project create WITHIN NAME TITLE OUTCOME REVIEW [NEXT]
+       pos-project status PROJECT STATUS ['Note']
+       pos-project promote PROJECT
+       pos-project --help
+
+Make a project's file, change its status, or promote it to a
+directory, in the ClankOS container.
+"clankos-run help pos-project" prints the protocol.
+
+    pos-project create . mend-roof 'Mend the roof' \
+        'The roof does not leak.' 2030-03-01 'Call the roofer'
+    projects/mend-roof.org
+
+create   NAME.org where WITHIN's projects belong. WITHIN is "." or the
+         path of a responsibility. NAME is lower-case letters, digits
+         and hyphens. OUTCOME goes under the file's Outcome heading.
+         REVIEW is the first review's date, YYYY-MM-DD. NEXT is the
+         next action's title.
+status   set PROJECT's STATUS to COMMITTED, WIP or DONE and record
+         the change. PROJECT is the path startup-prompt prints, as
+         projects/mend-roof.
+promote  move PROJECT.org to PROJECT/project.org, rewriting the path
+         links the move would break.
+
+Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-project "$@"
