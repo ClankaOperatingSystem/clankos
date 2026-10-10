@@ -27,8 +27,9 @@ addition writes.
 - **A project.** One Org file where the responsibility's projects
   belong, with headings for its outcome and its tasks. Making the file
   is the commitment.
-- **A product.** An entry with a path and a remote. The repository is
-  not cloned by this command.
+- **A product.** An entry with a path and a remote. The command then
+  clones the repository on this machine, with the user's own Git
+  credentials; `--no-clone` leaves it for later.
 
 ## What to get right
 

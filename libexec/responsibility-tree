@@ -1,8 +1,13 @@
 #!/bin/sh
 # responsibility-tree [--ask] [--responsibility NAME] ... [--project NAME] ...
 #                     [--product PATH=REMOTE] ...
+# responsibility-tree --to-clone
 # Add responsibilities, projects and products to the garden in the
 # working directory. The protocol is docs/responsibility-tree.txt.
+# With --to-clone, change nothing and print each declared repository
+# that is not there, a line each: its path from the repository's root,
+# its remote and its branch, with a tab between. bin/responsibility-tree
+# reads these on the host and clones them there.
 usage() {
     echo "Usage: responsibility-tree [--ask] [--responsibility NAME] ... [--project NAME] ... [--product PATH=REMOTE] ..." >&2
     exit 2
@@ -23,6 +28,18 @@ done
 projects=$(sed -n 's/^projects: *\([^ ]*\) *$/\1/p' "$config" | head -n 1)
 [ -n "$projects" ] || refuse "$config does not say where projects belong: this is not a responsibility"
 projects=${projects%/}
+
+if [ "${1:-}" = --to-clone ]; then
+    [ $# -eq 1 ] || usage
+    tree_root=$(git rev-parse --show-toplevel) || refuse "not in a Git repository"
+    exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+        -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
+        --eval '(seq-doseq (a (alist-get (quote actions)
+                                         (pos-tree-plan (pop command-line-args-left))))
+                  (let-alist a (when (equal .do "clone")
+                                 (princ (format "%s\t%s\t%s\n" .path .remote .branch)))))' \
+        "$tree_root"
+fi
 
 # A name is one part of a path, of letters, digits, dot, dash and underscore.
 name_ok() {

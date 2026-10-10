@@ -3,12 +3,13 @@ set -euo pipefail
 
 usage() {
     cat <<'HELP'
-Usage: responsibility-tree [--ask] [--responsibility NAME] ...
+Usage: responsibility-tree [--ask] [--no-clone] [--responsibility NAME] ...
                            [--project NAME] ... [--product PATH=REMOTE] ...
        responsibility-tree --help
 
 Add responsibilities, projects and products to the garden in the
-working directory, in the ClankOS container.
+working directory, in the ClankOS container, then clone each declared
+repository that is not there, with this machine's git.
 "clankos-run help responsibility-tree" prints the protocol.
 
 At a terminal with no option, and with --ask, it asks for each in
@@ -20,18 +21,62 @@ turn until an empty answer.
   --project NAME          make the one-file project NAME.org where the
                           garden's projects belong
   --product PATH=REMOTE   declare the repository at REMOTE as mounted
-                          at PATH; it is not cloned
+                          at PATH
+  --no-clone              clone nothing
 
 Then updates Git's managed archive ignore rules and prints what
 poslib's plan finds wrong in the tree, and what is still to clone.
+Each repository to clone is then cloned outside the container, where
+the user's Git credentials are, at its declared remote and branch.
 Keeps existing configuration and content, and commits nothing.
 
-Exit: 0 done, 1 a name or path was refused, 2 not a garden or usage;
-125, 126 and 127 are clankos-run's.
+Exit: 0 done, 1 a name or path was refused or a repository was not
+cloned, 2 not a garden or usage; 125, 126 and 127 are clankos-run's.
 HELP
 }
 
 case "${1:-}" in
     help|-h|--help) usage; exit 0 ;;
 esac
-exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" responsibility-tree "$@"
+run=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run
+clone=1
+args=()
+for arg in "$@"; do
+    case $arg in
+        --no-clone) clone= ;;
+        *) args+=("$arg") ;;
+    esac
+done
+
+status=0
+"$run" responsibility-tree ${args[@]+"${args[@]}"} || status=$?
+[ -n "$clone" ] || exit "$status"
+case $status in
+    0|1) ;;
+    *) exit "$status" ;;
+esac
+top=$(git rev-parse --show-toplevel)
+
+# A cloned repository can hold a configuration that declares more, so
+# ask again after each round, until a round clones nothing.
+tried=$'\n'
+while :; do
+    list=$("$run" responsibility-tree --to-clone < /dev/null) || exit $?
+    cloned=
+    while IFS=$'\t' read -r path remote branch; do
+        [ -n "$path" ] || continue
+        case $tried in
+            *$'\n'"$path"$'\n'*) continue ;;
+        esac
+        tried+=$path$'\n'
+        if git -C "$top" clone --quiet --branch "$branch" -- "$remote" "$path"; then
+            echo "cloned    $path from $remote"
+            cloned=1
+        else
+            echo "not cloned $path from $remote" >&2
+            status=1
+        fi
+    done <<< "$list"
+    [ -n "$cloned" ] || break
+done
+exit "$status"
