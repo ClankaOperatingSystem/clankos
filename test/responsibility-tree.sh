@@ -113,6 +113,15 @@ check "and the refusal says what a name is" \
     grep -qx 'not a name: Family Finances (a name is letters, digits, dot, dash and underscore, and does not begin with a dot)' out
 cd ..
 
+mkdir -p bare/.clanka && cd bare && git init -q .
+printf 'pos: 2\n' > .clanka/config.yml
+"$bin/responsibility-tree" --no-clone --responsibility health --project kitchen > out 2>&1
+check "in a garden that names no place for projects, a project is refused" test $? -eq 1
+check "and the refusal says why" \
+    grep -qx 'refused   kitchen (.clanka/config.yml does not say where projects belong)' out
+check "and the rest is done" test -f health/.clanka/config.yml
+cd ..
+
 mkdir plain && (cd plain && git init -q .)
 check "a repository that is no garden is refused" \
     sh -c "cd plain && '$bin/responsibility-tree' --project x >/dev/null 2>&1; [ \$? -eq 2 ]"

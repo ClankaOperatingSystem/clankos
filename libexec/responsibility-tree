@@ -26,7 +26,6 @@ for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos
 done
 [ -n "$config" ] || refuse "no configuration in $PWD; run initiate first"
 projects=$(sed -n 's/^projects: *\([^ ]*\) *$/\1/p' "$config" | head -n 1)
-[ -n "$projects" ] || refuse "$config does not say where projects belong: this is not a responsibility"
 projects=${projects%/}
 
 if [ "${1:-}" = --to-clone ]; then
@@ -126,6 +125,10 @@ add_responsibility() {
 
 add_project() {
     name_ok "$1" || { not_a_name "$1"; return 1; }
+    if [ -z "$projects" ]; then
+        echo "refused   $1 ($config does not say where projects belong)" >&2
+        return 1
+    fi
     file=$projects/$1.org
     if [ -e "$file" ] || [ -e "$projects/$1" ]; then
         echo "kept      $projects/$1 (it is there)"
@@ -191,8 +194,8 @@ if [ -n "$ask" ]; then
     while printf 'A responsibility to add (empty to go on): ' && read -r answer && [ -n "$answer" ]; do
         add_responsibility "$answer" || true
     done
-    echo "Projects: finite pieces of work with an outcome. Each gets a file in $projects/."
-    while printf 'A project to add (empty to go on): ' && read -r answer && [ -n "$answer" ]; do
+    [ -n "$projects" ] && echo "Projects: finite pieces of work with an outcome. Each gets a file in $projects/."
+    while [ -n "$projects" ] && printf 'A project to add (empty to go on): ' && read -r answer && [ -n "$answer" ]; do
         add_project "$answer" || true
     done
     echo "Products: repositories this garden works on, under their own rules."
