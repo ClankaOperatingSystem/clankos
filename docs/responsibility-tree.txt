@@ -51,7 +51,9 @@ in that directory.
     naming the image this garden runs, and intray.org. Its path is
     added to this garden's children.
   - A project NAME. The file NAME.org is made where this garden's
-    projects belong, with a title and a heading for its tasks. Making
+    projects belong, with a title and a heading for its tasks. A
+    garden whose configuration does not say where they belong is told
+    so, and the project is not made. Making
     the file is the commitment, and nothing declares it: the file
     begins with a property drawer whose STATUS is COMMITTED, by which
     startup-prompt lists the project until it has a review scheduled,
@@ -125,7 +127,7 @@ run bin/responsibility-tree afterwards.
     0     done
     1     a name or a path was refused, or a repository was not
           cloned; the rest was done
-    2     not a garden, not a responsibility, or usage
+    2     not a garden, or usage
     125   Docker failed to run the container
     126   the workspace is not visible in the container
     127   docker, or the command in the image, was not found
