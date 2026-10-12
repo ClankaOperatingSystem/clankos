@@ -70,4 +70,22 @@ mkdir -p projects/p/methodologies/hello/skills/greet && printf '%s\n' '---' 'nam
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a skill named without the methodology's prefix is reported" grep -q 'methodology-refused' ../err
 
+# A responsibility may have methodologies, and its skills are linked in it.
+mkdir -p work/.clanka work/methodologies/trade/skills/trade-greet
+printf '  - path: work\n' >> .clanka/config.yml
+printf 'pos: 2\nprojects: projects/\nmethodologies: methodologies\nchildren:\n  - path: methodologies/trade\n' > work/.clanka/config.yml
+printf '%s\n' '---' 'name: trade-greet' 'description: Greet.' '---' > work/methodologies/trade/skills/trade-greet/SKILL.md
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a responsibility's methodology is linked in the responsibility" \
+    test "$(readlink work/.agents/skills/trade-greet)" = ../../methodologies/trade/skills/trade-greet
+
+# A directory's skill with the name of another above it is reported.
+first=$(ls .agents/skills | head -n 1)
+mkdir -p "work/desk/.agents/skills/$first"
+printf '%s\n' '---' "name: $first" 'description: Another.' '---' > "work/desk/.agents/skills/$first/SKILL.md"
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a skill named as another above it exits 1" test $? -eq 1
+check "and is named on stderr" \
+    grep -qx "clankos: name-repeated work/desk/.agents/skills/$first (.agents/skills/$first)" ../err
+
 [ "$failures" -eq 0 ]

@@ -118,6 +118,9 @@ list with no item says "(none)".
                          one.
     stuck                Projects whose STATUS is WIP and none of
                          whose files has a NEXT or WAITING item.
+    no-outcome           Active projects none of whose files has an
+                         OUTCOME property: why each is done, and how
+                         it is known to be finished, is to be written.
     projects             Each active project, three lines: its path,
                          STATUS and the date of its next review; its
                          first NEXT or WAITING item; and its outcome,
@@ -173,7 +176,7 @@ printed, in the order above.
 "--view NAME", repeated, prints the prompts and those views only.
 "--weekly" stands for the views of a weekly review, in the order the
 review reads them: intray, next, waiting, scheduled, deadlines,
-reviews, stuck, reviews-to-schedule, someday, finished.
+reviews, stuck, no-outcome, reviews-to-schedule, someday, finished.
 
 
 5. The views as JSON
@@ -189,7 +192,8 @@ to read:
 In a view of items each element has scope, scope_kind, file, line, id,
 state, title, tags, scheduled, deadline, closed, properties and body.
 The dates are as written; what an item lacks is null. In
-reviews-to-schedule, stuck and projects, which list scopes, each has
+reviews-to-schedule, stuck, no-outcome and projects, which list scopes,
+each has
 scope, scope_kind and status; in projects, review, next and outcome
 too. A view named twice is given once.
 
