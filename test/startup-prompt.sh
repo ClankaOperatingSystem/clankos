@@ -35,7 +35,7 @@ printf 'pos: 2\nprojects: projects/\n' > garden/.clanka/config.yml
 printf 'pos: 2\nprojects: projects/\n' > shed/.clanka/config.yml
 printf '* NEXT Drafted\n' > drafts/d.org
 printf '* Unsorted\n** NEXT Answer the letter\n' > intray.org
-printf ':PROPERTIES:\n:STATUS:   COMMITTED\n:END:\n* NEXT Draft the outline\n* TODO Review Alpha :review:\nSCHEDULED: <%s>\n' \
+printf ':PROPERTIES:\n:STATUS:   COMMITTED\n:OUTCOME:  The outline is agreed.\n:END:\n* NEXT Draft the outline\n* TODO Review Alpha :review:\nSCHEDULED: <%s>\n' \
     "$(day -1)" > projects/alpha/project.org
 printf ':PROPERTIES:\n:STATUS:   WIP\n:END:\n* TODO Book the room\nSCHEDULED: <%s>\n* TODO File the return\nDEADLINE: <%s -3d>\n' \
     "$(day 5)" "$(day 40)" > projects/beta/project.org
@@ -91,6 +91,8 @@ check "a responsibility with no review is named" grep -q '^  garden$' out
 check "a responsibility a review elsewhere names is not" sh -c '! grep -q "^  shed$" out'
 check "a begun project with no next action is stuck" \
     sh -c "grep -A1 '^Projects with no next action\$' out | grep -q '^  projects/beta  *WIP\$'"
+check "an active project with no outcome is named" \
+    sh -c "grep -A3 '^Projects with no outcome: ' out | grep -q '^  projects/beta  *WIP\$'"
 check "the root's reviews are listed as the root's" \
     sh -c "grep -A2 '^Root reviews, late or due in the next 7 days\$' out | grep -q '^  life  *Scheduled:  *TODO Weekly review\$'"
 check "a root review beyond the window is not" sh -c '! grep -q "Monthly review" out'

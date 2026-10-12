@@ -14,16 +14,26 @@ with an outcome. A product is a leaf too: a repository the garden
 works on, under that repository's own rules.
 
 A node's configuration declares what is directly beneath it, each as a
-path. What is at the path says what it is:
+path. Where the path is, and what is at it, say what it is:
 
-    a configuration that names where projects belong    a responsibility
-    a configuration that names where methodologies belong      a project
-    no configuration                                           a product
+    no configuration                                     a product
+    a configuration, where the node's projects belong    a project
+    any other configuration                              a responsibility
 
-and a path directly beneath a project's methodologies path is a
-methodology, whatever is there: a directory or a repository that
-supplies the project skills and commands, as poslib's
-doc/pos-directory.txt section 6 and doc/pos-methodology.txt have it.
+A file or a directory where a responsibility's projects belong is a
+project too, with no configuration and no entry. A path directly
+beneath a node's methodologies path is a methodology, whatever is
+there: a directory or a repository that supplies the node skills and
+commands, as poslib's doc/pos-directory.txt section 6 and
+doc/pos-methodology.txt have it. A responsibility may have
+methodologies, as a project may.
+
+A coding agent shows a session the skills of the directory it is
+opened in and of each directory above it in the same repository. So a
+project that is a directory of its responsibility's repository works
+with the skills of its responsibility's methodologies, and a project
+that is a repository of its own does not. Which a project is, is
+chosen when the tree is laid out.
 
 No folder name carries meaning, with one convention: a responsibility
 keeps its one-file projects where its configuration says they belong,
