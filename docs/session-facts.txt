@@ -1,0 +1,51 @@
+session-facts: what happened since a commit
+
+bin/session-facts runs this protocol in the ClankOS container. The
+command is poslib's pos-facts, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What it is for
+
+A handover says what a session did, and a session that opens on a
+repository changed after the last handover needs to know what happened
+in between. Both are read from git and the ledgers.
+
+
+2. What it prints
+
+"session-facts SINCE", SINCE a commit the repository has, prints two
+lists:
+
+    Commits after SHORT SUBJECT
+      SHORT SUBJECT (pushed)
+      SHORT SUBJECT (not pushed)
+
+    Sealed after it
+      SCOPE event N: ITEM (committed)
+      SCOPE event N: ITEM (not committed)
+
+The commits are those after SINCE on the current branch, oldest first,
+each marked pushed or not by whether the upstream of HEAD has it; with
+no upstream, no commit is marked and a line says that pushed is not
+known. The events are those of every ledger under the working
+directory whose file SINCE does not have: the path of the archive's
+scope from the working directory, "." for the working directory
+itself; the event's number; the path it sealed; and whether the
+repository tracks the event's file. A list with nothing says "(none)".
+
+Other sessions' commits and seals of the same time are listed too:
+nothing here tells one session's from another's. The command reads
+git and the ledgers and writes nothing. "pushed" is as of the last
+fetch.
+
+
+3. Exit status
+
+    0     printed
+    1     a ledger refused; the reason is on stderr
+    2     usage, or SINCE is not a commit the repository has
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

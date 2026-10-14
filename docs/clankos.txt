@@ -81,6 +81,8 @@ image's own before it runs.
     wrap-up               the wrap-up slot: keep a session's handover,
                           sealed in the archive and indexed in the
                           journal
+    session-facts         the commits and the records sealed since a
+                          commit, for a handover
     archive-integrity     seal items into an archive; check archives
     archive-migrate       rebuild an archive that has a legacy ledger
     clankos-run           run a command in the image; the others call

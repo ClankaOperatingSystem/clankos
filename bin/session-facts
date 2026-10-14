@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: session-facts SINCE
+       session-facts --help
+
+Print what happened in the working directory's repository since SINCE,
+a commit, in the ClankOS container: the commits after it, oldest
+first, each pushed or not by the upstream of HEAD; then the ledger
+events added under the working directory, each committed or not.
+"clankos-run help session-facts" prints the protocol.
+
+    session-facts 1a2b3c4
+    Commits after 1a2b3c4 Begin the week
+      5d6e7f8 Mend the roof (pushed)
+      9a0b1c2 Clear the gutter (not pushed)
+
+    Sealed after it
+      . event 12: journal/2030-03-04-the-roof-mended.org (committed)
+
+Other sessions' commits and seals are listed too. Reads git and the
+ledgers; writes nothing. "pushed" is as of the last fetch.
+
+Exit: 0 printed, 1 a ledger refused, 2 usage or SINCE is not a commit,
+255 Emacs error; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    '') usage >&2; exit 2 ;;
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" session-facts "$@"
