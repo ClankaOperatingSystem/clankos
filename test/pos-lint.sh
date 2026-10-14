@@ -5,15 +5,15 @@ set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
 
 git init -q . && git config user.email t@example.org && git config user.name T
-mkdir -p .pos projects/p/.clanka projects/p/methodologies/adr/bin
+mkdir -p .pos projects/p/.clanka projects/p/methodologies/adr/skills/adr-write/scripts
 printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: projects/p\n' > .pos/config.yaml
 printf '#+TITLE: Intray\n\n* Unsorted\n** TODO Water the plants\n' > intray.org
 # A project that is a directory, with a methodology whose check finds
 # one thing and prints one line that is not a finding.
 printf 'pos: 2\nmethodologies: methodologies\nchildren:\n  - path: methodologies/adr\n' > projects/p/.clanka/config.yml
-printf 'methodology: 1\nchecks:\n  - adr-check\n' > projects/p/methodologies/adr/methodology.yaml
-printf '#!/bin/sh\necho "decisions/0002.md:3: status not known"\necho "index out of date"\nexit 1\n' > projects/p/methodologies/adr/bin/adr-check
-chmod +x projects/p/methodologies/adr/bin/adr-check
+printf -- '---\nname: adr-write\ndescription: Write a decision.\n---\n' > projects/p/methodologies/adr/skills/adr-write/SKILL.md
+printf '#!/bin/sh\necho "decisions/0002.md:3: status not known"\necho "index out of date"\nexit 1\n' > projects/p/methodologies/adr/skills/adr-write/scripts/check-status
+chmod +x projects/p/methodologies/adr/skills/adr-write/scripts/check-status
 printf '* NEXT Inside the methodology\n' > projects/p/methodologies/adr/README.org
 git add -A && git commit -q -m "Begin"
 # What the image installs is made before the first command; the lint
@@ -41,7 +41,7 @@ check "a WAITING item that says neither who nor since when is reported" \
     grep -qx 'intray.org:6: WAITING item does not say who or what it waits on, or since when' out
 git checkout -q intray.org
 
-rm -f projects/p/project.org projects/p/methodologies/adr/methodology.yaml
+rm -f projects/p/project.org projects/p/methodologies/adr/skills/adr-write/scripts/check-status
 "$bin/pos-lint" > out 2> err
 check "a clean tree exits 0" test $? -eq 0
 check "and prints nothing" test ! -s out
