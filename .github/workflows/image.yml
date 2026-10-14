@@ -27,6 +27,7 @@ jobs:
       - name: Test the commands in the image
         run: |
           docker build -t clankos:test .
+          docker build -t clankos-skills:test clankos-skills
           for test in test/*.sh; do
             echo "== $test"
             CLANKOS_IMAGE=clankos:test "$test" || exit 1
@@ -56,3 +57,20 @@ jobs:
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      # The image install runs the skills CLI in, under the same tags,
+      # so that clankos-run finds it beside the ClankOS image.
+      - id: skills-meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/clankaoperatingsystem/clankos-skills
+          flavor: latest=false
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+      - uses: docker/build-push-action@v7
+        with:
+          context: clankos-skills
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.skills-meta.outputs.tags }}
+          labels: ${{ steps.skills-meta.outputs.labels }}
