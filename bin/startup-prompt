@@ -10,6 +10,8 @@ Print what a session opens with: four prompts, then views of the saved
 Org files under the working directory, in the ClankOS container.
 "clankos-run help startup-prompt" prints the protocol.
 
+  handover             the latest handover of each node: its date, its
+                       title and the citation of its record
   next                 every NEXT item: projects', responsibilities'
                        and the root's apart
   waiting              every WAITING item

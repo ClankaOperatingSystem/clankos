@@ -49,10 +49,15 @@ printf '#+TITLE: Scope intray\n' > scope/intray.org
 check "the intray is the working directory's" grep -q 'In the scope' scope/intray.org
 
 mkdir empty
-check "a missing intray is refused" \
-    sh -c "cd empty && ! '$bin/pos-capture' -- 'Nowhere to go' >/dev/null 2>&1"
+check "a missing intray is refused, exit 1" \
+    sh -c "cd empty && '$bin/pos-capture' -- 'Nowhere to go' >/dev/null 2>&1; [ \$? -eq 1 ]"
+check "with the reason on stderr" \
+    sh -c "cd empty && '$bin/pos-capture' -- 'Nowhere to go' 2>&1 >/dev/null | grep -q 'Intray must be'"
 check "a refusal makes no intray" test ! -e empty/intray.org
-check "an empty title is refused" sh -c "! '$bin/pos-capture' -- ' ' >/dev/null 2>&1"
+check "an empty title is refused, exit 1" status 1 "$bin/pos-capture" -- ' '
+check "the capture slot's command is pos-capture" \
+    sh -c "'$bin/capture' -- 'Through the slot' | grep -q '^$work/intray.org:[0-9]*: TODO Through the slot\$'"
+check "and refuses the same way" status 1 "$bin/capture" -- ' '
 check "a title without -- is usage" status 2 "$bin/pos-capture" 'No dashes'
 check "and is told to put -- before the title" \
     sh -c "'$bin/pos-capture' 'No dashes' 2>&1 | grep -qx 'pos-capture: put -- before the title'"

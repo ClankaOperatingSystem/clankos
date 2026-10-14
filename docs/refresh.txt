@@ -25,7 +25,9 @@ mounted responsibility's or project's, the source is installed:
                      a link to each skill in auto/skills/
 
 All of it is untracked, its paths in Git's info/exclude. So a new
-clone has none of it until a command or initiate has run there.
+clone has none of it until a command or initiate has run there. A
+skill or a command of a slot's name, capture, start-up or wrap-up, is
+linked only where the repository holds none of its own (section 3).
 
 A repository with no configuration is a product. Nothing is written in
 it.
@@ -56,6 +58,13 @@ agent may take what has the name for ClankOS's skill. The other links
 are made. A garden made by an earlier image has copies of the scripts
 in bin/, which are reported in this way; removing them lets the links
 be made.
+
+A slot's name is the exception. A skill in .agents/skills/ or a
+command in bin/ that the repository holds under capture, start-up or
+wrap-up, tracked or not, is the repository's own filling of that slot
+(poslib's doc/pos-slots.txt): refresh makes no link there and says
+nothing, and the image's skill or command of that name is not
+installed in that repository.
 
 Where .claude/skills is an ordinary directory, the skill links are
 made there as well as in .agents/skills/, with a note,

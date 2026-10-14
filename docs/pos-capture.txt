@@ -2,7 +2,9 @@ pos-capture: adding a task to the intray
 
 bin/pos-capture runs this protocol in the ClankOS container. The
 command is poslib's pos-capture, at the commit the image was built
-with: https://github.com/ClankaOperatingSystem/poslib
+with: https://github.com/ClankaOperatingSystem/poslib. It is this
+image's filling of the capture slot, which bin/capture runs
+("clankos-run help capture").
 
 
 1. The intray
@@ -81,8 +83,9 @@ which an editor on the host sees.
 4. Exit status
 
     0     saved
+    1     refused; the reason is on stderr
     2     usage
-    255   refused, or an Emacs error; the message is on stderr
+    255   an Emacs error; the message is on stderr
     125   Docker failed to run the container
     126   the workspace is not visible in the container
     127   docker, or the command in the image, was not found

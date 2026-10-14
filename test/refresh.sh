@@ -51,6 +51,15 @@ check "what has the name is left" test "$(cat bin/pos-capture)" = mine
 "$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
 check "it is said again before every command" grep -q '^clankos: name-taken bin/pos-capture' ../err
 check "and the command runs all the same" grep -q 'START-UP PROMPTS' ../out
+
+# A command of the garden's own under a slot's name is its filling of
+# the slot: not a name taken.
+rm bin/pos-capture bin/wrap-up && printf '#!/bin/sh\necho ours\n' > bin/wrap-up && chmod +x bin/wrap-up
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a command of the garden's own under a slot's name exits 0" test $? -eq 0
+check "and is not reported" test ! -s ../err
+check "and is left as the garden's" test "$(bin/wrap-up)" = ours -a ! -L bin/wrap-up
+check "while the other slot commands are linked" test -L bin/capture -a -L bin/start-up
 cd ..
 
 mkdir plain

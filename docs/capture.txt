@@ -1,0 +1,49 @@
+capture: the capture slot
+
+bin/capture runs pos-capture in the ClankOS container: it is this
+image's filling of the capture slot, as poslib's doc/pos-slots.txt has
+the slots. A repository that holds a command named capture where its
+configuration says bin, or a skill named capture in .agents/skills/,
+fills the slot itself, and this image's is not installed there.
+
+
+1. The signature
+
+Every filling keeps to this:
+
+    capture -- TITLE [BODY]
+    capture --check -- TITLE
+
+TITLE is one line without control characters. BODY is text, for what
+does not fit a title. The command keeps the item and prints, first,
+one line:
+
+    LOCATOR: ITEM
+
+LOCATOR is a place a reader can follow, a file and a line or an
+address, and ITEM the item as kept. Then one line for each open item
+like the one given:
+
+    Like: LOCATOR: ITEM
+
+With --check, the Like: lines alone, and nothing is kept. Refused: an
+empty TITLE, a TITLE with a control character, and whatever the filling
+cannot keep, with the reason on stderr.
+
+
+2. This filling
+
+pos-capture keeps the item as a TODO under Unsorted in the working
+directory's intray.org, with ID and CREATED, and its LOCATOR is
+FILE:LINE ("clankos-run help pos-capture").
+
+
+3. Exit status
+
+    0     kept
+    1     refused; the reason is on stderr
+    2     usage
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

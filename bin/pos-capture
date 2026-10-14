@@ -24,8 +24,8 @@ made if the intray lacks it. Refused if intray.org is missing, is a
 symlink, or is locked by an editor. A second call with the same title
 adds a second task.
 
-Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
-stderr; 125, 126 and 127 are clankos-run's.
+Exit: 0 saved, 1 refused, its reason on stderr, 2 usage, 255 Emacs
+error; 125, 126 and 127 are clankos-run's.
 HELP
 }
 

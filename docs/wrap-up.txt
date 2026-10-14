@@ -1,0 +1,89 @@
+wrap-up: keeping a session's handover
+
+bin/wrap-up runs this protocol in the ClankOS container. The command
+is poslib's pos-wrap-up, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib. It is this image's
+filling of the wrap-up slot, as poslib's doc/pos-slots.txt has the
+slots. A repository that holds a command named wrap-up where its
+configuration says bin, or a skill named wrap-up in .agents/skills/,
+fills the slot itself, and this image's is not installed there.
+
+
+1. The handover
+
+A handover is what a session leaves for the one that resumes: what it
+was for, what it did and its evidence, what must not be redone, and
+what is open and where each open matter lives. The session that is
+closing writes it, since its account is in that session's context and
+nowhere else.
+
+
+2. The signature
+
+Every filling keeps to this:
+
+    wrap-up [--date DATE] -- TITLE < BODY
+
+TITLE is one line without control characters. BODY, on standard
+input, is the handover. DATE is YYYY-MM-DD, today by default. The
+command keeps BODY as the node's handover, titled TITLE and dated
+DATE, marks it the latest, and prints one line:
+
+    LOCATOR: TITLE, DATE
+
+LOCATOR is where a resuming session finds the handover: a citation, or
+an address. Refused: an empty TITLE, a TITLE with a control character,
+an empty BODY, a DATE not of that form, and whatever the filling
+cannot keep, with the reason on stderr.
+
+
+3. This filling
+
+Two things are written:
+
+  - The record. BODY is sealed, as it is, in the archive at the
+    working directory's archives/ as journal/DATE-SLUG.org, through
+    the archive's ledger, on disk or at its keeper, as
+    archive-integrity seals. SLUG is TITLE in lower case with each
+    run of characters that are not letters or digits made one hyphen.
+    A working directory with no archives/ gets one, with a new ledger
+    beside it.
+  - The index. A heading for the handover is added to the working
+    directory's journal.org before its first heading, so the file
+    reads newest first, tagged handover and latest, with the
+    properties ID, a new Org ID; DATE, the date as an inactive
+    timestamp; and RECORD, the record's ipfs:// citation. The latest
+    tag leaves the heading that had it. A journal.org that is missing
+    is made, with a title line.
+
+The LOCATOR printed is the record's citation:
+
+    ipfs://bafkrei...: The roof mended, 2030-03-04
+
+startup-prompt's handover view lists the heading tagged latest, and
+"archive-integrity fetch" reads the record from the citation.
+
+Besides the signature's refusals, this filling refuses when journal.org
+is a symlink or an editor holds a lock on it, and when the archive
+refuses the seal: a record already sealed at that path, a ledger that
+does not check, a keeper that cannot be reached. Nothing is written
+then.
+
+
+4. In the container
+
+bin/wrap-up gives its arguments and its standard input to
+bin/clankos-run. The files are the host's, at their own paths, and are
+written as the invoking user. A keeper is reached as archive-integrity
+reaches it.
+
+
+5. Exit status
+
+    0     kept
+    1     refused; the reason is on stderr
+    2     usage
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

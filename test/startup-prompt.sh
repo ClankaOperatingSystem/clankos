@@ -54,9 +54,20 @@ printf '* NEXT Generated\n' > _tmp/scratch.org
 (cd health && "$bin/pos-capture" -- 'Book the dentist' > /dev/null 2>&1)
 find . -type f ! -name before | sort > before
 
+# The root's journal: a latest handover and an earlier one.
+printf '#+TITLE: Journal\n\n* The roof mended :handover:latest:\n:PROPERTIES:\n:DATE:     [2030-03-04 Mon]\n:RECORD:   ipfs://bafyroof\n:END:\n* The roof surveyed :handover:\n:PROPERTIES:\n:DATE:     [2030-02-25 Mon]\n:RECORD:   ipfs://bafysurvey\n:END:\n' > journal.org
+find . -type f ! -name before | sort > before
+
 "$bin/startup-prompt" > out 2>/dev/null
 check "the prompts come first" test "$(head -1 out)" = "START-UP PROMPTS"
-check "the files read are counted, a product's among them" grep -q '^Files read: 9$' out
+check "the files read are counted, a product's among them" grep -q '^Files read: 10$' out
+check "the handover view comes first, and names the latest handover" \
+    sh -c "grep -A1 '^Latest handover\$' out | grep -q '^  journal  *2030-03-04 The roof mended ipfs://bafyroof\$'"
+check "and not the earlier one" sh -c '! grep -q "The roof surveyed" out'
+check "the handover view is the first view" \
+    test "$(grep -n -e '^Latest handover$' -e '^NEXT items of projects$' out | head -n 1 | cut -d: -f2)" = 'Latest handover'
+check "the start-up slot's command is startup-prompt" \
+    sh -c "'$bin/start-up' --view handover 2>/dev/null | grep -q 'The roof mended ipfs://bafyroof'"
 check "next lists a NEXT item by its scope" grep -q '^  alpha  *NEXT Draft the outline$' out
 check "next lists the items of projects under their own title" \
     sh -c "grep -A1 '^NEXT items of projects\$' out | grep -q '^  alpha  *NEXT Draft the outline\$'"
@@ -129,7 +140,7 @@ check "--weekly prints the views of a weekly review, the intray first" \
        = 'Intray, to be placed|NEXT items of projects|SOMEDAY items|Finished in the last 7 days|'
 "$bin/startup-prompt" --json --view stuck > json 2>/dev/null
 check "--json prints one line" test "$(wc -l < json | tr -d ' ')" = 1
-check "with the count of files" grep -q '^{"files_read":9,' json
+check "with the count of files" grep -q '^{"files_read":10,' json
 check "what was not read" grep -q '"not_read":\[{"path":"loft",' json
 check "and each view named" \
     grep -q '"views":{"stuck":\[{"scope":"projects/beta","scope_kind":"project","status":"WIP"}\]}}$' json

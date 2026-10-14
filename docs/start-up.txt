@@ -1,0 +1,45 @@
+start-up: the start-up slot
+
+bin/start-up runs startup-prompt in the ClankOS container: it is this
+image's filling of the start-up slot, as poslib's doc/pos-slots.txt
+has the slots. A repository that holds a command named start-up where
+its configuration says bin, or a skill named start-up in
+.agents/skills/, fills the slot itself, and this image's is not
+installed there.
+
+
+1. The signature
+
+Every filling keeps to this:
+
+    start-up [--view NAME]... [--json]
+
+The command prints the prompts a session opens with, then views: each
+a title, then one line per item, the item's scope then the item, with
+"(none)" for a view with no item. With no --view, the filling's
+default views; with --view NAME, repeated, those views. --json prints
+the same as one line of JSON. One view is the slot's own:
+
+    handover    the latest handover: where it is marked latest, and
+                the citation of its record
+
+A filling prints every view it is asked for; a view it does not keep
+prints "(none)". The command writes nothing to the node.
+
+
+2. This filling
+
+startup-prompt's views are those of poslib's pos-startup, the handover
+view first ("clankos-run help startup-prompt"). The handover view
+reads each journal.org under the working directory for the heading
+tagged handover and latest, which wrap-up writes.
+
+
+3. Exit status
+
+    0     printed
+    2     usage
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

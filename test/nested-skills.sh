@@ -62,12 +62,12 @@ check "the methodology's skill is linked in its project alone" \
 check "a responsibility that is a directory of the garden is given nothing of its own" \
     test "$(ls -A home | tr '\n' ' ')" = ".pos intray.org study "
 
-(cd home/study && ../../.agents/skills/clankos-capture/scripts/clankos pos-capture -- 'From the study' > ../../../out 2>&1)
+(cd home/study && ../../.agents/skills/capture/scripts/clankos capture -- 'From the study' > ../../../out 2>&1)
 check "from a directory two beneath the garden, the garden's skill works on that directory" \
     grep -q 'From the study' home/study/intray.org
-(cd child && .agents/skills/clankos-capture/scripts/clankos pos-capture -- 'From the child' > ../../out 2>&1)
+(cd child && .agents/skills/capture/scripts/clankos capture -- 'From the child' > ../../out 2>&1)
 check "a mounted responsibility's own skill works on it" grep -q 'From the child' child/intray.org
-(cd child/projects/grand && .agents/skills/clankos-start-up/scripts/clankos startup-prompt --view next > ../../../../out 2>&1)
+(cd child/projects/grand && .agents/skills/start-up/scripts/clankos start-up --view next > ../../../../out 2>&1)
 check "a mounted project's own skill reads the project" grep -q 'NEXT In the project' ../out
 "$bin/startup-prompt" --view next > ../out 2>&1
 check "from the garden, the project's task is read as the project's" \
