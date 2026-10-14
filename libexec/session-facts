@@ -1,0 +1,8 @@
+#!/bin/sh
+# session-facts SINCE
+# The protocol is docs/session-facts.txt.
+if [ $# -ne 1 ]; then
+    echo "Usage: session-facts SINCE" >&2
+    exit 2
+fi
+exec "$(dirname -- "$0")/pos-emacs" -l pos-facts -f pos-facts-batch "$@"
