@@ -1,0 +1,19 @@
+#!/bin/sh
+# wrap-up [--date DATE] -- TITLE < BODY
+# The protocol is docs/wrap-up.txt.
+usage() {
+    echo "Usage: wrap-up [--date YYYY-MM-DD] -- 'Title' < handover.org" >&2
+    exit 2
+}
+date=
+if [ "${1:-}" = --date ]; then
+    [ $# -ge 2 ] || usage
+    date=$2
+    shift 2
+fi
+if [ $# -ge 1 ] && [ "$1" != -- ]; then
+    echo "wrap-up: put -- before the title" >&2
+fi
+[ $# -eq 2 ] && [ "$1" = -- ] || usage
+POS_WRAP_UP_ROOT=$PWD POS_WRAP_UP_TITLE=$2 POS_WRAP_UP_DATE=$date \
+    exec "$(dirname -- "$0")/pos-emacs" -l pos-wrap-up -f pos-wrap-up-batch

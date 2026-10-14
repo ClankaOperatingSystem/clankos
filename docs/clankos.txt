@@ -69,10 +69,18 @@ image's own before it runs.
     pos-lint              report what is wrong in the Org files, and
                           run the checks the tree's methodologies
                           supply
-    startup-prompt        print what a session opens with: what is
-                          next, dated, due, to be reviewed, stuck,
-                          and captured and not yet placed; the
-                          projects; the views of a weekly review
+    startup-prompt        print what a session opens with: the latest
+                          handover; what is next, dated, due, to be
+                          reviewed, stuck, and captured and not yet
+                          placed; the projects; the views of a weekly
+                          review
+    capture               the capture slot: keep an item for later;
+                          here, pos-capture
+    start-up              the start-up slot: what a session opens
+                          with; here, startup-prompt
+    wrap-up               the wrap-up slot: keep a session's handover,
+                          sealed in the archive and indexed in the
+                          journal
     archive-integrity     seal items into an archive; check archives
     archive-migrate       rebuild an archive that has a legacy ledger
     clankos-run           run a command in the image; the others call
@@ -86,10 +94,19 @@ image's own before it runs.
 A coding agent finds ClankOS's skills in .agents/skills/ of a garden,
 and of each responsibility and project that is a repository of its
 own, so that a session has the same ones wherever in the tree it is
-started. Each is named clankos-NAME and says when a command is used,
-how to run it and what to check. An agent reads the skill that fits
-the work in hand, and the help that skill names; it does not read
-every command's help first.
+started. Each is named clankos-NAME, or with the name of the slot it
+fills, and says when a command is used, how to run it and what to
+check. An agent reads the skill that fits the work in hand, and the
+help that skill names; it does not read every command's help first.
+
+Three of the skills, and three of the commands, fill slots: capture,
+start-up and wrap-up, each a skill and a command of that name, with a
+signature every filling keeps to (poslib's doc/pos-slots.txt). A
+repository that keeps its own skill or command of a slot's name fills
+the slot itself: ClankOS installs nothing under that name there and
+reports nothing. Its capture may open a ticket in a forge where this
+image's adds a task to the intray; what a filling does behind the
+signature is the repository's own.
 
 ClankOS does not limit what a coding agent can read. Its commands run
 in a container that is given the garden, and the cache and sign-in
@@ -102,9 +119,12 @@ start it in the garden's directory, and set its permissions or sandbox
 so that it reads and writes only there. The agent's own documentation
 says how.
 
-    clankos-start-up        open a session: what is waiting, and what
-                            to do
-    clankos-capture         add a task to the intray
+    start-up                open a session: the last handover, what is
+                            waiting, and what to do
+    capture                 keep an item for later; here, a task in
+                            the intray
+    wrap-up                 close a session: leave the handover for
+                            the one that resumes
     clankos-place           move the intray's tasks to where they
                             belong
     clankos-dedupe          resolve tasks written more than once

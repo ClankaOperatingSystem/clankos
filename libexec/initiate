@@ -126,7 +126,9 @@ $begin
 This repository is a ClankOS garden: a tree of responsibilities kept
 in Org files. Its commands are the scripts in $bin/.
 
-ClankOS's skills are in .agents/skills/, each named clankos-NAME. Each
+ClankOS's skills are in .agents/skills/, each named clankos-NAME, or
+capture, start-up or wrap-up, the three slots a repository may fill
+with a skill of its own. Each
 says when a command is used, how to run it and what to check. Use the
 skill that fits the work in hand. The commands' help need not be read
 before that: a skill names the help it needs.

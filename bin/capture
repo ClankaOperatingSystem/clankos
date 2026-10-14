@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: capture -- 'Task title' ['Body']
+       capture --check -- 'Task title'
+       capture --help
+
+The capture slot: keep one item for later, in the ClankOS container.
+This image fills it with pos-capture, which adds a TODO under Unsorted
+in the working directory's intray.org. "clankos-run help capture"
+prints the slot's signature, and "clankos-run help pos-capture" the
+command's protocol.
+
+    capture -- 'Make time for sketching'
+    /path/to/intray.org:3: TODO Make time for sketching
+
+The title is one nonempty line, kept as written; the body, if given,
+is what does not fit a title. Prints where the item is and the item as
+kept, then a "Like:" line for each open item with a like title.
+--check prints the "Like:" lines alone and keeps nothing.
+
+Exit: 0 kept, 1 refused, its reason on stderr, 2 usage; 125, 126 and
+127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-capture "$@"

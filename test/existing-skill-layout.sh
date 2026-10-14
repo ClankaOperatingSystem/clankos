@@ -35,7 +35,7 @@ check "the mounted repository is unchanged" test -z "$(git -C mounted status --p
 check "the skills path that is a file is reported as a name taken" \
     grep -q '^clankos: name-taken mounted/.agents/skills (tracked, added in [0-9a-f]*)$' out
 check "the Claude skills directory is given the skill links" \
-    test "$(readlink mounted/.claude/skills/clankos-capture)" = ../../.clanka/auto/skills/clankos-capture
+    test "$(readlink mounted/.claude/skills/capture)" = ../../.clanka/auto/skills/capture
 check "and a note that names what in it is no skill" \
     grep -qx '  generate-pdf.md' mounted/.claude/skills/README.clankos
 

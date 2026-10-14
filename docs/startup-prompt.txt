@@ -2,7 +2,9 @@ startup-prompt: what a session opens with
 
 bin/startup-prompt runs this protocol in the ClankOS container. The
 command is poslib's pos-startup, at the commit the image was built
-with: https://github.com/ClankaOperatingSystem/poslib
+with: https://github.com/ClankaOperatingSystem/poslib. It is this
+image's filling of the start-up slot, which bin/start-up runs
+("clankos-run help start-up").
 
 
 1. What it is for
@@ -91,6 +93,13 @@ Each view is a title, then one line for each item: the item's scope,
 then the item. A view of more than one list has a title for each. A
 list with no item says "(none)".
 
+    handover             The latest handover of each node read: the
+                         heading tagged handover and latest in a file
+                         named journal.org, with the date its DATE
+                         property gives, its title, and the citation
+                         of its record, its RECORD property. wrap-up
+                         writes them (poslib's doc/pos-slots.txt,
+                         section 4).
     next                 Every item whose keyword is NEXT, in three
                          lists: projects', responsibilities', then
                          the root's. A product's, and those of a
