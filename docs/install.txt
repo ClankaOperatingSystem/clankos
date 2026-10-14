@@ -1,0 +1,107 @@
+install: installing the skills of the sources a node declares
+
+"clankos-run install" runs this protocol. poslib's
+doc/pos-directory.txt, section 6, says how a configuration declares
+its sources and what skills-lock.json is:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. What is declared
+
+A node, the root of a garden or a responsibility or project with a
+configuration of its own, declares under methodologies each
+repository of skills it installs from, and under harnesses the coding
+agents they are installed for:
+
+    methodologies:
+      - source: https://github.com/ClankaOperatingSystem/pr-gnome.git
+        ref: v1.2.0
+      - source: git@example.org:team/shared-skills.git
+        ref: 4f3c2a19d0b7e6a5c4b3a2918f7e6d5c4b3a2910
+        skills: [share-skill]
+        kind: skills-repository
+    harnesses: [codex, opencode, pi]
+
+source is the repository's git URL, its SSH URL when it is private.
+ref is a tag, or a commit by its full forty-digit id. skills names the
+skills to install, all of the repository's when it is absent. kind is
+methodology, the default, whose skills are each named with the
+repository's name and a hyphen, or skills-repository, whose skills
+are named as its owners choose. Without harnesses the skills are
+written to .agents/skills/ alone, which Codex, opencode and pi read. A
+harness that reads only its own directory is named in harnesses, and
+the skills CLI makes links there.
+
+
+2. What install does
+
+install works on the node in the working directory, which has a
+configuration. It runs the skills CLI, vercel-labs/skills, in a
+container of its own, clankos-skills, and does not change the
+repository until each of these is settled:
+
+  - each ref is read from its repository: a branch is refused, and so
+    is a ref that is neither a tag nor a full commit id;
+  - each source is fetched at its ref into a scratch directory, and a
+    skill named under skills that it does not hold is refused;
+  - a methodology's skill not named with its name and a hyphen is
+    refused, and so is a skill named clankos-NAME, which is ClankOS's;
+  - a skill whose name two sources supply is refused;
+  - a skill with the name of a slot, capture, start-up or wrap-up, is
+    refused where the repository fills that slot itself, with a skill
+    of its own or a tracked command where its configuration says bin;
+    and any other skill where the repository has a skill of its own of
+    that name.
+
+Then it removes each skill of skills-lock.json that is no longer
+declared, or is declared at another ref or from another source, and
+adds each declared skill that is missing, as folders in
+.agents/skills/ and entries in skills-lock.json. A link refresh made
+to the image's skill of a slot's name gives way to a source's skill
+of that name. Last, it runs the lint, pos-lint.
+
+install commits nothing. The skill folders and skills-lock.json are
+committed by whoever ran it, so that a new clone has its skills with
+no network and no command. refresh then compares the two with the
+configuration, with no network, on every command
+("clankos-run help refresh").
+
+A methodology declared as a path, the earlier form, is not installed:
+install refuses the configuration.
+
+
+3. The container
+
+clankos-skills is built from node:22-trixie-slim with git, the SSH
+client and the skills CLI at one version, and with DISABLE_TELEMETRY
+set, so that the CLI sends nothing to skills.sh. The ClankOS image
+holds no Node. The container is given the workspace, at its own path,
+the host's SSH agent, where SSH_AUTH_SOCK names a socket, and GH_TOKEN,
+where it is set. The ClankOS container is given neither.
+
+Its image is named as the ClankOS image is, with -skills after the
+name: ghcr.io/clankaoperatingsystem/clankos-skills:latest beside
+ghcr.io/clankaoperatingsystem/clankos:latest. CLANKOS_SKILLS_IMAGE
+names another.
+
+
+4. What it prints
+
+A line for each skill removed and each installed:
+
+    removed hello-greet
+    installed pr-gnome-write from https://github.com/ClankaOperatingSystem/pr-gnome.git at v1.2.0
+
+then what the lint prints. A refusal is a line on stderr for each
+reason, then "install: nothing was changed".
+
+
+5. Exit status
+
+    0     done, and the lint found nothing
+    1     refused, and nothing was changed; or the lint's findings
+    2     usage; no configuration in the working directory, one that
+          is refused, or one that declares methodologies as a path
+    3     the skills CLI failed while changing the node; what was
+          printed before was done
+    125   Docker failed to run a container

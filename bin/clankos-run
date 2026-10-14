@@ -41,8 +41,15 @@ from the working directory up to the workspace. Failing that, it is
 ghcr.io/clankaoperatingsystem/clankos:latest, which bin/install.sh
 installs.
 
---host-network gives the container the host's network, which signing
+--host-network gives the containers the host's network, which signing
 in needs. --show prints the workspace and the image and runs nothing.
+
+"clankos-run install" brings the skills of the node in the working
+directory to the sources its configuration declares: "clankos-run help
+install" says how. It runs a second image, clankos-skills, named as
+the ClankOS image is with -skills after its name, or as
+CLANKOS_SKILLS_IMAGE names it. That container alone is given the
+host's SSH agent, SSH_AUTH_SOCK, and GH_TOKEN, when they are set.
 
 Exit: the command's own; 2 usage, or a directory with two
 configurations; 125 Docker error; 126 the workspace is not visible in
@@ -157,23 +164,68 @@ if [ -t 0 ] && [ -t 1 ]; then
     terminal=(-t)
 fi
 
-exec docker run --rm -i \
-    ${terminal[@]+"${terminal[@]}"} \
+# The ClankOS container, running ARG ... through run.
+clankos() {
+    docker run --rm -i \
+        ${terminal[@]+"${terminal[@]}"} \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/tmp \
+        -e XDG_CONFIG_HOME="$home" \
+        -e XDG_CACHE_HOME="$cache" \
+        -v "$cache/pos:$cache/pos" \
+        -e CLANKOS_PROBE="$probe" \
+        -e GIT_CONFIG_COUNT=1 \
+        -e GIT_CONFIG_KEY_0=safe.directory \
+        -e GIT_CONFIG_VALUE_0='*' \
+        -e POS_ARCHIVE_OFFLINE \
+        -e POS_ARCHIVE_TOKEN \
+        -v "$workspace:$workspace" \
+        -w "$here" \
+        ${tokens[@]+"${tokens[@]}"} \
+        ${timezone[@]+"${timezone[@]}"} \
+        ${network[@]+"${network[@]}"} \
+        "$image" \
+        /usr/local/libexec/clankos/run "$@"
+}
+
+if [ "$1" != install ]; then
+    clankos "$@"
+    exit
+fi
+
+# install: the ClankOS container reads the configuration, the
+# clankos-skills container runs the skills CLI on it, and the ClankOS
+# container runs the lint. Only the skills container is given the SSH
+# agent and GH_TOKEN.
+[ $# -eq 1 ] || { echo "Usage: clankos-run install" >&2; exit 2; }
+skills=${CLANKOS_SKILLS_IMAGE:-}
+if [ -z "$skills" ]; then
+    named=${image%%@*}
+    case ${named##*/} in
+        *:*) skills=${named%:*}-skills:${named##*:} ;;
+        *) skills=$named-skills ;;
+    esac
+fi
+terminal=()
+sources=$(clankos install-sources) || exit
+agent=()
+if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
+    agent=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock" -e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
+fi
+token=()
+[ -z "${GH_TOKEN:-}" ] || token=(-e GH_TOKEN)
+printf '%s\n' "$sources" | docker run --rm -i \
     --user "$(id -u):$(id -g)" \
     -e HOME=/tmp \
     -e XDG_CONFIG_HOME="$home" \
-    -e XDG_CACHE_HOME="$cache" \
-    -v "$cache/pos:$cache/pos" \
-    -e CLANKOS_PROBE="$probe" \
     -e GIT_CONFIG_COUNT=1 \
     -e GIT_CONFIG_KEY_0=safe.directory \
     -e GIT_CONFIG_VALUE_0='*' \
-    -e POS_ARCHIVE_OFFLINE \
-    -e POS_ARCHIVE_TOKEN \
     -v "$workspace:$workspace" \
     -w "$here" \
-    ${tokens[@]+"${tokens[@]}"} \
-    ${timezone[@]+"${timezone[@]}"} \
+    ${agent[@]+"${agent[@]}"} \
+    ${token[@]+"${token[@]}"} \
     ${network[@]+"${network[@]}"} \
-    "$image" \
-    /usr/local/libexec/clankos/run "$@"
+    "$skills" \
+    node /usr/local/libexec/clankos-skills/install.mjs || exit
+clankos pos-lint

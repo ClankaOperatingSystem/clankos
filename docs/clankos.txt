@@ -88,6 +88,8 @@ image's own before it runs.
     clankos-run           run a command in the image; the others call
                           it
     clankos-run refresh   bring what ClankOS installs to the image's
+    clankos-run install   install the skills of the sources the
+                          configuration declares
     install.sh            pull the image
 
 
