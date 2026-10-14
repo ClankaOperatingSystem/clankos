@@ -35,11 +35,17 @@ tree, a #+TODO line is not reported: the line is that file's own.
 Then the whole tree, for:
 
   - a task heading written in more than one file, each copy naming
-    the others.
+    the others;
+  - an entry of a node's skills-lock.json that its configuration does
+    not declare (poslib's doc/pos-directory.txt, section 6), at the
+    entry's line, as "lock-undeclared: NAME: ...".
 
 Then each methodology a project of the tree uses (poslib's
-doc/pos-methodology.txt): each check its declaration names is run in
-the project, and what it prints is reported among the findings.
+doc/pos-methodology.txt): each executable scripts/check-* of each of
+its skills is run in the project, and what it prints is reported among
+the findings. The skills are those in a mounted methodology's skills/,
+and those install wrote in the project's .agents/skills/ from a
+declared source.
 
 
 2. Findings
@@ -51,9 +57,9 @@ One line each, sorted by file and then line:
 FILE is relative to the root. A check's finding is as the check printed
 it, FILE made relative to the root; a line a check printed that is not
 of that form is a finding at the project; a check that exited 2 is a
-finding at the methodology, with what it printed on stderr. A
-declaration the lint cannot read, and a check named that the
-methodology's bin/ does not hold, are each a finding at the
+finding at its skill, with what it printed on stderr. A declaration,
+methodology.yaml, that the lint cannot read, or that names checks in
+the methodology's bin/, which are not run, is a finding at the
 methodology.
 
 Nothing is changed, and nothing is written to the root.
