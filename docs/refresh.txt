@@ -93,16 +93,34 @@ both directories' skills and cannot show two of one name:
     clankos: name-repeated work/.agents/skills/tidy (.agents/skills/tidy)
 
 
-4. Where links cannot be made
+5. The lock file
+
+A node that declares methodologies as sources has their skills in
+.agents/skills/ and a record of them in skills-lock.json, which
+"clankos-run install" writes ("clankos-run help install"). refresh
+compares the two with no network, in each node of the repository it
+runs in, and says where they differ:
+
+    clankos: lock-differs skills-lock.json (https://example.org/team/pr-gnome.git at v1.3.0: not installed)
+    clankos: lock-undeclared skills-lock.json (grill-me: from someone/skills, which is not declared)
+
+lock-differs is a source, a skill or a ref the configuration declares
+that skills-lock.json does not hold; lock-undeclared is an entry the
+configuration does not declare, such as one the skills CLI wrote when
+run by hand. Running install brings the two into line.
+
+
+6. Where links cannot be made
 
 On a file system that refuses a symbolic link, refresh says so, and
 nothing is linked. The command it ran before goes on.
 
 
-5. Exit status
+7. Exit status
 
     0     done, or not in a Git repository
-    1     a name is taken or repeated
+    1     a name is taken or repeated, or a skills-lock.json differs
+          from its configuration
     2     usage, or poslib refused
     3     a link cannot be made
     125   Docker failed to run the container
