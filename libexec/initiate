@@ -181,8 +181,8 @@ fi
 
 # The configuration as poslib reads it.
 emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
-    -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
-    --eval '(pos-tree-read-config (with-temp-buffer (insert-file-contents (car command-line-args-left)) (setq command-line-args-left nil) (buffer-string)))' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-node \
+    --eval '(pos-node-read-config (with-temp-buffer (insert-file-contents (car command-line-args-left)) (setq command-line-args-left nil) (buffer-string)))' \
     "$config" 2>/dev/null || refuse "poslib refuses $config"
 
 # Read the saved configuration, including each existing child's policy.
