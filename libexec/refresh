@@ -2,8 +2,8 @@
 # refresh
 # Bring what ClankOS installs in the repository the working directory
 # is in to what this image holds. The protocol is docs/refresh.txt.
-# Exit: 0 done, 1 a name is taken or repeated, 2 usage, 3 a link cannot
-# be made.
+# Exit: 0 done, 1 a name is taken or repeated, or a skills-lock.json
+# differs from its configuration, 2 usage, 3 a link cannot be made.
 if [ $# -ne 0 ]; then
     echo "Usage: refresh" >&2
     exit 2
@@ -16,7 +16,8 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
       (source (pop command-line-args-left))
       (taken 0)
       (refused 0)
-      (repeated 0))
+      (repeated 0)
+      (locked 0))
   (condition-case err
       (seq-doseq (finding (alist-get (quote findings) (pos-tree-install root source)))
         (let-alist finding
@@ -29,7 +30,10 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
             (message "clankos: methodology-refused %s (%s)" .path .detail))
            ((equal .finding "name-repeated")
             (setq repeated (1+ repeated))
-            (message "clankos: name-repeated %s (%s)" .path .detail)))))
+            (message "clankos: name-repeated %s (%s)" .path .detail))
+           ((member .finding (quote ("lock-differs" "lock-undeclared")))
+            (setq locked (1+ locked))
+            (message "clankos: %s %s (%s)" .finding .path .detail)))))
     (pos-tree-refused
      (if (and (eq (nth 1 err) (quote failed))
               (string-match "\\`Cannot make a symbolic link at \\(.*\\): \\(.*\\)\\'"'"'"
@@ -59,6 +63,8 @@ permission to create them."
     (message "clankos: each is a methodology with a skill not named after it; nothing of it is linked"))
   (when (> repeated 0)
     (message "clankos: each is a skill with the name of another in a directory above it; rename one"))
-  (when (> (+ taken refused repeated) 0)
+  (when (> locked 0)
+    (message "clankos: each is a skills-lock.json that differs from its configuration; run clankos-run install there"))
+  (when (> (+ taken refused repeated locked) 0)
     (kill-emacs 1)))' \
     "$root" /usr/local/share/clankos/source
