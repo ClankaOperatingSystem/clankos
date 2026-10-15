@@ -6,6 +6,7 @@
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+image_remote
 
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.org
@@ -40,6 +41,10 @@ git clone -q "$work/child" child
 git clone -q "$work/grand" child/projects/grand
 git add .clankos home intray.org && git commit -qm 'Add a garden'
 
+for dir in . child child/projects/grand; do
+    (cd "$dir" && "$bin/clankos-run" install > "$work/out" 2> "$work/err")
+    check "$dir: install succeeds" test $? -eq 0
+done
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "refresh succeeds, and says nothing" test $? -eq 0 -a ! -s ../out -a ! -s ../err
 
@@ -50,13 +55,11 @@ check "a responsibility mounted in it has each skill" \
 check "a project mounted in that has each skill, and its methodology's" \
     test "$(ls child/projects/grand/.agents/skills | tr '\n' ' ')" = "adr-record $skills"
 for dir in . child child/projects/grand; do
-    check "$dir: an agent that reads .claude/skills finds them" \
-        test "$(readlink "$dir/.claude/skills")" = ../.agents/skills
     check "$dir: every skill is there to be read" \
         sh -c "for s in '$dir'/.agents/skills/*/SKILL.md; do [ -s \"\$s\" ] || exit 1; done"
 done
-check "each is installed where its repository keeps its configuration" \
-    test -d .clankos/auto/skills -a -d child/.clanka/auto/skills -a -d child/projects/grand/.pos/auto/skills
+check "each has the commands where its repository keeps its configuration" \
+    test -d .clankos/auto/bin -a -d child/.clanka/auto/bin -a -d child/projects/grand/.pos/auto/bin
 check "the methodology's skill is linked in its project alone" \
     test ! -e .agents/skills/adr-record -a ! -e child/.agents/skills/adr-record
 check "a responsibility that is a directory of the garden is given nothing of its own" \
@@ -72,12 +75,12 @@ check "a mounted project's own skill reads the project" grep -q 'NEXT In the pro
 "$bin/startup-prompt" --view next > ../out 2>&1
 check "from the garden, the project's task is read as the project's" \
     grep -q '^  child/grand  *NEXT In the project$' ../out
-check "Git keeps nothing ClankOS installed, in any of the three" \
-    sh -c "! { git status --porcelain --untracked-files=all; git -C child status --porcelain --untracked-files=all; git -C child/projects/grand status --porcelain --untracked-files=all; } | grep -q 'auto/\|\.agents\|\.claude\|bin/'"
+check "Git keeps nothing refresh installed, in any of the three" \
+    sh -c "! { git status --porcelain --untracked-files=all; git -C child status --porcelain --untracked-files=all; git -C child/projects/grand status --porcelain --untracked-files=all; } | grep -q 'auto/\|bin/\|\.agents/skills/adr-record'"
 
 cd "$work" && git clone -q grand alone && cd alone
-"$bin/clankos-run" refresh > ../out 2> ../err
-check "a clone of the project alone has the skills once a command has run" \
+"$bin/clankos-run" install > ../out 2> ../err
+check "a clone of the project alone has the skills once install has run" \
     test "$(ls .agents/skills | tr '\n' ' ')" = "adr-record $skills"
 
 [ "$failures" -eq 0 ]

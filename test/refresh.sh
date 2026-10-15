@@ -3,6 +3,7 @@
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+image_remote
 
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.org
@@ -22,6 +23,11 @@ printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 git clone -q "$work/child" child
 git clone -q "$work/product" product
 git add .clanka intray.org && git commit -qm 'Add a garden'
+# Each configured repository has the image's skills installed.
+for dir in child .; do
+    (cd "$dir" && "$bin/clankos-run" install > /dev/null 2>&1 \
+        && git add -A && git commit -qm 'Install the skills')
+done
 
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "refresh succeeds" test $? -eq 0

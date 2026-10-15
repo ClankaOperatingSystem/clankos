@@ -4,6 +4,7 @@
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+image_remote
 
 for skill in "$repo"/skills/*/; do
     name=$(basename -- "$skill")
@@ -20,16 +21,18 @@ done
 
 mkdir garden && cd garden && git init -q .
 "$bin/initiate" --no-tree < /dev/null > ../out 2>&1
-check "a new garden has each skill as a link to what is installed" \
-    test "$(readlink .agents/skills/capture)" = ../../.clanka/auto/skills/capture
+check "a new garden has each skill installed, as a folder" \
+    test -d .agents/skills/capture -a ! -L .agents/skills/capture
 for skill in "$repo"/skills/*/; do
     name=$(basename -- "$skill")
     check "$name is installed as the image has it" cmp -s ".agents/skills/$name/SKILL.md" "$skill/SKILL.md"
 done
-check "an agent that reads .claude/skills finds them too" \
-    test "$(readlink .claude/skills)" = ../.agents/skills -a -f .claude/skills/clankos-seal/SKILL.md
-check "Git keeps none of it" \
-    sh -c '! git status --porcelain --untracked-files=all | grep -q "\.agents\|\.claude\|\.clanka/auto"'
+commit=$(docker run --rm "$CLANKOS_IMAGE" cat /usr/local/share/clankos/source/commit)
+check "skills-lock.json records them at the image's commit" grep -q "\"ref\": \"$commit\"" skills-lock.json
+check "the skills and skills-lock.json are there to commit, and auto/ is not" \
+    sh -c 'git status --porcelain | grep -qx "?? .agents/" && git status --porcelain | grep -qx "?? skills-lock.json" && ! git status --porcelain --untracked-files=all | grep -q "\.clanka/auto"'
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "refresh finds them as installed" test $? -eq 0 -a ! -s ../err
 check "AGENTS.md says where the skills are" grep -q 'clankos-NAME' AGENTS.md
 
 .agents/skills/capture/scripts/clankos capture -- 'From the root' > ../out 2>&1
@@ -58,16 +61,26 @@ mkdir -p .agents/skills/mine && printf '%s\n' '---' 'name: mine' 'description: M
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a skill of the garden's own is left alone" test -f .agents/skills/mine/SKILL.md -a ! -L .agents/skills/mine
 
-# The garden fills the wrap-up slot with a skill of its own: the image's
-# is not linked there, and nothing is reported.
-rm .agents/skills/wrap-up
+printf 'Edited.\n' >> .agents/skills/clankos-seal/SKILL.md
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a skill edited where it is installed exits 1" test $? -eq 1
+check "and is named on stderr" \
+    grep -qx 'clankos: lock-differs skills-lock.json (clankos-seal: changed since it was installed)' ../err
+cp "$repo/skills/clankos-seal/SKILL.md" .agents/skills/clankos-seal/SKILL.md
+
+# A garden that fills the wrap-up slot with a skill of its own: the
+# image's is not installed there, and nothing is reported.
+mkdir ../filled && cd ../filled && git init -q .
 mkdir -p .agents/skills/wrap-up && printf '%s\n' '---' 'name: wrap-up' 'description: Ours.' '---' > .agents/skills/wrap-up/SKILL.md
-git add -f .agents/skills/wrap-up && git -c user.name=Test -c user.email=test@example.org commit -qm 'Fill the wrap-up slot'
+git add .agents && git -c user.name=Test -c user.email=test@example.org commit -qm 'Fill the wrap-up slot'
+"$bin/initiate" --no-tree < /dev/null > ../out 2>&1
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a skill of the garden's own under a slot's name is its filling: refresh exits 0" test $? -eq 0
 check "and reports nothing" test ! -s ../err
-check "and the skill stays the garden's" test "$(sed -n '3p' .agents/skills/wrap-up/SKILL.md)" = 'description: Ours.' -a ! -L .agents/skills/wrap-up
-check "while the image's other skills are linked" test -L .agents/skills/capture
+check "and the skill stays the garden's" test "$(sed -n '3p' .agents/skills/wrap-up/SKILL.md)" = 'description: Ours.'
+check "and has no lock entry" sh -c '! grep -q "\"wrap-up\"" skills-lock.json'
+check "while the image's other skills are installed" test -f .agents/skills/capture/SKILL.md
+cd ../garden
 
 # A project that is a directory of the garden uses a methodology, hello,
 # whose skill and command are linked where they lie, in the project.
@@ -82,10 +95,9 @@ check "a methodology's skill is linked in the project, where it lies" \
     test "$(readlink projects/p/.agents/skills/hello-greet)" = ../../methodologies/hello/skills/hello-greet
 check "and its command, where the project says bin" \
     test "$(readlink projects/p/bin/hello-greet)" = ../methodologies/hello/bin/hello-greet
-check "the project's .claude/skills finds it too" test -f projects/p/.claude/skills/hello-greet/SKILL.md
 check "nothing of the methodology is linked at the root" test ! -e .agents/skills/hello-greet
 check "Git keeps none of that either" \
-    sh -c '! git status --porcelain --untracked-files=all | grep -q "projects/p/\.agents\|projects/p/\.claude\|projects/p/bin"'
+    sh -c '! git status --porcelain --untracked-files=all | grep -q "projects/p/\.agents\|projects/p/bin"'
 mkdir -p projects/p/methodologies/hello/skills/greet && printf '%s\n' '---' 'name: greet' 'description: Bad.' '---' > projects/p/methodologies/hello/skills/greet/SKILL.md
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a skill named without the methodology's prefix is reported" grep -q 'methodology-refused' ../err
@@ -98,14 +110,5 @@ printf '%s\n' '---' 'name: trade-greet' 'description: Greet.' '---' > work/metho
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a responsibility's methodology is linked in the responsibility" \
     test "$(readlink work/.agents/skills/trade-greet)" = ../../methodologies/trade/skills/trade-greet
-
-# A directory's skill with the name of another above it is reported.
-first=$(ls .agents/skills | head -n 1)
-mkdir -p "work/desk/.agents/skills/$first"
-printf '%s\n' '---' "name: $first" 'description: Another.' '---' > "work/desk/.agents/skills/$first/SKILL.md"
-"$bin/clankos-run" refresh > ../out 2> ../err
-check "a skill named as another above it exits 1" test $? -eq 1
-check "and is named on stderr" \
-    grep -qx "clankos: name-repeated work/desk/.agents/skills/$first (.agents/skills/$first)" ../err
 
 [ "$failures" -eq 0 ]

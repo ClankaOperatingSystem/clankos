@@ -36,7 +36,8 @@ children:
 check "and not by the garden" sh -c '! grep -q widget .clanka/config.yml'
 check "with --no-clone a product is not cloned, and is reported as to clone" \
     sh -c 'test ! -e vendor/lib && grep -qx "to clone  vendor/lib" out && grep -qx "to clone  work/widget" out'
-check "poslib's plan finds nothing wrong" sh -c '! grep -q "^finding" out'
+check "poslib's plan finds nothing wrong but that the image's skills are not installed" \
+    sh -c "! grep '^finding' out | grep -v '^finding   lock-differs .*: not installed)\$'"
 check "new responsibilities have ignored archives before they exist" \
     sh -c 'git check-ignore -q health/archives/evidence && git check-ignore -q work/archives/evidence'
 check "a responsibility itself is not ignored" sh -c '! git check-ignore -q health/intray.org'

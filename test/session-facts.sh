@@ -23,7 +23,8 @@ find . -type f ! -path './.git/*' | sort > ../before
 "$bin/session-facts" "$since" > ../out 2> ../err
 status=$?
 check "session-facts exits 0" test "$status" -eq 0
-check "and says nothing on stderr" test ! -s ../err
+check "and says nothing on stderr but that the image's skills are not installed" \
+    sh -c "! grep -v -e '^clankos: lock-differs .*: not installed)\$' -e '^clankos: each is a skills-lock.json' ../err"
 check "it names the commit it starts from" grep -q '^Commits after [0-9a-f]* Begin$' ../out
 check "and lists the commit after it" grep -q '^  [0-9a-f]* Publish the first handover$' ../out
 check "with no upstream, pushed is not known" grep -q '^  HEAD has no upstream' ../out

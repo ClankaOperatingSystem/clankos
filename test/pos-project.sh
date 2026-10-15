@@ -3,6 +3,7 @@
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+image_remote
 
 git init -q .
 "$bin/initiate" --no-tree < /dev/null > out 2>&1

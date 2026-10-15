@@ -32,6 +32,16 @@ written to .agents/skills/ alone, which Codex, opencode and pi read. A
 harness that reads only its own directory is named in harnesses, and
 the skills CLI makes links there.
 
+At a repository's root, the node has one source more, which no
+configuration names: the image's skills, from the repository the
+ClankOS image was built from, at that commit. A slot's skill is left
+out where the repository fills the slot itself, and so is a skill that
+a declared source supplies under the same name. The image's skills are
+not refused for their names. A new image is at another commit, and
+install moves its skills to it. A node beneath the root in the same
+repository has no such source: a coding agent shows a session there
+the skills of the root.
+
 
 2. What install does
 
@@ -56,9 +66,9 @@ repository until each of these is settled:
 Then it removes each skill of skills-lock.json that is no longer
 declared, or is declared at another ref or from another source, and
 adds each declared skill that is missing, as folders in
-.agents/skills/ and entries in skills-lock.json. A link refresh made
-to the image's skill of a slot's name gives way to a source's skill
-of that name. Last, it runs the lint, pos-lint.
+.agents/skills/ and entries in skills-lock.json. A link an earlier
+refresh made into auto/skills/ is removed before the skill of its name
+is added. Last, it runs the lint, pos-lint.
 
 install commits nothing. The skill folders and skills-lock.json are
 committed by whoever ran it, so that a new clone has its skills with
@@ -66,8 +76,9 @@ no network and no command. refresh then compares the two with the
 configuration, with no network, on every command
 ("clankos-run help refresh").
 
-A methodology declared as a path, the earlier form, is not installed:
-install refuses the configuration.
+Methodologies declared as a path, the earlier form, are not
+installed: refresh links them where they lie (docs/refresh.txt), and
+install installs the image's skills alone in such a node.
 
 
 3. The container

@@ -145,9 +145,10 @@ says how.
     clankos-migrate-archive rebuild an archive that has a legacy
                             ledger
 
-They are links to what is installed in .clanka/auto/, as the scripts
-are (docs/refresh.txt). A skill of the repository's own that is not
-ClankOS's is left alone.
+install puts them in .agents/skills/ from this repository at the
+commit the image was built from, and records them in skills-lock.json,
+and they are committed with the garden ("clankos-run help install").
+A skill of the repository's own that is not ClankOS's is left alone.
 
 
 4. Reading more

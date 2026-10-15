@@ -1,16 +1,23 @@
 #!/bin/sh
 # clankos COMMAND [ARG ...]
-# Run one of ClankOS's commands from this skill, wherever the skill is
-# linked: the commands are installed beside the skills. The command
-# works on the directory this is run in, so run it by its path and do
-# not change directory first.
+# Run one of ClankOS's commands from this skill. The commands are in
+# auto/bin/ of the configuration directory at the top of the repository
+# the skill is installed in. The command works on the directory this is
+# run in, so run it by its path and do not change directory first.
 # Exit: the command's own; 2 usage; 127 no such command.
 if [ $# -eq 0 ]; then
     echo "Usage: clankos COMMAND [ARG ...]" >&2
     exit 2
 fi
 here=$(cd -- "$(dirname -- "$0")" && pwd -P) || exit 127
-command=$here/../../../bin/$1
+top=$(git -C "$here" rev-parse --show-toplevel 2>/dev/null) || top=
+command=
+for dir in .clanka .clankos .pos; do
+    if [ -n "$top" ] && [ -d "$top/$dir/auto/bin" ]; then
+        command=$top/$dir/auto/bin/$1
+        break
+    fi
+done
 case $1 in
     */*) command= ;;
 esac

@@ -1,19 +1,26 @@
 #!/bin/sh
 # install-sources
 # Print, as JSON, what the configuration of the node in the working
-# directory declares for install: its sources, harnesses and bin. The
+# directory declares for install: its sources, harnesses and bin; and,
+# at a repository's root, the image's skills as one source more. The
 # install command, which bin/clankos-run runs, gives it to the
 # clankos-skills image; docs/install.txt is the protocol.
+# Methodologies declared as a path are refresh's to link, and are no
+# sources here.
 # Exit: 0 printed, 2 usage, no configuration here, or one that is
-# refused or declares methodologies as a path.
+# refused.
 if [ $# -ne 0 ]; then
     echo "Usage: install-sources" >&2
     exit 2
 fi
+root=$(git rev-parse --show-toplevel 2>/dev/null) || root=
+[ -n "$root" ] && [ "$root" -ef . ] || root=
 exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-node -l pos-bytes \
+    -l pos-lock \
     --eval '
-(let ((file (condition-case err
+(let ((root (pop command-line-args-left))
+      (file (condition-case err
                 (pos-node-config-file default-directory)
               (pos-node-refused
                (message "install: %s: %s" (nth 1 err) (nth 2 err))
@@ -31,11 +38,12 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
                     (message "install: %s refused: %s: %s" file (nth 1 err) (nth 2 err))
                     (kill-emacs 2))))
          (methodologies (alist-get (quote methodologies) config)))
-    (when (stringp methodologies)
-      (message "install: methodologies is a path, %s; declare each as a source"
-               methodologies)
-      (kill-emacs 2))
     (pos-bytes-print
      (list (cons (quote sources) (if (vectorp methodologies) methodologies []))
            (cons (quote harnesses) (alist-get (quote harnesses) config))
-           (cons (quote bin) (alist-get (quote bin) config))))))'
+           (cons (quote bin) (alist-get (quote bin) config))
+           (cons (quote image)
+                 (or (and (not (string-empty-p root))
+                          (pos-lock-image "/usr/local/share/clankos/source" root))
+                     :null))))))' \
+    "$root"

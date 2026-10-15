@@ -87,6 +87,12 @@ It then has poslib read the configuration, and is refused if poslib
 refuses it. At a terminal, and with --ask, it goes on to
 responsibility-tree unless --no-tree is given.
 
+Last, the initiate script in bin/ runs install (docs/install.txt),
+which installs in .agents/skills/ the image's skills and those of the
+sources the configuration declares, and records them in
+skills-lock.json. It needs the network. The skills are committed with
+the garden, by whoever ran it.
+
 
 4. Run again
 
