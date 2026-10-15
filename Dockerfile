@@ -71,13 +71,23 @@ COPY libexec/ /usr/local/libexec/clankos/
 COPY docs/ /usr/local/share/clankos/docs/
 
 # The source: what refresh installs in a garden, which is the scripts
-# that start the commands from a host, and the skills. Its version is a
-# hash of what it holds, so that it changes when they do and at no
-# other time. bin is where the web site's initiate.sh looks for
-# clankos-run.
+# that start the commands from a host, and the skills; and the
+# repository and the commit the image is built from, at which install
+# adds the skills from that repository. CLANKOS_COMMIT is required, the
+# full id: CI gives github.sha, and a local build git rev-parse HEAD.
+# The version is a hash of the scripts and the skills, so that it
+# changes when they do and at no other time. bin is where the web
+# site's initiate.sh looks for clankos-run.
+ARG CLANKOS_REPOSITORY=https://github.com/ClankaOperatingSystem/clankos.git
+ARG CLANKOS_COMMIT
 COPY bin/ /usr/local/share/clankos/source/bin/
 COPY skills/ /usr/local/share/clankos/source/skills/
 RUN cd /usr/local/share/clankos \
+    && if ! printf '%s' "$CLANKOS_COMMIT" | grep -Eq '^[0-9a-f]{40}$'; then \
+        echo "Build with --build-arg CLANKOS_COMMIT=<the full commit id>" >&2; exit 1; \
+    fi \
+    && echo "$CLANKOS_REPOSITORY" > source/repository \
+    && echo "$CLANKOS_COMMIT" > source/commit \
     && ln -s source/bin bin \
     && (cd source && find bin skills -type f | LC_ALL=C sort | xargs sha256sum \
         | sha256sum | cut -c1-16) > source/version
