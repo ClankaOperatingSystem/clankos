@@ -49,7 +49,7 @@ function entryKey(entry) {
 // The skills CLI, with its JSON on standard output; its other output is
 // kept for a failure.
 function skills(args, cwd) {
-  const run = spawnSync('skills', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const run = spawnSync('skills', args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   let results = [];
   try {
     results = JSON.parse(run.stdout || '[]');
@@ -85,6 +85,26 @@ try {
 const sources = plan.sources || [];
 const agents = plan.harnesses && plan.harnesses.length ? plan.harnesses : ['universal'];
 const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
+
+// With GH_TOKEN, a github.com source given by its SSH URL is fetched over
+// HTTPS with the token, so that neither the SSH client nor an agent is
+// needed: Docker on a Mac cannot pass the host's agent socket into a
+// container. The settings follow those clankos-run gives git.
+if (env.GH_TOKEN) {
+  const settings = [
+    ['url.https://github.com/.insteadOf', 'git@github.com:'],
+    ['url.https://github.com/.insteadOf', 'ssh://git@github.com/'],
+    ['credential.https://github.com.helper',
+      '!f() { test "$1" = get || exit 0; echo username=x-access-token; echo "password=$GH_TOKEN"; }; f'],
+  ];
+  let count = Number(env.GIT_CONFIG_COUNT) || 0;
+  for (const [name, value] of settings) {
+    env[`GIT_CONFIG_KEY_${count}`] = name;
+    env[`GIT_CONFIG_VALUE_${count}`] = value;
+    count += 1;
+  }
+  env.GIT_CONFIG_COUNT = String(count);
+}
 
 // 1. Each ref is a tag or a full commit id, and no branch.
 const refused = [];
