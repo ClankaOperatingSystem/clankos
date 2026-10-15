@@ -104,7 +104,7 @@ right; whether the next action is true, the one thing that would move
 it; whether the project is blocked, and on whom; which goal it
 advances; and whether its review interval fits its pace. A project
 that has reached its outcome, or is no longer wanted, is closed: its
-outcome recorded, and the file's STATUS set to COMPLETE, or the file
+outcome recorded, and the file's STATUS set to DONE, or the file
 retired.
 
 A responsibility's review asks whether its purpose is still the one
