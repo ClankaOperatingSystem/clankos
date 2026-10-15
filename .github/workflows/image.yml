@@ -26,7 +26,7 @@ jobs:
           git -C "$RUNNER_TEMP/poslib.git" merge-base --is-ancestor "$pin" master
       - name: Test the commands in the image
         run: |
-          docker build -t clankos:test .
+          docker build --build-arg CLANKOS_COMMIT="$GITHUB_SHA" -t clankos:test .
           docker build -t clankos-skills:test clankos-skills
           for test in test/*.sh; do
             echo "== $test"
@@ -54,6 +54,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          build-args: CLANKOS_COMMIT=${{ github.sha }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
