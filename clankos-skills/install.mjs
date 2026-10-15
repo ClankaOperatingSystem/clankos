@@ -3,7 +3,10 @@
 // is docs/install.txt. bin/clankos-run starts this in the clankos-skills
 // image, with what the ClankOS image read of the configuration on
 // standard input: {"sources": [...], "harnesses": [...] or null,
-// "bin": a path or null}, each source as poslib's reader gives it.
+// "bin": a path or null, "image": a source or null}, each source as
+// poslib's reader gives it. image is the ClankOS image's skills, from
+// the repository and at the commit it was built from, which the
+// ClankOS image gives at a repository's root.
 //
 // Nothing is changed until every source has been fetched into a scratch
 // directory and every refusal checked. Then the skills no longer
@@ -82,7 +85,8 @@ try {
 } catch {
   fail(2, ['the configuration was not given on standard input']);
 }
-const sources = plan.sources || [];
+const declared = plan.sources || [];
+const sources = plan.image ? [...declared, { ...plan.image, kind: 'image' }] : declared;
 const agents = plan.harnesses && plan.harnesses.length ? plan.harnesses : ['universal'];
 const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
 
@@ -146,7 +150,13 @@ try {
         return;
       }
     }
-    supplied.push({ source, names: run.results.map((result) => result.name).sort() });
+    let names = run.results.map((result) => result.name).sort();
+    if (source.kind === 'image') {
+      // A skill a declared source supplies takes the place of the image's.
+      const others = new Set(supplied.flatMap((each) => each.names));
+      names = names.filter((name) => !others.has(name));
+    }
+    if (names.length) supplied.push({ source, names });
   });
 } finally {
   rmSync(stage, { recursive: true, force: true });
@@ -167,6 +177,7 @@ for (const { source, names } of supplied) {
       present = false;
     }
     const ours = name in locked || imageLink(path);
+    if (source.kind === 'image') continue;
     if (source.kind === 'methodology' && !name.startsWith(`${source.name}-`)) {
       refused.push(`${name}: a skill of ${source.source} not named ${source.name}-NAME`);
     }

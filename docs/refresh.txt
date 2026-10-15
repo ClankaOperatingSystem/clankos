@@ -9,7 +9,8 @@ https://github.com/ClankaOperatingSystem/poslib
 1. What is installed
 
 The image holds a source: the scripts that start its commands, and its
-skills, with a version that changes when any of them does. In a
+skills, with a version that changes when any of them does, and the
+repository and the commit the image was built from. In a
 repository that has a configuration at its root, a garden's or a
 mounted responsibility's or project's, the source is installed:
 
@@ -21,13 +22,17 @@ mounted responsibility's or project's, the source is installed:
                      .pos/auto/
     bin/NAME         where the configuration says "bin: bin", a link to
                      each command in auto/bin/
-    .agents/skills/NAME
-                     a link to each skill in auto/skills/
 
 All of it is untracked, its paths in Git's info/exclude. So a new
 clone has none of it until a command or initiate has run there. A
-skill or a command of a slot's name, capture, start-up or wrap-up, is
-linked only where the repository holds none of its own (section 3).
+command of a slot's name, capture, start-up or wrap-up, is linked only
+where the repository holds none of its own (section 3).
+
+The image's skills are not linked. install installs them, as a source
+of the repository's skills-lock.json: from the repository the image
+was built from, at its commit ("clankos-run help install"). Each
+skill's scripts/clankos runs the commands in auto/bin/ at the top of
+the repository it is installed in.
 
 A repository with no configuration is a product. Nothing is written in
 it.
@@ -59,17 +64,13 @@ are made. A garden made by an earlier image has copies of the scripts
 in bin/, which are reported in this way; removing them lets the links
 be made.
 
-A slot's name is the exception. A skill in .agents/skills/ or a
-command in bin/ that the repository holds under capture, start-up or
-wrap-up, tracked or not, is the repository's own filling of that slot
-(poslib's doc/pos-slots.txt): refresh makes no link there and says
-nothing, and the image's skill or command of that name is not
-installed in that repository.
-
-Where .claude/skills is an ordinary directory, the skill links are
-made there as well as in .agents/skills/, with a note,
-README.clankos, proposing that the directory's skills be moved to
-.agents/skills/ and the directory replaced by a link.
+A slot's name is the exception. A command in bin/ that the repository
+holds under capture, start-up or wrap-up, tracked or not, is the
+repository's own filling of that slot (poslib's doc/pos-slots.txt):
+refresh makes no link there and says nothing. So is a skill of a
+slot's name in .agents/skills/ that install did not put there from
+the image: the image's skill of that name is not installed in that
+repository.
 
 
 4. A node's methodologies
@@ -86,41 +87,43 @@ a hyphen is left out and said so on stderr, until it is renamed:
 
     clankos: methodology-refused projects/p/methodologies/hello (a skill not named hello-NAME: greet)
 
-A skill with the name of another skill in a directory above it in the
-same repository is said so too, since a coding agent shows a session
-both directories' skills and cannot show two of one name:
-
-    clankos: name-repeated work/.agents/skills/tidy (.agents/skills/tidy)
-
 
 5. The lock file
 
-A node that declares methodologies as sources has their skills in
-.agents/skills/ and a record of them in skills-lock.json, which
-"clankos-run install" writes ("clankos-run help install"). refresh
-compares the two with no network, in each node of the repository it
-runs in, and says where they differ:
+A node that declares methodologies as sources, and a repository's
+root, which has the image's skills, has the skills in .agents/skills/
+and a record of them in skills-lock.json, which "clankos-run install"
+writes ("clankos-run help install"). refresh compares the
+configuration, the image's skills counted as declared, with
+skills-lock.json, and each entry with its skill's directory, with no
+network, in each node of the repository it runs in, and says where
+they differ:
 
     clankos: lock-differs skills-lock.json (https://example.org/team/pr-gnome.git at v1.3.0: not installed)
+    clankos: lock-differs skills-lock.json (pr-gnome-write: changed since it was installed)
     clankos: lock-undeclared skills-lock.json (grill-me: from someone/skills, which is not declared)
 
 lock-differs is a source, a skill or a ref the configuration declares
-that skills-lock.json does not hold; lock-undeclared is an entry the
-configuration does not declare, such as one the skills CLI wrote when
-run by hand. Running install brings the two into line.
+that skills-lock.json does not hold, or an installed skill whose
+directory is gone or no longer has the hash its entry records;
+lock-undeclared is an entry the configuration does not declare, such
+as one the skills CLI wrote when run by hand. Running install brings
+the two into line. A new image is at another commit, so after the
+image changes refresh says lock-differs for its skills until install
+has run.
 
 
 6. Where links cannot be made
 
 On a file system that refuses a symbolic link, refresh says so, and
-nothing is linked. The command it ran before goes on.
+the commands are not linked. The command it ran before goes on.
 
 
 7. Exit status
 
     0     done, or not in a Git repository
-    1     a name is taken or repeated, or a skills-lock.json differs
-          from its configuration
+    1     a name is taken, or a skills-lock.json differs from its
+          configuration
     2     usage, or poslib refused
     3     a link cannot be made
     125   Docker failed to run the container

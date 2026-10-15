@@ -17,10 +17,9 @@ unset SSH_AUTH_SOCK GH_TOKEN
 # URL of that form. git in the containers reads the rewrite from
 # $XDG_CONFIG_HOME/git/config, which clankos-run passes on, and the
 # workspace is this whole directory, so that both are seen there.
-export CLANKOS_WORKSPACE=$work XDG_CONFIG_HOME=$work/config
-mkdir -p "$XDG_CONFIG_HOME/git" remotes
+image_remote
 printf '[url "file://%s/remotes/"]\n\tinsteadOf = https://git.example/\n' "$work" \
-    > "$XDG_CONFIG_HOME/git/config"
+    >> "$XDG_CONFIG_HOME/git/config"
 
 # origin NAME TAG SKILL ...: the repository NAME holding SKILLs, tagged
 # TAG; made, or given a new commit.

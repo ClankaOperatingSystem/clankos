@@ -25,18 +25,22 @@ from standard input.
   --no-tree       do not go on to responsibility-tree
 
 Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
-scripts in bin/, as the image has them. Makes AGENTS.md, or in one
+scripts in bin/, as the image has them. Then runs install, which
+installs the skills in .agents/skills/ and needs the network. Makes AGENTS.md, or in one
 that is there writes only its own marked block, which sends an agent
 to "clankos-run help". Updates the managed archive
 rules in Git's info/exclude from the saved configuration, including
 child scopes. Keeps existing configuration and content, and commits
 nothing. In an existing garden it also adds what is missing.
 
-Exit: 0 done, 2 refused or usage; 125, 126 and 127 are clankos-run's.
+Exit: 0 done, 2 refused or usage; install's own if it fails; 125, 126
+and 127 are clankos-run's.
 HELP
 }
 
 case "${1:-}" in
     help|-h|--help) usage; exit 0 ;;
 esac
-exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" initiate "$@"
+run="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run"
+"$run" initiate "$@"
+exec "$run" install

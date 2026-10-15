@@ -40,3 +40,17 @@ sha256() {
 owner() {
     stat -c %u "$1" 2>/dev/null || stat -f %u "$1"
 }
+
+# image_remote: install fetches the image's skills from the repository
+# the image was built from, at its commit. Serve that repository from a
+# bare clone of this one in remotes/: git in the containers reads the
+# rewrite from $XDG_CONFIG_HOME/git/config, which clankos-run passes on,
+# and the workspace is the whole work directory, so that both see it.
+# The image must be built from a commit of this repository.
+image_remote() {
+    export CLANKOS_WORKSPACE=$work XDG_CONFIG_HOME=$work/config
+    mkdir -p "$XDG_CONFIG_HOME/git" "$work/remotes"
+    [ -d "$work/remotes/clankos.git" ] || git clone -q --bare "$repo" "$work/remotes/clankos.git"
+    printf '[url "file://%s/remotes/clankos.git"]\n\tinsteadOf = https://github.com/ClankaOperatingSystem/clankos.git\n' \
+        "$work" >> "$XDG_CONFIG_HOME/git/config"
+}

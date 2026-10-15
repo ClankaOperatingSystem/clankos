@@ -141,10 +141,12 @@ Search for files within this repository. Do not search the user's
 home directory or the rest of the machine unless the user asks for
 that.
 
-The scripts in $bin/ and those skills are links ClankOS makes, and Git
-does not keep them. Where they are missing, as in a new clone, run
-this at the root of the repository, which makes them and changes
-nothing else:
+The skills are installed by \`$bin/clankos-run install\` from the
+repositories the configuration names, and from ClankOS's own, and are
+committed with the repository. The scripts in $bin/ are links ClankOS
+makes, and Git does not keep them. Where they are missing, as in a new
+clone, run this at the root of the repository, which makes them and
+changes nothing else:
 
     sh -c "\$(curl -fsSL https://www.clankos.org/initiate.sh)"
 
