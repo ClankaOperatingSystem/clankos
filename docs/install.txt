@@ -79,6 +79,13 @@ holds no Node. The container is given the workspace, at its own path,
 the host's SSH agent, where SSH_AUTH_SOCK names a socket, and GH_TOKEN,
 where it is set. The ClankOS container is given neither.
 
+Where GH_TOKEN is set, a source on github.com given by its SSH URL is
+fetched over HTTPS with the token, and the SSH client is not run.
+Docker on a Mac cannot pass the host's agent into a container, so
+there a private repository on GitHub is installed with
+
+    GH_TOKEN=$(gh auth token) clankos-run install
+
 Its image is named as the ClankOS image is, with -skills after the
 name: ghcr.io/clankaoperatingsystem/clankos-skills:latest beside
 ghcr.io/clankaoperatingsystem/clankos:latest. CLANKOS_SKILLS_IMAGE
