@@ -62,9 +62,19 @@ configure "$(hello v1)" "$shared"
 printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 git add .clanka intray.org && git commit -qm 'Add a garden'
 
+# A link an earlier refresh made to one of the image's skills, which Git
+# was told to ignore.
+mkdir -p .agents/skills
+ln -s ../../.clanka/auto/skills/clankos-seal .agents/skills/clankos-seal
+printf '/.agents/skills/clankos-seal\n' >> .git/info/exclude
+
 "$bin/clankos-run" install > ../out 2> ../err
 status=$?
 check "install succeeds" test $status -eq 0
+check "the image's skill replaces the earlier link" \
+    test ! -L .agents/skills/clankos-seal -a -f .agents/skills/clankos-seal/SKILL.md
+check "and Git no longer ignores it" \
+    sh -c '! git check-ignore -q .agents/skills/clankos-seal/SKILL.md'
 check "a methodology's skills are installed" \
     test -f .agents/skills/hello-greet/SKILL.md -a -f .agents/skills/hello-part/SKILL.md
 check "as folders, not links" test ! -L .agents/skills/hello-greet
