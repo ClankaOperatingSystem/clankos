@@ -1,0 +1,37 @@
+wild-caught: the skills installed and not configured
+
+"clankos-run wild-caught" lists, for each node of the tree beneath
+the repository the working directory is in, its wild-caught skills:
+those whose entries in its skills-lock.json are of a source its
+configuration does not declare ("clankos-run help install", 2). Such
+a skill may fill a gap in a managed set, be left over from a source
+removed, be a local skill with no place in a shared set, or be an
+experiment. The list does not tell these apart.
+
+It is the comparison refresh makes, with nothing changed and no
+network, and refresh is not run first. "clankos-run methodology adopt"
+declares a wild-caught skill's source. One no longer wanted is removed
+with the skills CLI, as it was installed.
+
+
+1. What it prints
+
+For each node with a wild-caught skill, its directory relative to the
+repository, "." for the repository itself, and beneath it a line for
+each skill:
+
+    .
+      grill-me: from someone/skills, which is not declared
+    work
+      tools-lint: from https://example.org/tools.git, which is not declared
+
+Nothing is printed where there is none. A configuration that is
+refused is reported on stderr, as "wild-caught: config-refused PATH
+(DETAIL)", and what lies beneath it is not listed.
+
+
+2. Exit status
+
+    0     listed
+    1     listed, and a configuration was refused
+    2     usage, or not in a Git repository

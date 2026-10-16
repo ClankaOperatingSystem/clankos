@@ -1,0 +1,39 @@
+#!/bin/sh
+# wild-caught
+# List the wild-caught skills of each node of the tree beneath the
+# repository the working directory is in. The protocol is
+# docs/wild-caught.txt.
+# Exit: 0 listed, 1 listed and a configuration refused, 2 usage or not
+# in a repository.
+if [ $# -ne 0 ]; then
+    echo "Usage: wild-caught" >&2
+    exit 2
+fi
+root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+    echo "wild-caught: not in a Git repository: $PWD" >&2
+    exit 2
+}
+exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
+    --eval '
+(let ((root (pop command-line-args-left))
+      (source (pop command-line-args-left))
+      (last nil)
+      (refused nil))
+  (condition-case err
+      (seq-doseq (finding (alist-get (quote findings) (pos-tree-plan root source)))
+        (let-alist finding
+          (when (equal .finding "config-refused")
+            (setq refused t)
+            (message "wild-caught: config-refused %s (%s)" .path .detail))
+          (when (equal .finding "wild-caught")
+            (let ((node (directory-file-name (or (file-name-directory .path) "./"))))
+              (unless (equal node last)
+                (princ (concat node "\n"))
+                (setq last node))
+              (princ (concat "  " .detail "\n"))))))
+    (pos-tree-refused
+     (message "wild-caught: %s: %s" (nth 1 err) (nth 2 err))
+     (kill-emacs 2)))
+  (when refused (kill-emacs 1)))' \
+    "$root" /usr/local/share/clankos/source
