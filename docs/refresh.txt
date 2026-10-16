@@ -46,6 +46,15 @@ what it has installed is brought to that image without being asked.
 initiate runs it once it has written the configuration. "clankos-run
 refresh" runs it alone.
 
+Before a command, refresh reads nothing again when nothing it reads
+has changed since the last refresh: the image's version, and the
+content of each file and the entries of each directory in a
+configuration directory, in .agents/skills/ and in a directory named
+bin, and of each skills-lock.json and Git's info/exclude. It then says
+again what the last refresh said, and exits as it did. What it saw is
+kept in auto/refresh/. A path that changed while a refresh ran is read
+again by the next. Run alone, refresh always reads everything.
+
 It uses no network and clones nothing. It also brings to the same
 state each configured repository mounted beneath the one it runs in.
 

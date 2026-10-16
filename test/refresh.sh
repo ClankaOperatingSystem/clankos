@@ -58,6 +58,17 @@ check "what has the name is left" test "$(cat bin/pos-capture)" = mine
 check "it is said again before every command" grep -q '^clankos: name-taken bin/pos-capture' ../err
 check "and the command runs all the same" grep -q 'START-UP PROMPTS' ../out
 
+# A command's refresh reads nothing again when nothing has changed: it
+# says again what the last refresh said, which is kept in auto/refresh/.
+printf 'clankos: kept\n' >> .clanka/auto/refresh/said
+"$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
+check "a command's refresh skips when nothing has changed" grep -qx 'clankos: kept' ../err
+check "and says again what the last refresh said" grep -q '^clankos: name-taken bin/pos-capture' ../err
+printf '# A comment.\n' >> .clanka/config.yml
+"$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
+check "a changed configuration is read again" sh -c '! grep -q "clankos: kept" ../err'
+check "and what it says is said" grep -q '^clankos: name-taken bin/pos-capture' ../err
+
 # A command of the garden's own under a slot's name is its filling of
 # the slot: not a name taken.
 rm bin/pos-capture bin/wrap-up && printf '#!/bin/sh\necho ours\n' > bin/wrap-up && chmod +x bin/wrap-up

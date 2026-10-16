@@ -6,7 +6,7 @@
 # Before any command but help, initiate, refresh and wild-caught,
 # refresh runs: what ClankOS installs in the repository is brought to
 # what this image holds, and a name it cannot take is reported on
-# stderr. initiate does it itself, once there is a configuration.
+# stderr. It reads nothing again when nothing it reads has changed. initiate does it itself, once there is a configuration.
 # Exit: the command's own, 126 workspace not visible, 127 no such command.
 if [ -n "${CLANKOS_PROBE:-}" ] && [ ! -e "$CLANKOS_PROBE" ]; then
     echo "clankos: the workspace is not visible in the container: $PWD" >&2
@@ -23,7 +23,7 @@ if [ -z "$command" ] || [ ! -x "$command" ]; then
 fi
 case $1 in
     help|initiate|refresh|wild-caught) ;;
-    *) "$(dirname -- "$0")/refresh" || true ;;
+    *) "$(dirname -- "$0")/refresh" --if-changed || true ;;
 esac
 shift
 exec "$command" "$@"

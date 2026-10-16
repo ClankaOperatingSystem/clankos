@@ -16,8 +16,9 @@ printf '#!/bin/sh\necho "decisions/0002.md:3: status not known"\necho "index out
 chmod +x projects/p/methodologies/adr/skills/adr-write/scripts/check-status
 printf '* NEXT Inside the methodology\n' > projects/p/methodologies/adr/README.org
 git add -A && git commit -q -m "Begin"
-# What the image installs is made before the first command; the lint
-# itself writes nothing.
+# What the image installs is made before the first command, and what
+# refresh keeps of it by the second; the lint itself writes nothing.
+"$bin/clankos-run" refresh > out 2> err
 "$bin/clankos-run" refresh > out 2> err
 find . -type f ! -name before ! -name out ! -name err | sort > before
 
