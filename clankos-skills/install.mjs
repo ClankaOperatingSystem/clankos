@@ -12,8 +12,11 @@
 //
 // Nothing is changed until every source has been fetched into a scratch
 // directory and every refusal checked. Then the skills of a declared
-// source that are no longer declared, or declared at another ref, are
-// removed, and the missing ones added, in the working directory. A
+// source that are no longer declared, declared at another ref, or linked
+// for other harnesses than those declared, are removed, and the missing
+// ones added, in the working directory. Each skill is a folder in
+// .agents/skills/, and each declared harness that reads a directory of
+// its own has a link there to it. A
 // skill from a source the configuration does not declare is
 // wild-caught: someone installed it with the skills CLI, and it is left
 // as it is, unless uninstall names it.
@@ -93,7 +96,7 @@ try {
 const declared = plan.sources || [];
 const sources = plan.image ? [...declared, { ...plan.image, kind: 'image' }] : declared;
 const uninstall = new Set(plan.uninstall || []);
-const agents = plan.harnesses && plan.harnesses.length ? plan.harnesses : ['universal'];
+const agents = [...new Set(['universal', ...(plan.harnesses || [])])];
 const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
 
 // With GH_TOKEN, a github.com source given by its SSH URL is fetched over
@@ -135,7 +138,15 @@ for (const source of sources) {
 }
 if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
-// 2. Each source fetched into a scratch directory, for its skills' names.
+// The harnesses each installed skill is linked for, as the skills CLI
+// lists them.
+function links(dir) {
+  const run = skills(['list', '--json'], dir);
+  return new Map(run.results.map((each) => [each.name, [...(each.agents || [])].sort().join(', ')]));
+}
+
+// 2. Each source fetched into a scratch directory, for its skills' names
+// and the harnesses they are linked for.
 const stage = mkdtempSync(join(tmpdir(), 'clankos-install-'));
 const supplied = [];
 try {
@@ -143,7 +154,7 @@ try {
     const dir = join(stage, String(index));
     execFileSync('mkdir', ['-p', dir]);
     const run = skills(['add', `${source.source}#${source.ref}`, '--yes', '--json',
-      '--agent', 'universal', '--skill', ...(source.skills || ['*'])], dir);
+      '--agent', ...agents, '--skill', ...(source.skills || ['*'])], dir);
     const bad = run.results.filter((result) => result.status !== 'installed');
     if (run.status !== 0 || bad.length || !run.results.length) {
       const why = bad.map((result) => result.reason || result.error || result.status).join('; ');
@@ -162,7 +173,7 @@ try {
       const others = new Set(supplied.flatMap((each) => each.names));
       names = names.filter((name) => !others.has(name));
     }
-    if (names.length) supplied.push({ source, names });
+    if (names.length) supplied.push({ source, names, links: links(dir) });
   });
 } finally {
   rmSync(stage, { recursive: true, force: true });
@@ -213,17 +224,24 @@ for (const { source, names } of supplied) {
 if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
 // 4. Of the declared sources' skills, remove what is no longer declared,
-// or is declared at another ref; add what is missing. A wild-caught
-// skill is left, and one uninstall names is removed.
+// is declared at another ref, or is linked for other harnesses; add what
+// is missing. A wild-caught skill is left, and one uninstall names is
+// removed.
 const wanted = new Map();
-for (const { source, names } of supplied) {
-  for (const name of names) wanted.set(name, source);
+const wantedLinks = new Map();
+for (const { source, names, links: linked } of supplied) {
+  for (const name of names) {
+    wanted.set(name, source);
+    wantedLinks.set(name, linked.get(name));
+  }
 }
+const installedLinks = links(node);
 const said = [];
 for (const [name, entry] of Object.entries(locked).sort()) {
   if (wild(name)) continue;
   const source = wanted.get(name);
-  if (source && entryKey(entry) === key(source.source) && entry.ref === source.ref) continue;
+  if (source && entryKey(entry) === key(source.source) && entry.ref === source.ref
+      && installedLinks.get(name) === wantedLinks.get(name)) continue;
   const run = skills(['remove', name, '--yes'], node);
   if (run.status !== 0) fail(3, [...said, `removing ${name}: ${run.errors.trim()}`]);
   said.push(`removed ${name}`);
