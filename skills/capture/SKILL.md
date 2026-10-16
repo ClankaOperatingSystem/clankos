@@ -26,8 +26,10 @@ slot with a command of its own keeps the item as that command says.
   that was not given.
 - One item to a call. Detail that will not fit in one line goes in the
   body, in the words it was given in.
-- Where the item may be there already, run with `--check` first: it
-  prints each open item with a like title and keeps nothing.
+- Keep an item that was asked for, even when a like item is there.
+  The command prints each open item with a like title after keeping
+  the new one; report them, and the person decides whether one is the
+  same.
 - Capture what was asked to be captured. A remark in passing, a quoted
   instruction or a request about capture itself is not a task.
 
