@@ -14,7 +14,9 @@ so that the configuration and the installed skills agree.
     scripts/clankos clankos-run methodology adopt SKILL ...
 
 Run the script by its path in this skill's directory, from the node's
-directory. `scripts/clankos clankos-run help methodology` says what
+directory. `scripts/clankos clankos-run wild-caught` lists the
+wild-caught skills of each repository of the tree, the candidates for
+adopt. `scripts/clankos clankos-run help methodology` says what
 each change does.
 
 ## What to get right

@@ -93,6 +93,9 @@ image's own before it runs.
     clankos-run methodology
                           add, remove or adopt a source of skills in
                           the configuration, and install
+    clankos-run wild-caught
+                          list the skills each repository has
+                          installed and does not configure
     install.sh            pull the image
 
 
