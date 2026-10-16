@@ -29,7 +29,9 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
             (message "clankos: methodology-refused %s (%s)" .path .detail))
            ((member .finding (quote ("lock-differs" "lock-undeclared")))
             (setq locked (1+ locked))
-            (message "clankos: %s %s (%s)" .finding .path .detail)))))
+            (message "clankos: %s %s (%s)" .finding .path .detail))
+           ((equal .finding "wild-caught")
+            (message "clankos: wild-caught %s (%s)" .path .detail)))))
     (pos-tree-refused
      (if (and (eq (nth 1 err) (quote failed))
               (string-match "\\`Cannot make a symbolic link at \\(.*\\): \\(.*\\)\\'"'"'"

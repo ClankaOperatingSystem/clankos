@@ -36,9 +36,11 @@ Then the whole tree, for:
 
   - a task heading written in more than one file, each copy naming
     the others;
-  - an entry of a node's skills-lock.json that its configuration does
-    not declare (poslib's doc/pos-directory.txt, section 6), at the
-    entry's line, as "lock-undeclared: NAME: ...".
+  - an entry of a node's skills-lock.json of a skill that its declared
+    source's entry does not name (poslib's doc/pos-directory.txt,
+    section 6), at the entry's line, as "lock-undeclared: NAME: ...".
+    An entry of a source no configuration declares is wild-caught, and
+    is not reported.
 
 Then each methodology a project of the tree uses (poslib's
 doc/pos-methodology.txt): each executable scripts/check-* of each of

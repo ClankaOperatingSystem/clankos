@@ -44,6 +44,7 @@ origin shared v1 share-skill other-skill
 origin loose v1 loose-greet greet
 origin clash v1 clash-one hello-greet
 origin slot v1 capture
+origin twin v1 other-skill
 git -C sources/hello branch -q stable && rm -rf remotes/hello.git \
     && git clone -q --bare sources/hello remotes/hello.git
 
@@ -87,11 +88,28 @@ check "and names it" grep -qx 'clankos: lock-differs skills-lock.json (hello-gre
 check "install updates a changed ref" grep -q 'v2' .agents/skills/hello-greet/SKILL.md
 check "and records it" test "$(grep -c '"ref": "v2"' skills-lock.json)" -eq 2
 
-configure "$(hello v2)"
+configure "$(hello v2)" '  - source: https://git.example/shared.git
+    ref: v1
+    skills: [other-skill]
+    kind: skills-repository
+'
 "$bin/clankos-run" install > ../out 2> ../err
-check "install removes an undeclared skill" test ! -e .agents/skills/share-skill
+check "install removes a declared source's skill no longer named" test ! -e .agents/skills/share-skill
 check "and says so" grep -qx 'removed share-skill' ../out
 check "and its lock entry" sh -c '! grep -q share-skill skills-lock.json'
+check "and adds the one now named" test -f .agents/skills/other-skill/SKILL.md
+
+# A source no longer declared leaves its skills wild-caught: install
+# leaves them, and refresh names them and exits 0.
+git add -A && git commit -qm 'Name another skill'
+configure "$(hello v2)"
+"$bin/clankos-run" install > ../out 2> ../err
+check "install leaves a skill of a source no longer declared" test -f .agents/skills/other-skill/SKILL.md
+check "and its lock entry" grep -q '"other-skill"' skills-lock.json
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "refresh exits 0 for a wild-caught skill" test $? -eq 0
+check "and names it" \
+    grep -qx 'clankos: wild-caught skills-lock.json (other-skill: from https://git.example/shared.git, which is not declared)' ../err
 
 # A refusal changes nothing but the configuration the test wrote.
 git add -A && git commit -qm 'Update the skills'
@@ -127,14 +145,19 @@ configure "$(hello v2)" '  - source: https://git.example/slot.git
     kind: skills-repository
 '
 check "a slot the repository fills is refused" refused 'capture: the repository fills this slot itself'
+configure "$(hello v2)" '  - source: https://git.example/twin.git
+    ref: v1
+    kind: skills-repository
+'
+check "a source that supplies a wild-caught skill's name is refused" \
+    refused 'other-skill: installed from https://git.example/shared.git, which the configuration does not declare'
 
 printf '{"version": 1, "skills": {"stray": {"source": "someone/skills", "sourceType": "github", "computedHash": "0"}}}\n' \
     > ../lock
 configure "$(hello v2)"
 cp ../lock skills-lock.json
 "$bin/clankos-run" pos-lint > ../out 2> ../err
-check "the lint reports a lock entry not declared" \
-    grep -q '^skills-lock.json:1: lock-undeclared: stray: from someone/skills, which is not declared' ../out
+check "the lint does not report a wild-caught entry" sh -c '! grep -q stray ../out'
 cd ..
 
 [ "$failures" -eq 0 ]

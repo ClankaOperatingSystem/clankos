@@ -9,9 +9,12 @@
 // ClankOS image gives at a repository's root.
 //
 // Nothing is changed until every source has been fetched into a scratch
-// directory and every refusal checked. Then the skills no longer
-// declared, or declared at another ref, are removed, and the missing
-// ones added, in the working directory.
+// directory and every refusal checked. Then the skills of a declared
+// source that are no longer declared, or declared at another ref, are
+// removed, and the missing ones added, in the working directory. A
+// skill from a source the configuration does not declare is
+// wild-caught: someone installed it with the skills CLI, and it is left
+// as it is.
 //
 // Exit: 0 done, 1 refused and nothing changed, 2 usage, 3 the skills CLI
 // failed while changing the node.
@@ -165,6 +168,8 @@ if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
 // 3. The refusals of a name.
 const locked = lockEntries();
+const declaredKeys = new Set(sources.map((source) => key(source.source)));
+const wild = (name) => name in locked && !declaredKeys.has(entryKey(locked[name]));
 const by = new Map();
 for (const { source, names } of supplied) {
   for (const name of names) {
@@ -175,6 +180,11 @@ for (const { source, names } of supplied) {
       present = true;
     } catch {
       present = false;
+    }
+    if (wild(name)) {
+      refused.push(`${name}: installed from ${locked[name].source}, which the configuration`
+        + ` does not declare, and supplied by ${source.source}; remove one`);
+      continue;
     }
     const ours = name in locked || imageLink(path);
     if (source.kind === 'image') continue;
@@ -198,14 +208,16 @@ for (const { source, names } of supplied) {
 }
 if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
-// 4. Remove what is no longer declared, or is declared at another ref;
-// add what is missing.
+// 4. Of the declared sources' skills, remove what is no longer declared,
+// or is declared at another ref; add what is missing. A wild-caught
+// skill is left.
 const wanted = new Map();
 for (const { source, names } of supplied) {
   for (const name of names) wanted.set(name, source);
 }
 const said = [];
 for (const [name, entry] of Object.entries(locked).sort()) {
+  if (wild(name)) continue;
   const source = wanted.get(name);
   if (source && entryKey(entry) === key(source.source) && entry.ref === source.ref) continue;
   const run = skills(['remove', name, '--yes'], node);
