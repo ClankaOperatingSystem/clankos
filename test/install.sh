@@ -99,6 +99,23 @@ check "and says so" grep -qx 'removed share-skill' ../out
 check "and its lock entry" sh -c '! grep -q share-skill skills-lock.json'
 check "and adds the one now named" test -f .agents/skills/other-skill/SKILL.md
 
+# A harness that reads a directory of its own, declared after the skills
+# are installed, is given a link to each, and loses them when taken away.
+other='  - source: https://git.example/shared.git
+    ref: v1
+    skills: [other-skill]
+    kind: skills-repository'
+configure "$(hello v2)" "$other" 'harnesses: [claude-code]'
+"$bin/clankos-run" install > ../out 2> ../err
+check "a harness declared later is given a link to each skill" \
+    test -L .claude/skills/hello-greet -a -L .claude/skills/other-skill
+check "and each skill stays a folder in .agents/skills/" \
+    test -d .agents/skills/hello-greet -a ! -L .agents/skills/hello-greet
+configure "$(hello v2)" "$other"
+"$bin/clankos-run" install > ../out 2> ../err
+check "a harness taken away loses its links" test ! -e .claude/skills/hello-greet
+check "and the skills stay" test -f .agents/skills/hello-greet/SKILL.md
+
 # A source no longer declared leaves its skills wild-caught: install
 # leaves them, and refresh names them and exits 0.
 git add -A && git commit -qm 'Name another skill'

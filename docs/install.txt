@@ -27,10 +27,10 @@ ref is a tag, or a commit by its full forty-digit id. skills names the
 skills to install, all of the repository's when it is absent. kind is
 methodology, the default, whose skills are each named with the
 repository's name and a hyphen, or skills-repository, whose skills
-are named as its owners choose. Without harnesses the skills are
-written to .agents/skills/ alone, which Codex, opencode and pi read. A
-harness that reads only its own directory is named in harnesses, and
-the skills CLI makes links there.
+are named as its owners choose. The skills are always written to
+.agents/skills/, which Codex, opencode and pi read. A harness that
+reads only its own directory is named in harnesses, and the skills CLI
+makes a link there to each skill.
 
 At a repository's root, the node has one source more, which no
 configuration names: the image's skills, from the repository the
@@ -67,8 +67,11 @@ repository until each of these is settled:
 
 Then it removes each skill of skills-lock.json from a declared source
 that is no longer declared, or is declared at another ref or from
-another source, and adds each declared skill that is missing, as folders in
-.agents/skills/ and entries in skills-lock.json. A link an earlier
+another source, or is linked for other harnesses than those declared,
+and adds each declared skill that is missing, as folders in
+.agents/skills/, links for the harnesses, and entries in
+skills-lock.json. So a harness added to or taken from harnesses gains
+or loses its links at the next install. A link an earlier
 refresh made into auto/skills/ is removed before the skill of its name
 is added. Last, it runs the lint, pos-lint.
 
