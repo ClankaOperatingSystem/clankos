@@ -126,6 +126,15 @@ configure "$(hello v2)" "$other"
 check "a harness taken away loses its links" test ! -e .claude/skills/hello-greet
 check "and the skills stay" test -f .agents/skills/hello-greet/SKILL.md
 
+# A harness's directory that is a link to .agents/skills/ shows each
+# skill to that harness: install again changes nothing.
+rm -rf .claude && mkdir .claude && ln -s ../.agents/skills .claude/skills
+"$bin/clankos-run" install > ../out 2> ../err
+"$bin/clankos-run" install > ../out 2> ../err
+check "with a harness's directory linked to .agents/skills/, install again changes nothing" \
+    sh -c '! grep -q "^removed\|^installed" ../out'
+rm -rf .claude
+
 # A source no longer declared leaves its skills wild-caught: install
 # leaves them, and refresh names them and exits 0.
 git add -A && git commit -qm 'Name another skill'
