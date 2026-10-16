@@ -24,7 +24,10 @@
 // Exit: 0 done, 1 refused and nothing changed, 2 usage, 3 the skills CLI
 // failed while changing the node.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync, lstatSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -159,6 +162,20 @@ function links(dir) {
   return new Map(run.results.map((each) => [each.name, [...(each.agents || [])].sort().join(', ')]));
 }
 
+// A harness's directory in the node that is a link to .agents/skills/,
+// such as .claude/skills: the skills CLI lists each skill as linked for
+// that harness. Each scratch directory has the same links, so that a
+// skill's harnesses there are the ones it has in the node.
+const shared = readdirSync(node).filter((entry) => {
+  const path = join(node, entry, 'skills');
+  try {
+    return entry.startsWith('.') && entry !== '.agents' && lstatSync(path).isSymbolicLink()
+      && resolve(join(node, entry), readlinkSync(path)) === join(node, '.agents/skills');
+  } catch {
+    return false;
+  }
+});
+
 // 2. Each source fetched into a scratch directory, for its skills' names
 // and the harnesses they are linked for.
 const stage = mkdtempSync(join(tmpdir(), 'clankos-install-'));
@@ -167,6 +184,11 @@ try {
   sources.forEach((source, index) => {
     const dir = join(stage, String(index));
     execFileSync('mkdir', ['-p', dir]);
+    if (shared.length) execFileSync('mkdir', ['-p', join(dir, '.agents/skills')]);
+    for (const entry of shared) {
+      execFileSync('mkdir', ['-p', join(dir, entry)]);
+      symlinkSync('../.agents/skills', join(dir, entry, 'skills'));
+    }
     const run = skills(['add', `${source.source}#${source.ref}`, '--yes', '--json',
       '--agent', ...agents, '--skill', ...(source.skills || ['*'])], dir);
     const bad = run.results.filter((result) => result.status !== 'installed');
