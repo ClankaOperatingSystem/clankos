@@ -101,16 +101,21 @@ they differ:
 
     clankos: lock-differs skills-lock.json (https://example.org/team/pr-gnome.git at v1.3.0: not installed)
     clankos: lock-differs skills-lock.json (pr-gnome-write: changed since it was installed)
-    clankos: lock-undeclared skills-lock.json (grill-me: from someone/skills, which is not declared)
+    clankos: lock-undeclared skills-lock.json (hello-other: not among the skills of https://example.org/team/hello.git)
 
 lock-differs is a source, a skill or a ref the configuration declares
 that skills-lock.json does not hold, or an installed skill whose
 directory is gone or no longer has the hash its entry records;
-lock-undeclared is an entry the configuration does not declare, such
-as one the skills CLI wrote when run by hand. Running install brings
-the two into line. A new image is at another commit, so after the
-image changes refresh says lock-differs for its skills until install
-has run.
+lock-undeclared is an entry of a skill that a declared source's entry
+does not name. Running install brings the two into line. A new image
+is at another commit, so after the image changes refresh says
+lock-differs for its skills until install has run.
+
+A skill someone installed with the skills CLI from a source the
+configuration does not declare is wild-caught. It is no fault: refresh
+names it, and does not exit 1 for it, and install leaves it as it is.
+
+    clankos: wild-caught skills-lock.json (grill-me: from someone/skills, which is not declared)
 
 
 6. Where links cannot be made
