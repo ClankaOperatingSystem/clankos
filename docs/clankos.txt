@@ -151,6 +151,8 @@ says how.
     clankos-migrate-archive rebuild an archive that has a legacy
                             ledger
     clankos-methodology     add, remove or adopt a source of skills
+    clankos-upgrade         install a new image's skills in each
+                            repository of the garden, and commit them
 
 install puts them in .agents/skills/ from this repository at the
 commit the image was built from, and records them in skills-lock.json,
