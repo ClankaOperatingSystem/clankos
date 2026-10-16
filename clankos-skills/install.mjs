@@ -24,7 +24,7 @@
 // Exit: 0 done, 1 refused and nothing changed, 2 usage, 3 the skills CLI
 // failed while changing the node.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdtempSync, readFileSync, readlinkSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -85,6 +85,20 @@ function imageLink(path) {
   }
   const target = resolve(join(path, '..'), readlinkSync(path));
   return ['.clanka', '.clankos', '.pos'].some((dir) => target.startsWith(join(node, dir, 'auto') + '/'));
+}
+
+// Remove the line with which an earlier refresh had Git ignore its link
+// at path, a path in the node, from the repository's info/exclude.
+// Otherwise Git would ignore the skill installed there. Refresh may
+// have removed the link already, and leaves the line.
+function unexclude(path) {
+  const git = (args) => spawnSync('git', args, { cwd: node, encoding: 'utf8' }).stdout.trim();
+  const file = git(['rev-parse', '--git-path', 'info/exclude']);
+  if (!file || !existsSync(resolve(node, file))) return;
+  const line = `/${git(['rev-parse', '--show-prefix'])}${path}`;
+  const lines = readFileSync(resolve(node, file), 'utf8').split('\n');
+  const kept = lines.filter((each) => each !== line);
+  if (kept.length < lines.length) writeFileSync(resolve(node, file), kept.join('\n'));
 }
 
 let plan;
@@ -253,6 +267,7 @@ for (const { source, names } of supplied) {
   for (const name of missing) {
     const path = join(node, '.agents/skills', name);
     if (imageLink(path)) rmSync(path);
+    unexclude(`.agents/skills/${name}`);
   }
   const run = skills(['add', `${source.source}#${source.ref}`, '--yes', '--json',
     '--agent', ...agents, '--skill', ...missing], node);

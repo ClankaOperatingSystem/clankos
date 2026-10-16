@@ -73,7 +73,8 @@ and adds each declared skill that is missing, as folders in
 skills-lock.json. So a harness added to or taken from harnesses gains
 or loses its links at the next install. A link an earlier
 refresh made into auto/skills/ is removed before the skill of its name
-is added. Last, it runs the lint, pos-lint.
+is added, and so is any line in Git's info/exclude that ignored the
+link. Last, it runs the lint, pos-lint.
 
 A skill whose entry in skills-lock.json is of a source the
 configuration does not declare is wild-caught: someone installed it
