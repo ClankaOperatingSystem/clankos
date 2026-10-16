@@ -155,6 +155,32 @@ check "initiate, run in a clone, makes them" test -L bin/clankos-run -a -L bin/p
 check "and changes nothing Git keeps" test -z "$(git status --porcelain)"
 cd ..
 
+# A project made with --project is read as a project where its parent
+# keeps projects; one made without it is refused there.
+for kind in project garden; do
+    mkdir "$kind-repo" && (cd "$kind-repo" && git init -q -b master .)
+    if [ "$kind" = project ]; then
+        (cd "$kind-repo" && "$bin/initiate" --project < /dev/null > ../out 2>&1)
+    else
+        (cd "$kind-repo" && "$bin/initiate" --no-tree < /dev/null > ../out 2>&1)
+    fi
+    [ "$kind" = garden ] || cp out project-out
+    git -C "$kind-repo" add -A
+    git -C "$kind-repo" -c user.name=Test -c user.email=test@example.org commit -qm "A $kind"
+done
+check "--project says nowhere that projects belong" sh -c '! grep -q "^projects:" project-repo/.clanka/config.yml'
+check "and says it made a project" grep -qx 'This repository is a project. Nothing is committed: read git status, and commit.' project-out
+check "and does not go on to the tree" sh -c '! grep -q "^This repository is a garden" project-out'
+mkdir -p mounting/.clanka && cd mounting && git init -q -b master .
+printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+"$bin/responsibility-tree" --product projects/shed="$work/project-repo" \
+    --product projects/barn="$work/garden-repo" > /dev/null 2>&1
+"$bin/startup-prompt" > out 2>&1
+check "both are cloned" test -d projects/shed/.git -a -d projects/barn/.git
+check "a project made with --project is read as a project" sh -c '! grep -q "projects/shed.*project-holds-projects" out'
+check "a garden mounted as a project is refused" grep -q 'projects/barn (project-holds-projects' out
+cd ..
+
 mkdir plain
 check "a directory that is no repository is refused" sh -c "cd plain && '$bin/initiate' </dev/null >/dev/null 2>&1; [ \$? -eq 2 ]"
 check "a refusal writes nothing" test -z "$(ls -A plain)"

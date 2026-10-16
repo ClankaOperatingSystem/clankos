@@ -33,7 +33,10 @@ opened in and of each directory above it in the same repository. So a
 project that is a directory of its responsibility's repository works
 with the skills of its responsibility's methodologies, and a project
 that is a repository of its own does not. Which a project is, is
-chosen when the tree is laid out.
+chosen when the tree is laid out. A project that is a repository of
+its own is made with "initiate --project" (docs/initiate.txt), and
+mounted where the responsibility's projects belong as a product
+PATH=REMOTE is.
 
 No folder name carries meaning, with one convention: a responsibility
 keeps its one-file projects where its configuration says they belong,
