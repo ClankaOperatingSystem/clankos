@@ -1,15 +1,78 @@
 #!/bin/sh
-# refresh
+# refresh [--if-changed]
 # Bring what ClankOS installs in the repository the working directory
 # is in to what this image holds. The protocol is docs/refresh.txt.
+# With --if-changed, which run gives before a command, nothing is read
+# again when the image and the paths that refresh reads are as they
+# were after the last refresh: what it said is said again, and its exit
+# status is the exit status.
 # Exit: 0 done, 1 a name is taken, or a skills-lock.json differs from
 # its configuration, 2 usage, 3 a link cannot be made.
+changed=
+if [ "${1:-}" = --if-changed ]; then
+    changed=1
+    shift
+fi
 if [ $# -ne 0 ]; then
-    echo "Usage: refresh" >&2
+    echo "Usage: refresh [--if-changed]" >&2
     exit 2
 fi
 root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
-exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+source=/usr/local/share/clankos/source
+
+# What the last refresh saw is kept in the auto/ of the repository's
+# configuration directory, in refresh/.
+kept=
+for dir in .clanka .clankos .pos; do
+    if [ -d "$root/$dir/auto" ]; then
+        kept=$root/$dir/auto/refresh
+        break
+    fi
+done
+
+# The paths refresh reads: the configuration directories, the skills,
+# the lock files, the directories of links, and Git's info/exclude.
+listed() {
+    find "$root" \( -name .git -o -name '_*' -o -name node_modules \
+            -o -name archives -o -name attic -o -path '*/auto/refresh' \) -prune \
+        -o \( -path '*/.clanka' -o -path '*/.clanka/*' -o -path '*/.clankos' \
+            -o -path '*/.clankos/*' -o -path '*/.pos' -o -path '*/.pos/*' \
+            -o -path '*/.agents/skills' -o -path '*/.agents/skills/*' \
+            -o -name skills-lock.json -o -name bin -o -path '*/bin/*' \) -print
+    git -C "$root" rev-parse --path-format=absolute --git-path info/exclude
+}
+
+# A digest of the image's version and of each path in the file $1: a
+# directory's entries, or a file's content, or that it is gone. Both are
+# read by opening the path: a time of change that Docker's shared folder
+# gives can be seconds old.
+signature() {
+    {
+        cat "$source/version"
+        tr '\n' '\0' < "$1" | xargs -0 -r sh -c '
+            for path; do
+                if [ -d "$path" ] && [ ! -L "$path" ]; then
+                    printf "%s/\n" "$path"
+                    ls -1A -- "$path"
+                fi
+            done' sh
+        tr '\n' '\0' < "$1" | xargs -0 -r sha256sum -- 2>&1 | grep -v ': Is a directory$'
+    } | sha256sum
+}
+
+if [ -n "$changed" ] && [ -n "$kept" ] && [ -f "$kept/signature" ] \
+        && [ "$(signature "$kept/list")" = "$(cat "$kept/signature")" ]; then
+    cat "$kept/said" >&2
+    exit "$(cat "$kept/status")"
+fi
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+if [ -n "$kept" ]; then
+    listed > "$work/list"
+    signature "$work/list" > "$work/signature"
+fi
+emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
     --eval '
 (let ((root (pop command-line-args-left))
@@ -50,4 +113,16 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     (message "clankos: each is a skills-lock.json that differs from its configuration; run clankos-run install there"))
   (when (> (+ taken refused locked) 0)
     (kill-emacs 1)))' \
-    "$root" /usr/local/share/clankos/source
+    "$root" "$source" 2> "$work/said"
+status=$?
+cat "$work/said" >&2
+
+# What was seen is kept only when refresh changed none of the paths, so
+# that a change made while it ran is read by the next refresh. The
+# first refresh after a change makes links, and the next one keeps it.
+if [ -n "$kept" ] && [ "$status" -le 1 ] \
+        && [ "$(signature "$work/list")" = "$(cat "$work/signature")" ]; then
+    mkdir -p "$kept" && echo "$status" > "$work/status" \
+        && cp "$work/list" "$work/signature" "$work/said" "$work/status" "$kept/"
+fi
+exit "$status"
