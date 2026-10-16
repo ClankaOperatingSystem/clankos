@@ -1,18 +1,16 @@
 #!/bin/sh
-# install-sources
+# install-sources [SKILL ...]
 # Print, as JSON, what the configuration of the node in the working
 # directory declares for install: its sources, harnesses and bin; and,
-# at a repository's root, the image's skills as one source more. The
+# at a repository's root, the image's skills as one source more. Each
+# SKILL is one to uninstall that install would leave, a skill of a
+# source the methodology command has just removed. The
 # install command, which bin/clankos-run runs, gives it to the
 # clankos-skills image; docs/install.txt is the protocol.
 # Methodologies declared as a path are refresh's to link, and are no
 # sources here.
 # Exit: 0 printed, 2 usage, no configuration here, or one that is
 # refused.
-if [ $# -ne 0 ]; then
-    echo "Usage: install-sources" >&2
-    exit 2
-fi
 root=$(git rev-parse --show-toplevel 2>/dev/null) || root=
 [ -n "$root" ] && [ "$root" -ef . ] || root=
 exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
@@ -20,6 +18,8 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l pos-lock \
     --eval '
 (let ((root (pop command-line-args-left))
+      (uninstall (prog1 (vconcat command-line-args-left)
+                   (setq command-line-args-left nil)))
       (file (condition-case err
                 (pos-node-config-file default-directory)
               (pos-node-refused
@@ -42,8 +42,9 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
      (list (cons (quote sources) (if (vectorp methodologies) methodologies []))
            (cons (quote harnesses) (alist-get (quote harnesses) config))
            (cons (quote bin) (alist-get (quote bin) config))
+           (cons (quote uninstall) uninstall)
            (cons (quote image)
                  (or (and (not (string-empty-p root))
                           (pos-lock-image "/usr/local/share/clankos/source" root))
                      :null))))))' \
-    "$root"
+    "$root" "$@"

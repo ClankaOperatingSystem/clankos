@@ -90,6 +90,9 @@ image's own before it runs.
     clankos-run refresh   bring what ClankOS installs to the image's
     clankos-run install   install the skills of the sources the
                           configuration declares
+    clankos-run methodology
+                          add, remove or adopt a source of skills in
+                          the configuration, and install
     install.sh            pull the image
 
 
@@ -144,6 +147,7 @@ says how.
                             disk or kept, and cite each hit
     clankos-migrate-archive rebuild an archive that has a legacy
                             ledger
+    clankos-methodology     add, remove or adopt a source of skills
 
 install puts them in .agents/skills/ from this repository at the
 commit the image was built from, and records them in skills-lock.json,
