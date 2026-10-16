@@ -1,10 +1,11 @@
 #!/bin/sh
 # initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
-#          [--keeper URL] [--bin DIR] [--no-tree]
-# Make the Git repository in the working directory a garden. The
-# protocol is docs/initiate.txt.
+#          [--keeper URL] [--bin DIR] [--no-tree] [--project]
+# Make the Git repository in the working directory a garden, or with
+# --project a project to be mounted in one. The protocol is
+# docs/initiate.txt.
 usage() {
-    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--bin DIR] [--no-tree]" >&2
+    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--bin DIR] [--no-tree] [--project]" >&2
     exit 2
 }
 refuse() {
@@ -15,11 +16,12 @@ refuse() {
 registry=ghcr.io/clankaoperatingsystem/clankos
 ask=
 [ ! -t 0 ] || ask=1
-tag= archive= keeper= bin=bin tree=1
+tag= archive= keeper= bin=bin tree=1 project=
 while [ $# -gt 0 ]; do
     case $1 in
         --ask) ask=1; shift ;;
         --no-tree) tree=; shift ;;
+        --project) project=1 tree=; shift ;;
         --image) [ $# -ge 2 ] || usage; tag=$2; shift 2 ;;
         --archive) [ $# -ge 2 ] || usage; archive=$2; shift 2 ;;
         --keeper) [ $# -ge 2 ] || usage; keeper=$2; shift 2 ;;
@@ -82,7 +84,10 @@ else
     config=.clanka/config.yml
     mkdir -p .clanka
     {
-        printf 'pos: 2\nprojects: projects/\nimage: %s:%s\nbin: %s\n' "$registry" "$tag" "$bin"
+        # A project is a leaf, and says nowhere that projects belong.
+        printf 'pos: 2\n'
+        [ -n "$project" ] || printf 'projects: projects/\n'
+        printf 'image: %s:%s\nbin: %s\n' "$registry" "$tag" "$bin"
         # The directories no command reads, written out so that a reader
         # of the file can see why; these are what poslib assumes when a
         # node declares none.
@@ -216,6 +221,11 @@ if [ -n "$tree" ] && [ -n "$ask" ]; then
 fi
 
 echo
-echo "This repository is a garden. Nothing is committed: read git status, and commit."
-echo "Add to the tree at any time with $bin/responsibility-tree."
+if [ -n "$project" ]; then
+    echo "This repository is a project. Nothing is committed: read git status, and commit."
+    echo "Mount it where a responsibility keeps its projects, with responsibility-tree there."
+else
+    echo "This repository is a garden. Nothing is committed: read git status, and commit."
+    echo "Add to the tree at any time with $bin/responsibility-tree."
+fi
 echo "$bin/clankos-run help says what a garden is and lists the commands."

@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
     cat <<'HELP'
 Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
-                [--keeper URL] [--bin DIR] [--no-tree]
+                [--keeper URL] [--bin DIR] [--no-tree] [--project]
        initiate --help
 
 Make the Git repository in the working directory a garden, in the
@@ -23,6 +23,9 @@ from standard input.
   --keeper URL    with --archive remote, the keeper's address
   --bin DIR       where the scripts go; bin unless given
   --no-tree       do not go on to responsibility-tree
+  --project       make a project, to be mounted where a responsibility
+                  keeps its projects: its configuration says nowhere
+                  that projects belong, and it has no tree
 
 Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
 scripts in bin/, as the image has them. Then runs install, which

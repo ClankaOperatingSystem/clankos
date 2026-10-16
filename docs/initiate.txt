@@ -52,6 +52,13 @@ At a terminal it asks. Without one it takes the defaults for what no
 option answers. "--ask" makes it ask all the same, one answer to a
 line of standard input, an empty line taking the default.
 
+"--project" makes the repository a project instead of a garden: a
+repository of its own, to be mounted where a responsibility keeps its
+projects (docs/responsibility-tree.txt). Its configuration says
+nowhere that projects belong, since a project is a leaf and poslib
+refuses one that does, and initiate does not go on to
+responsibility-tree.
+
 
 3. What it writes
 
