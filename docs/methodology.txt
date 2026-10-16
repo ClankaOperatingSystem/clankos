@@ -1,0 +1,71 @@
+methodology: changing the sources a node declares, and installing them
+
+"clankos-run methodology" changes methodologies in the configuration
+of the node in the working directory ("clankos-run help install", 1),
+and then runs install, so that the skills follow the configuration in
+one step. The configuration can be edited by hand, at the editor's own
+risk: install and refresh take what they find there.
+
+
+1. The changes
+
+    clankos-run methodology add SOURCE REF [SKILL ...] [--kind KIND]
+
+declares SOURCE at REF, and the SKILLs of it, or all of its skills
+when none is named. KIND is methodology, the default, or
+skills-repository. A source declared already takes REF, and KIND if
+given, and the SKILLs are added to those it names, if it names any.
+
+    clankos-run methodology remove SOURCE [SKILL ...] [--keep]
+
+removes SOURCE, or the SKILLs of it. A source that names no skills
+names, for this, those installed from it. The source goes when it
+names no others. A source removed whole leaves its skills wild-caught,
+and install would leave them as they are, so they are uninstalled
+too. On a terminal the command asks first, with yes the default.
+--keep keeps them, wild-caught. The SKILLs of a source still declared
+are uninstalled, since install removes a skill its source no longer
+names, and --keep is refused for them.
+
+    clankos-run methodology adopt SKILL ...
+
+declares each wild-caught SKILL from its entry in skills-lock.json:
+its source, at the ref it was installed at, naming the skills adopted
+from it. A source written OWNER/REPOSITORY, as the skills CLI writes a
+GitHub repository's, is declared as https://github.com/OWNER/REPOSITORY.git.
+Its kind is methodology where each skill adopted is named with the
+source's name and a hyphen, and skills-repository otherwise. A skill
+installed at no ref is refused; its source is declared with add.
+
+poslib's pos-sources makes each change. It writes methodologies afresh
+and leaves the rest of the file as it was; a comment within
+methodologies is lost. What it writes is read back and checked as
+install's reader checks it.
+
+
+2. What follows
+
+install runs on the configuration as changed ("clankos-run help
+install"), and uninstalls the skills named above. Where install
+refuses, the configuration is put back as it was, and nothing else
+has changed. Where the skills CLI fails part way, the configuration
+stays as changed, and install, run again, finishes the work.
+
+Nothing is committed: the configuration, the skill folders and
+skills-lock.json are committed by whoever ran it.
+
+
+3. What it prints
+
+A line on stderr for the configuration changed, or declaring the
+change already, then what install prints.
+
+
+4. Exit status
+
+    0     done, and the lint found nothing
+    1     refused, and nothing was changed; or the lint's findings
+    2     usage; no configuration in the working directory, or one
+          that is refused
+    3     the skills CLI failed while changing the node
+    125   Docker failed to run a container

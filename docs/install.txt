@@ -76,7 +76,8 @@ A skill whose entry in skills-lock.json is of a source the
 configuration does not declare is wild-caught: someone installed it
 with the skills CLI. install leaves it as it is, and refresh names it
 and does not count it a fault. Declaring its source puts it in
-install's care.
+install's care. "clankos-run methodology" changes what is declared and
+installs in one step ("clankos-run help methodology").
 
 install commits nothing. The skill folders and skills-lock.json are
 committed by whoever ran it, so that a new clone has its skills with
