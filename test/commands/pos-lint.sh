@@ -7,7 +7,7 @@ set -uo pipefail
 git init -q . && git config user.email t@example.org && git config user.name T
 mkdir -p .pos projects/p/.clanka projects/p/methodologies/adr/skills/adr-write/scripts
 printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: projects/p\n' > .pos/config.yaml
-printf '#+TITLE: Intray\n\n* Unsorted\n** TODO Water the plants\n' > intray.org
+printf ':PROPERTIES:\n:ID: intray\n:END:\n#+TITLE: Intray\n\n* Unsorted\n** TODO Water the plants\n' > intray.org
 # A project that is a directory, with a methodology whose check finds
 # one thing and prints one line that is not a finding.
 printf 'pos: 2\nmethodologies: methodologies\nchildren:\n  - path: methodologies/adr\n' > projects/p/.clanka/config.yml
@@ -33,13 +33,14 @@ check "nothing is written" sh -c 'find . -type f ! -name before ! -name out ! -n
 printf '* DONE Parent\n** TODO Child\n' > projects/p/project.org
 "$bin/pos-lint" > out 2> err
 check "a done entry with an open child is reported" grep -qx 'projects/p/project.org:1: done entry has open children' out
+check "a file with no file ID is reported" grep -qx 'projects/p/project.org:1: no file-level ID' out
 
 printf '** NEXT Call the plumber\n** WAITING Hear back\n' >> intray.org
 "$bin/pos-lint" > out 2> err
 check "an intray item that is not TODO is reported" \
-    grep -qx 'intray.org:5: NEXT item in the intray: clarified, to be placed' out
+    grep -qx 'intray.org:8: NEXT item in the intray: clarified, to be placed' out
 check "a WAITING item that says neither who nor since when is reported" \
-    grep -qx 'intray.org:6: WAITING item does not say who or what it waits on, or since when' out
+    grep -qx 'intray.org:9: WAITING item does not say who or what it waits on, or since when' out
 git checkout -q intray.org
 
 rm -f projects/p/project.org projects/p/methodologies/adr/skills/adr-write/scripts/check-status

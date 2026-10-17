@@ -23,6 +23,7 @@ exclude:
 check "an uncommitted archive is ignored by Git" git check-ignore -q archives/evidence
 check "underscore directories are ignored by Git" grep -qxF '_*/' .gitignore
 check "the intray has Unsorted" grep -qx '\* Unsorted' intray.org
+check "and a file ID" grep -qxE ':ID: +[0-9a-f-]{36}' intray.org
 check "it gives the garden the image's scripts" \
     sh -c 'for s in archive-integrity clankos-run initiate pos-capture responsibility-tree startup-prompt; do [ -x "bin/$s" ] || exit 1; done'
 check "the scripts are those of this repository" cmp -s bin/clankos-run "$bin/clankos-run"
