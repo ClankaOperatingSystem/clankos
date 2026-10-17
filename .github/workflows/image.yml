@@ -26,10 +26,13 @@ jobs:
           git -C "$RUNNER_TEMP/poslib.git" merge-base --is-ancestor "$pin" master
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
-      # Each image's layers are kept in the Actions cache under a scope
-      # of its own. The test build and the published build share them,
-      # so the apt and package layers are rebuilt when the Dockerfile
-      # changes and not otherwise. A pull request reads master's cache
+      # Each image's layers are kept in the Actions cache, so the apt
+      # and package layers are rebuilt when the Dockerfile changes and
+      # not otherwise. The published build's scope holds both platforms.
+      # The test build, one platform, reads that scope and writes a
+      # scope of its own: were it to write the published scope, the
+      # index it left would hold one platform, and the published build
+      # would build arm64 again. A pull request reads master's cache
       # and writes its own.
       - uses: docker/build-push-action@v7
         with:
@@ -37,15 +40,19 @@ jobs:
           build-args: CLANKOS_COMMIT=${{ github.sha }}
           load: true
           tags: clankos:test
-          cache-from: type=gha,scope=clankos
-          cache-to: type=gha,mode=max,scope=clankos
+          cache-from: |
+            type=gha,scope=clankos
+            type=gha,scope=clankos-test
+          cache-to: type=gha,mode=max,scope=clankos-test
       - uses: docker/build-push-action@v7
         with:
           context: clankos-skills
           load: true
           tags: clankos-skills:test
-          cache-from: type=gha,scope=clankos-skills
-          cache-to: type=gha,mode=max,scope=clankos-skills
+          cache-from: |
+            type=gha,scope=clankos-skills
+            type=gha,scope=clankos-skills-test
+          cache-to: type=gha,mode=max,scope=clankos-skills-test
       - name: Test the commands in the image
         run: |
           for test in test/*.sh; do
