@@ -33,8 +33,13 @@ install_skills() {
     if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
         agent=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock" -e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
     fi
+    # Failing GH_TOKEN, the token of the GitHub CLI, where it is signed in.
+    local GH_TOKEN=${GH_TOKEN:-}
+    if [ -z "$GH_TOKEN" ] && command -v gh > /dev/null 2>&1; then
+        GH_TOKEN=$(gh auth token 2> /dev/null) || GH_TOKEN=
+    fi
     token=()
-    [ -z "${GH_TOKEN:-}" ] || token=(-e GH_TOKEN)
+    [ -z "$GH_TOKEN" ] || { export GH_TOKEN; token=(-e GH_TOKEN); }
     status=0
     printf '%s\n' "$sources" | docker run --rm -i \
         --user "$(id -u):$(id -g)" \

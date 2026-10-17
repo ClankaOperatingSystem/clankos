@@ -10,7 +10,9 @@ set -uo pipefail
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.org
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.org
-unset SSH_AUTH_SOCK GH_TOKEN
+# The sources are local, and the GitHub CLI is not asked for a token.
+unset SSH_AUTH_SOCK
+export GH_TOKEN=unused
 
 # The sources are bare repositories in remotes/, reached as
 # https://git.example/NAME.git: the skills CLI reads a ref only from a
@@ -195,5 +197,38 @@ cp ../lock skills-lock.json
 "$bin/clankos-run" pos-lint > ../out 2> ../err
 check "the lint does not report a wild-caught entry" sh -c '! grep -q stray ../out'
 cd ..
+
+# install gives the skills container GH_TOKEN, or failing it the token
+# the GitHub CLI prints. Record the token each container is given.
+cd "$work" || exit 1
+mkdir -p token/.clanka token-bin
+git -C token init -q .
+printf 'pos: 2\nprojects: projects/\n' > token/.clanka/config.yml
+cat > token-bin/docker <<'MOCK'
+#!/bin/sh
+case " $* " in
+    *" -e GH_TOKEN "*) printf '%s\n' "$GH_TOKEN" >> "$DOCKER_TOKENS" ;;
+    *) printf 'none\n' >> "$DOCKER_TOKENS" ;;
+esac
+MOCK
+cat > token-bin/gh <<'MOCK'
+#!/bin/sh
+[ "$*" = "auth token" ] && [ -n "$GH_SIGNED_IN" ] && echo from-gh
+MOCK
+chmod +x token-bin/docker token-bin/gh
+# tokens [VAR=VALUE ...]: the token each container of an install is
+# given, one a line, with the VARs set.
+tokens() {
+    rm -f "$work/tokens"
+    (cd token && env -u GH_TOKEN PATH="$work/token-bin:$PATH" DOCKER_TOKENS="$work/tokens" \
+        GH_SIGNED_IN= "$@" "$bin/clankos-run" install > /dev/null 2>&1)
+    tr '\n' ' ' < "$work/tokens"
+}
+check "install gives the skills container GH_TOKEN" \
+    [ "$(tokens GH_TOKEN=set GH_SIGNED_IN=1)" = "none set none " ]
+check "and failing it, the GitHub CLI's token" \
+    [ "$(tokens GH_SIGNED_IN=1)" = "none from-gh none " ]
+check "and no token where the GitHub CLI is signed out" \
+    [ "$(tokens)" = "none none none " ]
 
 [ "$failures" -eq 0 ]
