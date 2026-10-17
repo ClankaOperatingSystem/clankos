@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Run the tests given, or with none given every test in test/, as
+# many at a time as there are processors, in the image CLANKOS_IMAGE
+# names. Each test writes to its own workspace, so they do not meet.
+# When all have run, each test's output is printed in turn, under its
+# name and the seconds it took. Exit: 0 every test passed, 1 otherwise.
+set -uo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
+tests=("$@")
+[ ${#tests[@]} -gt 0 ] || tests=(test/*.sh)
+jobs=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+out=$(mktemp -d "${TMPDIR:-/tmp}/clankos-test.XXXXXX")
+trap 'rm -rf "$out"' EXIT
+
+run() {
+    local name start
+    name=$(basename -- "$1" .sh)
+    start=$SECONDS
+    "$1" < /dev/null > "$2/$name.out" 2>&1
+    echo "$? $((SECONDS - start))" > "$2/$name.status"
+}
+export -f run
+printf '%s\n' "${tests[@]}" | xargs -P "$jobs" -I{} bash -c 'run "$@"' _ {} "$out"
+
+failed=0
+for test in "${tests[@]}"; do
+    name=$(basename -- "$test" .sh)
+    read -r status seconds < "$out/$name.status"
+    echo "== $test ${seconds}s"
+    cat "$out/$name.out"
+    [ "$status" -eq 0 ] || failed=$((failed + 1))
+done
+echo "== $failed of ${#tests[@]} tests failed"
+[ "$failed" -eq 0 ]
