@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-person add NAME
+       pos-person identity PERSON SCOPE
+       pos-person rename ID NAME
+       pos-person wait TARGET PERSON [NOTE]
+       pos-person arrived TARGET [STATE [NOTE]]
+       pos-person --help
+
+Record people, who each is in a scope, and which tasks wait on them,
+in the ClankOS container.
+"clankos-run help pos-person" prints the protocol.
+
+    pos-person wait intray.org:12 'Ada Brook' 'Asked on Friday'
+    intray.org:12: WAITING Ask Ada for the quote
+
+add records a person once, as a file in person-entities/ of the root's
+configuration directory. identity gives PERSON an identity in SCOPE, a
+scope's path from the working directory, "." for the root. rename
+gives the identity with ID a new NAME, in its file and in each link to
+it. wait sets TARGET to WAITING and links it to PERSON's identity in
+its scope, making one if there is none. arrived removes that link and
+sets TARGET to STATE, NEXT when none is given.
+
+PERSON is a recorded person's name, or their file's name without .org.
+TARGET is the task's ID, or FILE:LINE, as pos-state takes it.
+
+Exit: 0 saved, 2 usage, 255 refused or Emacs error, its message on
+stderr; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-person "$@"

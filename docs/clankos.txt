@@ -60,6 +60,8 @@ image's own before it runs.
     pos-item              set a task's scheduled date, deadline or
                           tags
     pos-place             move one task to where it belongs
+    pos-person            record people, and the tasks that wait on
+                          them
     pos-project           make a project's file, change its status,
                           promote it to a directory
     pos-refile            move tasks from the intray to where they

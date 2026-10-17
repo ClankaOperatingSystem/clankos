@@ -1,0 +1,83 @@
+pos-person: people, and the tasks that wait on them
+
+bin/pos-person runs this protocol in the ClankOS container. The command
+is poslib's pos-person, at the commit the image was built with:
+https://github.com/ClankaOperatingSystem/poslib
+
+
+1. People and identities
+
+A person is recorded once, as a person-entity: an Org file with an ID
+in person-entities/ of the root's configuration directory.
+
+In each scope where the person is referred to, they have a
+person-identity, with an ID of its own. In a scope with a
+configuration it is a file in person-identities/ of the scope's
+configuration directory. In a project with none it is a heading under
+the top-level heading People of the project's file.
+
+An identity is named PERSON@SCOPE: the person's name with a hyphen for
+each space, and the scope's path with a dot for each slash. The root's
+identity is named for the root's directory. The entity links to each
+of its identities by ID; an identity links to nothing, so a scope's
+records refer to nothing above the scope.
+
+
+2. The commands
+
+"pos-person add NAME" records a person, and prints the file made:
+
+    .clanka/person-entities/ada-brook.org
+
+"pos-person identity PERSON SCOPE" gives PERSON an identity in SCOPE,
+a scope's path from the working directory, "." for the root, and
+prints its file, name and ID, then whether it was made:
+
+    .clanka/person-identities/ada-brook.org: Ada-Brook@garden 2d3d4f82-..., made
+
+"pos-person rename ID NAME" gives the identity with ID a new name, in
+its title or heading and in the text of each link to it. The ID stays.
+It prints the identity's file, then one line for each file changed:
+
+    Links renamed: intray.org: 2
+
+"pos-person wait TARGET PERSON [NOTE]" sets the task TARGET to WAITING
+and puts in its WAITING_ON property a link to PERSON's identity in the
+task's own scope, making the identity if there is none. NOTE is one
+line, kept with the record of the change. A task WAITING already gains
+the link, and takes no NOTE.
+
+"pos-person arrived TARGET [STATE [NOTE]]" removes WAITING_ON from the
+task and sets it to STATE, NEXT when none is given.
+
+PERSON is a recorded person's name, or their file's name without .org.
+TARGET names a task as pos-state names one (docs/pos-state.txt): by
+its ID, or by FILE:LINE. wait and arrived print the task as it is
+afterwards, from the root:
+
+    intray.org:12: WAITING Ask Ada for the quote
+
+Each change of state is one line in the task's LOGBOOK drawer, which
+says since when it waited.
+
+It is refused, and nothing is written, for a person not recorded, a
+second person of the same file name, a path that is no scope's, a
+scope or file in another repository, and what pos-state would refuse.
+
+
+3. In the container
+
+bin/pos-person gives its arguments to bin/clankos-run. The files are
+the host's, at their own paths, and are written as the invoking user.
+The lock the command takes while it writes is a file beside each file,
+which an editor on the host sees. It sees saved files only.
+
+
+4. Exit status
+
+    0     saved
+    2     usage
+    255   refused, or an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
