@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""Generate the host resources that each operational skill requires."""
+import argparse
+import re
+from pathlib import Path
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--check', action='store_true', help='report stale generated files')
+args = parser.parse_args()
+root = Path(__file__).resolve().parent.parent
+commands = sorted(p.name for p in (root / 'libexec').iterdir() if p.is_file() and p.name != 'run')
+commands.append('install')
+launcher = root / 'bin/clankos-run'
+source = launcher.read_text()
+block = ('    # BEGIN runtime commands\n    case $1 in\n        '
+         + '|'.join(sorted(set(commands))) + ') ;;\n'
+         + '        *) echo "clankos: no such command: $1" >&2; exit 127 ;;\n'
+         + '    esac\n    # END runtime commands')
+if source.count('# BEGIN runtime commands') != 1 or source.count('# END runtime commands') != 1:
+    raise SystemExit('launcher must contain one runtime command block')
+content = re.sub(r'    # BEGIN runtime commands.*?    # END runtime commands',
+                 lambda _: block, source, flags=re.S).encode()
+outputs = {launcher: (content, 0o755)}
+resources = ['clankos-install', 'capture', 'start-up', 'wrap-up']
+for skill in sorted((root / 'skills').iterdir()):
+    if not (skill / 'SKILL.md').is_file():
+        continue
+    destination = skill / 'scripts'
+    outputs[destination / 'clankos'] = (content, 0o755)
+    for name in resources:
+        outputs[destination / name] = ((root / 'bin' / name).read_bytes(), 0o755)
+stale = []
+for path, (content, mode) in outputs.items():
+    if args.check:
+        if not path.is_file() or path.read_bytes() != content or path.stat().st_mode & 0o777 != mode:
+            stale.append(str(path.relative_to(root)))
+    else:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        path.chmod(mode)
+for name in stale:
+    print('stale bundle resource: ' + name)
+raise SystemExit(bool(stale))

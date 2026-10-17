@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: wrap-up [--date YYYY-MM-DD] -- 'Title' < handover.org
+       wrap-up --help
+
+The wrap-up slot: keep a session's handover, in the ClankOS container.
+This image fills it with pos-wrap-up, which seals the handover, read
+from standard input, in the working directory's archive, adds its
+heading to the working directory's journal.org tagged handover and
+latest, and prints the record's citation, the title and the date.
+"clankos-run help wrap-up" prints the protocol.
+
+    wrap-up -- 'The roof mended' < handover.org
+    ipfs://bafkrei...: The roof mended, 2030-03-04
+
+The title is one nonempty line. The date is today unless --date gives
+another. Refused if the handover is empty, the date is not written
+YYYY-MM-DD, journal.org is locked by an editor, or the archive refuses
+the seal.
+
+Exit: 0 kept, 1 refused, its reason on stderr, 2 usage, 255 Emacs
+error; 125, 126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    ''|help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" wrap-up "$@"

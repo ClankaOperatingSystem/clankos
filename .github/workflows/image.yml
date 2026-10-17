@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Check generated skill bundles
+        run: scripts/build-bundles --check
       - name: Refuse a tag that is not on master
         if: github.ref_type == 'tag'
         run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
