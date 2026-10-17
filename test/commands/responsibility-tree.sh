@@ -2,7 +2,7 @@
 # Run bin/responsibility-tree against a new garden.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir -p garden/.clanka && cd garden && git init -q .
 printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml

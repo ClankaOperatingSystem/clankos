@@ -2,7 +2,7 @@
 # Run bin/pos-refile against a new workspace.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir .pos work
 echo "(setq pos-refile-rules '((\"invoice\" . \"work/todo.org\")))" > pos-config.el

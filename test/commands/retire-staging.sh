@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # A retired project's archive root survives Git dropping empty directories.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir -p .pos trial/_seal trial/archives/old/_seal trial/ordinary
 echo "Result." > trial/result.txt

@@ -2,7 +2,7 @@
 # Run bin/archive-integrity against a new workspace.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir _seal .pos
 echo "A note." > _seal/note.txt

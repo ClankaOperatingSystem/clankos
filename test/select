@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
-# Print the tests in test/ that the changed paths on standard input
-# bear on, one a line, for test/run. A command's pieces share its
-# name: bin/NAME, libexec/NAME, docs/NAME.txt, test/NAME.sh and
+# Print the tests that the changed paths on standard input bear on,
+# one a line, for test/run. A command's pieces share its name:
+# bin/NAME, libexec/NAME, docs/NAME.txt, test/GROUP/NAME.sh and
 # skills/clankos-NAME. A test runs the commands its text names, and a
 # command runs the commands its text names, so a change to a command
-# selects the tests that name it or name one of its callers. A path
-# no rule knows selects every test. Exit: 0, or 2 for a usage error.
+# selects the tests that name it or name one of its callers. The
+# tests in test/garden install skills, from this repository at the
+# image's commit, through the skills image; those in test/docs read
+# docs/ and the scripts. A path no rule knows selects every test.
+# Exit: 0, or 2 for a usage error.
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 [ $# -eq 0 ] || { echo "Usage: test/select < CHANGED-PATHS" >&2; exit 2; }
 
-all() { printf '%s\n' test/*.sh; exit 0; }
+groups=(test/commands/*.sh test/garden/*.sh test/docs/*.sh)
+all() { printf '%s\n' "${groups[@]}"; exit 0; }
 
-# The tests that install skills fetch them from this repository at the
-# image's commit, through the skills image.
-installers=$(grep -l '^image_remote$' test/*.sh)
+# named NAME: the test of that name, in whichever group holds it.
+named() { ls test/*/"$1.sh" 2>/dev/null; }
+
+installers=(test/garden/*.sh)
+readers=(test/docs/*.sh)
 
 # callers NAME: the commands and scripts whose text runs NAME.
 callers() {
@@ -24,7 +30,7 @@ callers() {
 
 # naming NAME: the tests whose text runs NAME.
 naming() {
-    grep -lE "bin/$1([^a-z-]|\$)|clankos-run\"? +$1([^a-z-]|\$)" test/*.sh 2>/dev/null
+    grep -lE "bin/$1([^a-z-]|\$)|clankos-run\"? +$1([^a-z-]|\$)" "${groups[@]}" 2>/dev/null
 }
 
 commands=
@@ -37,18 +43,18 @@ while IFS= read -r path; do
         Dockerfile|lisp/*|libexec/run|libexec/refresh|libexec/pos-emacs|bin/clankos-run) all ;;
         test/lib/*|test/run|test/select|.github/*) all ;;
         README|LICENSE|AGENTS.md|bin/install.sh) ;;
-        test/fixtures/*) name=${path#test/fixtures/}; want "test/${name%%/*}.sh" ;;
-        test/*.sh) want "$path" ;;
-        docs/*) want $(grep -l '\$repo/docs' test/*.sh) ;;
+        test/fixtures/*) name=${path#test/fixtures/}; want $(named "${name%%/*}") ;;
+        test/*/*.sh) want "$path" ;;
+        docs/*) want "${readers[@]}" ;;
         skills/clankos-*)
             name=${path#skills/clankos-}; name=${name%%/*}
-            [ ! -f "test/$name.sh" ] || want "test/$name.sh"
-            want $installers $(grep -l '\$repo/skills' test/*.sh) ;;
-        skills/*) want $installers $(grep -l '\$repo/skills' test/*.sh) ;;
-        clankos-skills/*) want $installers ;;
+            want $(named "$name") "${installers[@]}" "${readers[@]}" ;;
+        skills/*) want "${installers[@]}" "${readers[@]}" ;;
+        clankos-skills/*) want "${installers[@]}" ;;
         libexec/install-sources) changed install ;;
-        libexec/install|libexec/methodology|libexec/initiate|libexec/pos-lint) changed "${path#libexec/}"; want $installers ;;
-        bin/*|libexec/*) changed "${path#*/}" ;;
+        libexec/install|libexec/methodology|libexec/initiate|libexec/pos-lint)
+            changed "${path#libexec/}"; want "${installers[@]}" ;;
+        bin/*|libexec/*) changed "${path#*/}"; want "${readers[@]}" ;;
         *) all ;;
     esac
 done
@@ -65,7 +71,7 @@ for name in $(printf '%s\n' "$commands" | grep . | sort -u); do
         queue=$(printf '%s\n' "$queue" | tail -n +2)
         case " $seen " in *" $name "*) continue ;; esac
         seen="$seen $name"
-        case $name in install|methodology|initiate) want $installers; found=1 ;; esac
+        case $name in install|methodology|initiate) want "${installers[@]}"; found=1 ;; esac
         named=$(naming "$name")
         [ -z "$named" ] || { want $named; found=1; }
         for caller in $(callers "$name"); do

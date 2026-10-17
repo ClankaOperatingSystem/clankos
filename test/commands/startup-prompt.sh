@@ -2,7 +2,7 @@
 # Run bin/startup-prompt against a new workspace.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 # day N: the date N days from today, as YYYY-MM-DD.
 day() {

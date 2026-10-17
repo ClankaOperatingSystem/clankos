@@ -5,7 +5,7 @@
 # Reads the repository only; the image is not run.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 docs=$repo/docs
 

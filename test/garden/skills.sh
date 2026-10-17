@@ -3,7 +3,7 @@
 # carries runs the commands from wherever a session is started.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
 
 for skill in "$repo"/skills/*/; do

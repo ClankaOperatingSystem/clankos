@@ -2,7 +2,7 @@
 # Run bin/pos-dedupe against a new workspace.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir .pos work
 printf '#+TITLE: Intray\n\n* Unsorted\n** TODO Buy milk\n:PROPERTIES:\n:ID: milk-intray\n:END:\nTwo litres.\n** TODO Water the plants\n' > intray.org
