@@ -51,6 +51,7 @@ while IFS= read -r path; do
             want $(named "$name") "${installers[@]}" "${readers[@]}" ;;
         skills/*) want "${installers[@]}" "${readers[@]}" ;;
         clankos-skills/*) want "${installers[@]}" ;;
+        bin/clankos-install) want "${installers[@]}" "${readers[@]}" ;;
         libexec/install-sources) changed install ;;
         libexec/install|libexec/methodology|libexec/initiate|libexec/pos-lint)
             changed "${path#libexec/}"; want "${installers[@]}" ;;
