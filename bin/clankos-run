@@ -49,7 +49,8 @@ directory to the sources its configuration declares: "clankos-run help
 install" says how. It runs a second image, clankos-skills, named as
 the ClankOS image is with -skills after its name, or as
 CLANKOS_SKILLS_IMAGE names it. That container alone is given the
-host's SSH agent, SSH_AUTH_SOCK, and GH_TOKEN, when they are set.
+host's SSH agent, SSH_AUTH_SOCK, when it is set, and GH_TOKEN, or
+failing that the token "gh auth token" prints.
 
 "clankos-run methodology add|remove|adopt ..." changes the sources the
 configuration of the node in the working directory declares, and then

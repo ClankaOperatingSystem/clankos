@@ -9,7 +9,9 @@ set -uo pipefail
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.org
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.org
-unset SSH_AUTH_SOCK GH_TOKEN
+# The sources are local, and the GitHub CLI is not asked for a token.
+unset SSH_AUTH_SOCK
+export GH_TOKEN=unused
 
 image_remote
 printf '[url "file://%s/remotes/"]\n\tinsteadOf = https://git.example/\n' "$work" \

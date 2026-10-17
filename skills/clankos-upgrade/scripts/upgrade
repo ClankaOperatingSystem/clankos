@@ -19,13 +19,6 @@ top=$(git rev-parse --show-toplevel 2>/dev/null) || {
 }
 cd "$top" || exit 2
 
-# A source on GitHub is fetched with the token of the GitHub CLI, where
-# there is one: Docker on a Mac cannot pass the host's SSH agent into a
-# container ("clankos-run help install").
-if [ -z "${GH_TOKEN:-}" ] && command -v gh > /dev/null 2>&1; then
-    GH_TOKEN=$(gh auth token 2> /dev/null) && export GH_TOKEN
-fi
-
 # The image the repository's commands run in, and its skills image. A
 # pull that fails, as offline or for a local image, leaves the one there.
 image=$("$clankos" clankos-run --show | sed -n 's/^image //p')
