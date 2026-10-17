@@ -2,4 +2,14 @@ ClankOS is the operating system for clankas.
 This repository holds its container: Debian with GNU Emacs and Org,
 in which ClankOS commands run.
 
+A garden is a tree of responsibilities kept in Org files, and the
+image's commands tend it: capture, placing, review, sweeping and
+sealing, with a start-up and a wrap-up for each session. A garden
+declares the methodologies it uses, repositories of skills with
+checks, and the image installs them where every session finds them.
+"clankos-run help" says what a garden is and lists the commands;
+"clankos-run help words" gives each word one line and says where it
+is defined; "clankos-run help model" says how the things fit together
+and which code enforces each. The same documents are under docs/.
+
 https://www.clankos.org

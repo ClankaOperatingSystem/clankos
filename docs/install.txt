@@ -21,6 +21,11 @@ agents they are installed for:
         skills: [share-skill]
         kind: skills-repository
     harnesses: [codex, opencode, pi]
+pr-gnome is a gnome: a methodology that also holds a doctrine, its
+policies and its cases, which a bugflow server reads and install never
+does. bugflow's docs/gnomes.md says what a gnome is:
+https://github.com/bugflow/bugflow/blob/master/docs/gnomes.md
+
 
 source is the repository's git URL, its SSH URL when it is private.
 ref is a tag, or a commit by its full forty-digit id. skills names the
