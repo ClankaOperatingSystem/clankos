@@ -12,8 +12,9 @@ gathers what is to be read, presents it, and records what is decided.
 
 Run the script by its path in this skill's directory. The document
 says how a review item is marked, the three reviews and what each
-asks, the weekly and four-weekly passes of the whole, and how a garden
-is given its review items.
+asks, the record a project's review writes, the weekly and
+four-weekly passes of the whole, and how a garden is given its review
+items.
 
 ## Gather
 
@@ -40,6 +41,20 @@ project's file.
 - Capture what comes to mind with the capture skill. Do not hold it.
 - A container's review looks over its children's and does not repeat
   them: a project with a review item of its own is reviewed there.
+
+## Write a project's review
+
+A project's review is written down before it is put to the person.
+The document's section 4 says what is read, the record's four parts
+and the four rulings. Keep the draft outside the archive, in a
+directory whose name begins with an underscore, until it is sealed.
+
+Give the person the situation first, then the assessment, and ask the
+decisions wanted one at a time. Where the plan is not in good shape,
+say so and show the rewritten tasks, in the order they would be done,
+before they go into the project's file. End the record with what was
+decided and what was not, make each matter not decided a task in the
+project's file, and seal the record with the seal skill.
 
 ## Close
 
