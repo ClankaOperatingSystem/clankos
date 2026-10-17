@@ -42,4 +42,21 @@ check "a name that is no commit is usage" status 2 "$bin/session-facts" nothing-
 check "no commit named is usage" status 2 "$bin/session-facts"
 check "--help prints the usage" sh -c "'$bin/session-facts' --help | grep -q '^Usage: session-facts'"
 
+# A repository within the tree, with a .git and an archive of its own,
+# keeps its events: the working directory's git does not track them.
+mkdir -p projects/inner
+(
+    cd projects/inner || exit 1
+    git init -q -b master
+    mkdir .pos
+    printf 'pos: 2\n' > .pos/config.yaml
+    git add . && git commit -qm 'Begin inner'
+    printf 'Inner.\n' | "$bin/wrap-up" -- 'The inner session' > /dev/null 2>&1
+)
+check "the inner repository sealed a record of its own" test -d projects/inner/archive-integrity/ledger
+"$bin/session-facts" "$since" > ../mounted 2>/dev/null
+check "a repository within the tree keeps its own events" \
+    sh -c "! grep -q 'projects/inner event' ../mounted"
+check "and the working directory's events are still listed" grep -q '^  \. event 2:' ../mounted
+
 [ "$failures" -eq 0 ]

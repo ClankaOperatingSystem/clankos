@@ -32,7 +32,9 @@ known. The events are those of every ledger under the working
 directory whose file SINCE does not have: the path of the archive's
 scope from the working directory, "." for the working directory
 itself; the event's number; the path it sealed; and whether the
-repository tracks the event's file. A list with nothing says "(none)".
+repository tracks the event's file. A ledger within another repository
+of the tree, one with a .git of its own, is that repository's and is
+left out. A list with nothing says "(none)".
 
 Other sessions' commits and seals of the same time are listed too:
 nothing here tells one session's from another's. The command reads
