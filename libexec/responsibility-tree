@@ -112,7 +112,8 @@ add_responsibility() {
     if [ -e "$1/intray.org" ]; then
         echo "kept      $1/intray.org"
     else
-        printf '#+TITLE: Intray\n\n* Unsorted\n' > "$1/intray.org"
+        printf ':PROPERTIES:\n:ID:       %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' \
+            "$(cat /proc/sys/kernel/random/uuid)" > "$1/intray.org"
         echo "wrote     $1/intray.org"
     fi
     if declared "$config" "$1"; then
@@ -134,7 +135,8 @@ add_project() {
         echo "kept      $projects/$1 (it is there)"
     else
         mkdir -p "$projects"
-        printf ':PROPERTIES:\n:STATUS: COMMITTED\n:OUTCOME:\n:END:\n#+TITLE: %s\n\n* Tasks\n' "$1" > "$file"
+        printf ':PROPERTIES:\n:ID:       %s\n:STATUS: COMMITTED\n:OUTCOME:\n:END:\n#+TITLE: %s\n\n* Tasks\n' \
+            "$(cat /proc/sys/kernel/random/uuid)" "$1" > "$file"
         echo "wrote     $file"
     fi
 }
