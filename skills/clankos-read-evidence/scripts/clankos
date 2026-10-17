@@ -1,29 +1,268 @@
-#!/bin/sh
-# clankos COMMAND [ARG ...]
-# Run one of ClankOS's commands from this skill. The commands are in
-# auto/bin/ of the configuration directory at the top of the repository
-# the skill is installed in. The command works on the directory this is
-# run in, so run it by its path and do not change directory first.
-# Exit: the command's own; 2 usage; 127 no such command.
-if [ $# -eq 0 ]; then
-    echo "Usage: clankos COMMAND [ARG ...]" >&2
-    exit 2
-fi
-here=$(cd -- "$(dirname -- "$0")" && pwd -P) || exit 127
-top=$(git -C "$here" rev-parse --show-toplevel 2>/dev/null) || top=
-command=
-for dir in .clanka .clankos .pos; do
-    if [ -n "$top" ] && [ -d "$top/$dir/auto/bin" ]; then
-        command=$top/$dir/auto/bin/$1
-        break
-    fi
-done
-case $1 in
-    */*) command= ;;
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: clankos-run [--host-network] COMMAND [ARG ...]
+       clankos-run --show
+       clankos-run --help
+
+Run a ClankOS command in the ClankOS container, on the workspace the
+working directory is in. The other scripts in bin/ call this.
+
+"clankos-run help" says what a garden is and lists the commands, and
+"clankos-run help COMMAND" prints a command's protocol, both as the
+image has them.
+
+The workspace is the repository the working directory is in: the
+nearest directory, from the working directory upwards, that holds
+.git. Failing one, it is the nearest that holds .clanka, .clankos or .pos, and
+failing all, the working directory. CLANKOS_WORKSPACE names it
+instead. It is mounted at its own path, and the command starts in the
+working directory, so paths mean the same inside the container as
+outside. The command runs as the invoking user.
+
+Before the command, what ClankOS installs in the repository is brought
+to what the image holds: "clankos-run help refresh" says what that is.
+
+{config}/pos, where {config} is $XDG_CONFIG_HOME or ~/.config, is
+mounted too when it exists: the tokens that signing in to a keeper
+keeps. {cache}/pos, where {cache} is $XDG_CACHE_HOME or ~/.cache, is
+mounted as well, and made if it does not exist: the index of the
+workspace's Org files that the commands keep, which a run would
+otherwise build afresh. POS_ARCHIVE_OFFLINE and POS_ARCHIVE_TOKEN are passed on. The
+container is given the host's time zone, from TZ or /etc/localtime, so
+that today is the same day inside as outside; failing both it is UTC.
+
+The image is the one CLANKOS_IMAGE names; failing that, the one a
+configuration pins, on its line "image: NAME" in .clanka/config.yaml,
+or config.yml, or the same in .clankos or .pos: the nearest that has the line,
+from the working directory up to the workspace. Failing that, it is
+ghcr.io/clankaoperatingsystem/clankos:latest, which bin/install.sh
+installs.
+
+--host-network gives the containers the host's network, which signing
+in needs. --show prints the workspace and the image and runs nothing.
+
+"clankos-run install" brings the skills of the node in the working
+directory to the sources its configuration declares: "clankos-run help
+install" says how. It runs a second image, clankos-skills, named as
+the ClankOS image is with -skills after its name, or as
+CLANKOS_SKILLS_IMAGE names it. That container alone is given the
+host's SSH agent, SSH_AUTH_SOCK, when it is set, and GH_TOKEN, or
+failing that the token "gh auth token" prints.
+
+"clankos-run methodology add|remove|adopt ..." changes the sources the
+configuration of the node in the working directory declares, and then
+runs install: "clankos-run help methodology" says how. Where install
+refuses, the configuration is put back as it was.
+
+Exit: the command's own; 2 usage, or a directory with two
+configurations; 125 Docker error; 126 the workspace is not visible in
+the container; 127 docker or the command not found.
+HELP
+}
+
+resources=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+[ "${1:-}" != clankos-run ] || shift
+network=()
+show=
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    --host-network) network=(--network host); shift ;;
+    --show) show=1; shift ;;
 esac
-if [ -z "$command" ] || [ ! -x "$command" ]; then
-    echo "clankos: no such command: $1" >&2
-    exit 127
+if [ -n "$show" ]; then
+    [ $# -eq 0 ] || { usage >&2; exit 2; }
+else
+    [ $# -ge 1 ] || { usage >&2; exit 2; }
 fi
-shift
-exec "$command" "$@"
+
+if [ -z "$show" ]; then
+    case $1 in
+        capture|start-up|wrap-up)
+            slot=$1
+            shift
+            case "${1:-}" in
+                help|-h|--help) exec "$resources/$slot" --help ;;
+                '')
+                    if [ "$slot" != start-up ]; then
+                        exec "$resources/$slot" --help
+                    fi ;;
+            esac
+            case $slot in
+                capture) set -- pos-capture "$@" ;;
+                start-up) set -- startup-prompt "$@" ;;
+                wrap-up) set -- wrap-up "$@" ;;
+            esac ;;
+    esac
+    case $1 in
+        */*|run|'') echo "clankos: no such command: $1" >&2; exit 127 ;;
+    esac
+    # BEGIN runtime commands
+    case $1 in
+        archive-integrity|archive-migrate|help|initiate|install|install-sources|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
+        *) echo "clankos: no such command: $1" >&2; exit 127 ;;
+    esac
+    # END runtime commands
+fi
+
+here=$(pwd -P)
+if [ -n "${CLANKOS_WORKSPACE:-}" ]; then
+    workspace=$(cd -- "$CLANKOS_WORKSPACE" && pwd -P)
+else
+    workspace=
+    node=
+    dir=$here
+    while :; do
+        if [ -z "$node" ] && { [ -e "$dir/.clanka" ] || [ -e "$dir/.clankos" ] || [ -e "$dir/.pos" ]; }; then
+            node=$dir
+        fi
+        if [ -e "$dir/.git" ]; then
+            workspace=$dir
+            break
+        fi
+        [ "$dir" != / ] || break
+        dir=$(dirname -- "$dir")
+    done
+    workspace=${workspace:-${node:-$here}}
+fi
+case "$here/" in
+    "$workspace"/*) ;;
+    *) echo "clankos-run: the working directory is not in the workspace $workspace" >&2
+       exit 2 ;;
+esac
+
+# The image: named in the environment, else pinned by the nearest
+# configuration that names one, from the working directory up to the
+# workspace, on a line a tool with no YAML reader can find.
+image=${CLANKOS_IMAGE:-}
+dir=$here
+while :; do
+    config=
+    for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos/config.yml .pos/config.yaml .pos/config.yml; do
+        if [ -f "$dir/$file" ]; then
+            if [ -n "$config" ]; then
+                echo "clankos-run: $dir has two configurations: $config, $file" >&2
+                exit 2
+            fi
+            config=$file
+        fi
+    done
+    if [ -z "$image" ] && [ -n "$config" ]; then
+        image=$(sed -n 's/^image: \([^ ]*\)$/\1/p' "$dir/$config" | head -n 1)
+    fi
+    [ "$dir" != "$workspace" ] && [ "$dir" != / ] || break
+    dir=$(dirname -- "$dir")
+done
+image=${image:-ghcr.io/clankaoperatingsystem/clankos:latest}
+
+if [ -n "$show" ]; then
+    echo "workspace $workspace"
+    echo "image $image"
+    exit 0
+fi
+
+command -v docker >/dev/null || {
+    echo "clankos-run: docker not found" >&2
+    exit 127
+}
+
+# A linked worktree points outside its workspace. Git metadata is read-only
+# except info/, where refresh maintains exclude rules by atomic replacement.
+git_mounts=()
+exclude_mounts=()
+if [ -f "$workspace/.git" ]; then
+    command -v git >/dev/null || { echo "clankos-run: git not found; install Git for linked worktrees" >&2; exit 127; }
+    git_dir=$(git -C "$workspace" rev-parse --absolute-git-dir) || exit 2
+    common_dir=$(git -C "$workspace" rev-parse --git-common-dir) || exit 2
+    common_dir=$(cd -- "$workspace" && cd -- "$common_dir" && pwd -P) || exit 2
+    case "$common_dir/" in
+        "$workspace/"*) ;;
+        *) git_mounts+=(-v "$common_dir:$common_dir:ro") ;;
+    esac
+    case "$git_dir/" in
+        "$workspace/"*|"$common_dir/"*) ;;
+        *) git_mounts+=(-v "$git_dir:$git_dir:ro") ;;
+    esac
+    case "$common_dir/" in
+        "$workspace/"*) ;;
+        *)
+            case $1 in
+                help|install-sources) ;;
+                *)
+                    if [ ! -d "$common_dir/info" ]; then
+                        echo "clankos-run: create $common_dir/info before running a command that refreshes this worktree" >&2
+                        exit 2
+                    fi
+                    exclude_mounts=(-v "$common_dir/info:$common_dir/info") ;;
+            esac ;;
+    esac
+fi
+
+# A file the host sees in the workspace, for the container to look for.
+probe=$(find "$workspace" -mindepth 1 -maxdepth 1 -print -quit)
+
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+tokens=()
+[ ! -d "$config_home/pos" ] || tokens=(-v "$config_home/pos:$config_home/pos")
+
+# The index the commands keep of the workspace's Org files, so that a
+# run finds it where the last one left it.
+cache=${XDG_CACHE_HOME:-$HOME/.cache}
+mkdir -p "$cache/pos"
+
+# The host's time zone, so that today is the same day inside: TZ, or
+# the zone /etc/localtime links to.
+zone=${TZ:-}
+if [ -z "$zone" ] && [ -L /etc/localtime ]; then
+    zone=$(readlink /etc/localtime)
+    case $zone in
+        */zoneinfo/*) zone=${zone##*/zoneinfo/} ;;
+        *) zone= ;;
+    esac
+fi
+timezone=()
+[ -z "$zone" ] || timezone=(-e "TZ=$zone")
+
+# git refuses a repository whose owner is not the user running it, and
+# a mounted directory's owner can read differently inside a container.
+# A terminal, when there is one at both ends, so that a command can ask.
+terminal=()
+if [ -t 0 ] && [ -t 1 ]; then
+    terminal=(-t)
+fi
+
+# The ClankOS container, running ARG ... through run.
+clankos() {
+    docker run --rm -i \
+        ${terminal[@]+"${terminal[@]}"} \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/tmp \
+        -e XDG_CONFIG_HOME="$config_home" \
+        -e XDG_CACHE_HOME="$cache" \
+        -v "$cache/pos:$cache/pos" \
+        -e CLANKOS_PROBE="$probe" \
+        -e GIT_CONFIG_COUNT=1 \
+        -e GIT_CONFIG_KEY_0=safe.directory \
+        -e GIT_CONFIG_VALUE_0='*' \
+        -e POS_ARCHIVE_OFFLINE \
+        -e POS_ARCHIVE_TOKEN \
+        -v "$workspace:$workspace" \
+        -w "$here" \
+        ${git_mounts[@]+"${git_mounts[@]}"} \
+        ${exclude_mounts[@]+"${exclude_mounts[@]}"} \
+        ${tokens[@]+"${tokens[@]}"} \
+        ${timezone[@]+"${timezone[@]}"} \
+        ${network[@]+"${network[@]}"} \
+        "$image" \
+        /usr/local/libexec/clankos/run "$@"
+}
+
+# install and methodology run a second container, the skills image,
+# between runs of the ClankOS container: bin/clankos-install, which is
+# read here and ends the script.
+case $1 in
+    install|methodology) . "$(dirname -- "${BASH_SOURCE[0]}")/clankos-install" ;;
+    *) clankos "$@"; exit ;;
+esac

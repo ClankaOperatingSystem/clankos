@@ -13,3 +13,9 @@ is defined; "clankos-run help model" says how the things fit together
 and which code enforces each. The same documents are under docs/.
 
 https://www.clankos.org
+
+Each operational skill carries the host launcher and its resources.
+Run scripts/build-bundles after changing bin/clankos-run, its installer
+or slot helpers, or the runtime command inventory. CI checks the generated
+copies with scripts/build-bundles --check. Python 3 is needed to build
+bundles; installed launchers use Bash and Docker.

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: start-up [--json] [--view NAME] ...
+       start-up --help
+
+The start-up slot: print what a session opens with, in the ClankOS
+container. This image fills it with startup-prompt: four prompts, then
+views of the saved Org files under the working directory, the latest
+handover first. "clankos-run help start-up" prints the slot's
+signature, and "clankos-run help startup-prompt" the command's
+protocol, with each view.
+
+  handover             the latest handover of each node: its date, its
+                       title and the citation of its record
+  next, waiting, scheduled, deadlines, reviews, reviews-to-schedule,
+  stuck, no-outcome, intray
+                       printed with no --view
+  someday, projects, finished, all
+                       printed when named
+
+--view NAME, repeated, prints the prompts and those views only. --json
+prints the views as one line of JSON in place of the text. Reads;
+writes nothing.
+
+Exit: 0 printed, 2 usage, 255 Emacs error, its message on stderr; 125,
+126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" startup-prompt "$@"
