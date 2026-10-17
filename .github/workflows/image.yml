@@ -53,12 +53,21 @@ jobs:
             type=gha,scope=clankos-skills
             type=gha,scope=clankos-skills-test
           cache-to: type=gha,mode=max,scope=clankos-skills-test
+      # A pull request runs the tests its changes bear on, which
+      # test/select chooses from the diff against its base. A push to
+      # master or a tag runs them all.
       - name: Test the commands in the image
+        env:
+          CLANKOS_IMAGE: clankos:test
         run: |
-          for test in test/*.sh; do
-            echo "== $test"
-            CLANKOS_IMAGE=clankos:test "$test" || exit 1
-          done
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | test/select > "$RUNNER_TEMP/tests"
+            echo "== $(wc -l < "$RUNNER_TEMP/tests") of $(ls test/*.sh | wc -l) tests selected"
+            [ -s "$RUNNER_TEMP/tests" ] || exit 0
+            xargs test/run < "$RUNNER_TEMP/tests"
+          else
+            test/run
+          fi
       - uses: docker/login-action@v4
         if: github.event_name == 'push'
         with:
