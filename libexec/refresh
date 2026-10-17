@@ -42,13 +42,13 @@ listed() {
     git -C "$root" rev-parse --path-format=absolute --git-path info/exclude
 }
 
-# A digest of the image's version and of each path in the file $1: a
+# A digest of the image's version and commit, and of each path in the file $1: a
 # directory's entries, or a file's content, or that it is gone. Both are
 # read by opening the path: a time of change that Docker's shared folder
 # gives can be seconds old.
 signature() {
     {
-        cat "$source/version"
+        cat "$source/version" "$source/commit"
         tr '\n' '\0' < "$1" | xargs -0 -r sh -c '
             for path; do
                 if [ -d "$path" ] && [ ! -L "$path" ]; then

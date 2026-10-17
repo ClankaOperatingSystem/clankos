@@ -49,6 +49,13 @@ check "a command runs refresh first: another version is replaced whole" test ! -
 check "and a missing link is made" test -L bin/pos-capture
 check "and the command then runs" grep -q 'A task' intray.org
 
+printf '%040d\n' 0 > .clanka/auto/commit
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "an older commit of the same version is replaced" \
+    test "$(cat .clanka/auto/commit)" \
+    = "$(docker run --rm --entrypoint cat "$CLANKOS_IMAGE" /usr/local/share/clankos/source/commit)"
+check "and the lock does not differ" sh -c '! grep -q lock-differs ../err'
+
 rm bin/pos-capture && printf 'mine\n' > bin/pos-capture
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "a name that is taken exits 1" test $? -eq 1
