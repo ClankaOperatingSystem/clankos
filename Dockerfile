@@ -9,8 +9,6 @@ RUN apt-get update \
         git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY lisp/ /usr/local/share/clankos/lisp/
-
 # poslib, and the packages it requires, each from its Git repository at
 # one commit, so that an image tag names one of each: markdown-mode 2.8,
 # yaml 1.2.4, and org-roam 2.3.1 with what it requires, compat 31.1.0.0,
@@ -19,7 +17,8 @@ COPY lisp/ /usr/local/share/clankos/lisp/
 # magit-section wants newer than Emacs ships. All are byte-compiled,
 # poslib with warnings as errors; of emacsql, the files for SQLite,
 # since the others want servers the image has not. org-roam's manual
-# and tests are not kept.
+# and tests are not kept. The fetch is its own layer, before lisp/ is
+# copied, so that a change to lisp/ recompiles and does not refetch.
 ARG POSLIB_COMMIT=22c38f393b7fe3bfef456b61165c3a0b667c12ca
 ARG MARKDOWN_MODE_COMMIT=f5d520b3ee7722dd2231ab586ba51d8eb166e49b
 ARG YAML_COMMIT=5546f36bde24a9a8c1934e0f6ce205cd41d72537
@@ -31,7 +30,8 @@ ARG EMACSQL_COMMIT=7a4c607912c8fdd1fca4def4915d68f43b12d4da
 ARG MAGIT_COMMIT=659f89955cf60fe3d4326d881c412df06c69680d
 ARG TRANSIENT_COMMIT=0cacc84ff0c7df126e194666ff8b8a1e6082e796
 ARG ORG_ROAM_COMMIT=7ce95a286ba7d0383f2ab16ca4cdbf79901921ff
-RUN cd /usr/local/share/clankos \
+RUN mkdir -p /usr/local/share/clankos \
+    && cd /usr/local/share/clankos \
     && fetch() { \
         git init -q "$1" \
         && git -C "$1" fetch -q --depth 1 "$2" "$3" \
@@ -52,7 +52,10 @@ RUN cd /usr/local/share/clankos \
     && rm -rf magit \
     && fetch transient https://github.com/magit/transient.git "$TRANSIENT_COMMIT" \
     && fetch org-roam https://github.com/org-roam/org-roam.git "$ORG_ROAM_COMMIT" \
-    && rm -rf org-roam/doc org-roam/tests \
+    && rm -rf org-roam/doc org-roam/tests
+
+COPY lisp/ /usr/local/share/clankos/lisp/
+RUN cd /usr/local/share/clankos \
     && emacs -Q --batch -l lisp/clankos-packages.el \
         -f batch-byte-compile markdown-mode/markdown-mode.el yaml/yaml.el \
         compat/compat.el compat/compat-2*.el compat/compat-3*.el compat/compat-macs.el \
