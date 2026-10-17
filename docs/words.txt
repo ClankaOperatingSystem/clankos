@@ -1,0 +1,136 @@
+words: what ClankOS calls things
+
+"clankos-run help words" prints this document. Each word has one line
+here, and the line says where the word is defined. The line is a
+reminder, not the definition: read the document it names.
+
+The words of a gnome and of a bugflow server are bugflow's, in its
+docs/words.md: https://github.com/bugflow/bugflow/blob/master/docs/words.md.
+A skill folder is the agentskills.io format: https://agentskills.io.
+
+
+1. The tree
+
+    garden            a tree of responsibilities kept in Org files, in
+                      a Git repository ("clankos-run help", 1)
+    responsibility    an area of life or work that is tended and does
+                      not finish; a directory with a configuration and
+                      an intray ("clankos-run help", 1)
+    project           a finite piece of work with an outcome; an Org
+                      file, or a directory once promoted ("clankos-run
+                      help", 1, and "help pos-project")
+    product           a repository the garden works on, under that
+                      repository's own rules; read, never written
+                      ("clankos-run help", 1)
+    tree              the responsibilities, projects and products as
+                      they contain one another, from the root down
+                      ("clankos-run help responsibility-tree")
+    root              the garden's top directory, itself a
+                      responsibility ("clankos-run help", 1)
+    node              a responsibility or a project that has a
+                      configuration of its own, so that commands run
+                      from its directory work on it ("clankos-run help
+                      install", 1)
+    scope             what one file or one node covers: a project's
+                      file, a responsibility's directory, or the root
+                      ("clankos-run help", 1)
+    mount             a responsibility, project or product that is a
+                      repository of its own within the tree; the
+                      tree's commands stop at its edge, and it has a
+                      configuration and skills of its own
+                      ("clankos-run help responsibility-tree", and
+                      "help initiate" for --project)
+    configuration     .pos/config.yaml in a node: what the node
+                      declares, its methodologies among them
+                      ("clankos-run help install", 1)
+
+
+2. The image and its commands
+
+    image             the ClankOS container image, which holds Emacs,
+                      poslib and the commands; a garden names the
+                      image it runs ("clankos-run help initiate")
+    container         one run of the image, given the garden's
+                      directory and nothing else of the user's
+                      ("clankos-run help", 3)
+    command           a script in the garden's bin/, a link to what
+                      the image installs, run from the directory it is
+                      to work on ("clankos-run help", 2)
+    slot              a name a garden may fill with a skill or command
+                      of its own, capture, start-up and wrap-up, with
+                      a signature every filling keeps to; the image
+                      fills a slot the garden has not ("clankos-run
+                      help", 3)
+    harness           the program a coding agent runs in, which finds
+                      the skills in .agents/skills/; install names the
+                      ones it writes for ("clankos-run help install")
+
+
+3. Skills and methodologies
+
+    skill             a folder holding SKILL.md in the agentskills.io
+                      format, which tells an agent when and how to do
+                      one kind of work; its references/ hold what it
+                      reads, its scripts/ what it runs
+    methodology       a repository of skills, with checks, that a node
+                      declares in its configuration at a ref and
+                      installs; each skill is named with the
+                      repository's name and a hyphen ("clankos-run
+                      help install", 1)
+    method zero       the image's own commands and skills, the ones
+                      named clankos-NAME and the slots it fills;
+                      installed at the commit the image was built
+                      from, and declared by no configuration
+                      ("clankos-run help", 3)
+    gnome             a methodology that also holds a doctrine, its
+                      policies and its cases, so that a bugflow server
+                      judges by it and a garden writes to it; bugflow's
+                      docs/gnomes.md defines it
+    skills repository a source declared with kind skills-repository:
+                      skills taken as they are, named as their author
+                      named them, with no checks ("clankos-run help
+                      install", 1)
+    source            where a methodology or a skills repository is
+                      fetched from, a Git URL, declared with a ref
+                      ("clankos-run help install", 1)
+    ref               the tag, or the full commit id, a source is
+                      installed at; moving it is how a node takes a
+                      change ("clankos-run help install", 1)
+    lock              skills-lock.json: what the skills CLI installed,
+                      from which source at which commit, committed
+                      with the skill folders ("clankos-run help
+                      install", 2)
+    wild-caught       a skill installed, by the skills CLI run by
+                      hand, from a source the configuration does not
+                      declare ("clankos-run help wild-caught")
+    check             an executable scripts/check-NAME in a
+                      methodology's skill, run by the lint, which
+                      reports what it finds as the lint's own findings
+                      ("clankos-run help pos-lint")
+    lint              pos-lint: what is wrong in a node's Org files,
+                      and what the checks of its methodologies report
+                      ("clankos-run help pos-lint")
+
+
+4. Records
+
+    intray            intray.org: where a task is written the moment
+                      it comes to mind, to be placed later
+                      ("clankos-run help", 1)
+    archive           sealed records that never change, with a ledger
+                      beside them ("clankos-run help
+                      archive-integrity")
+    ledger            the numbered, chained events beside an archive,
+                      by which a change to a sealed record is noticed
+                      ("clankos-run help archive-integrity")
+    seal              to put a record in an archive and write its
+                      event, after which it is cited by content
+                      ("clankos-run help archive-integrity")
+    keeper            a service that holds an archive's records for a
+                      garden that does not keep them on disk
+                      ("clankos-run help archive-integrity")
+    handover          the record a session leaves for the one that
+                      resumes, sealed and indexed in the journal
+                      ("clankos-run help wrap-up")
+    review            a scheduled item tagged :review: in a scope's
+                      file ("clankos-run help review")

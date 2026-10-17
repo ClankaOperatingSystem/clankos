@@ -41,6 +41,9 @@ The files are plain text and the garden is a Git repository. No
 command commits: the diff is read, and the commit made, by whoever ran
 it.
 
+"clankos-run help words" lists what ClankOS calls things, one line
+each, and where each word is defined.
+
 
 2. The commands
 
