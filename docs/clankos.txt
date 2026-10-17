@@ -135,7 +135,9 @@ writes in AGENTS.md tells it to search within the repository, which
 it can ignore. To hold it to the garden, use the agent's own settings:
 start it in the garden's directory, and set its permissions or sandbox
 so that it reads and writes only there. The agent's own documentation
-says how.
+says how. Codex is given the other way round as well: a rules file,
+.codex/rules/clankos.rules, that allows ClankOS's own commands, so
+that it runs them without asking ("clankos-run help refresh", 1).
 
     start-up                open a session: the last handover, what is
                             waiting, and what to do

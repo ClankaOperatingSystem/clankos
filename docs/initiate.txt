@@ -69,9 +69,10 @@ Run at the root of a Git repository, it writes, in this order:
   - in .gitignore, the line "_*/";
   - intray.org;
   - .clanka/auto/, and in bin/, or the directory --bin names, a link
-    to each script the image has for starting its commands
-    (docs/refresh.txt). The configuration says where the links go, on
-    its line "bin: bin";
+    to each script the image has for starting its commands, and
+    .codex/rules/clankos.rules, which lets Codex run them without
+    asking (docs/refresh.txt). The configuration says where the links
+    go, on its line "bin: bin";
   - in AGENTS.md, one block between the lines
     "<!-- clankos: begin -->" and "<!-- clankos: end -->". The file is
     made if it is missing. In a file that is there, the block is added

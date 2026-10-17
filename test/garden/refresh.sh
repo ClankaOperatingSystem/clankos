@@ -38,6 +38,16 @@ check "a mounted responsibility has them installed too" test -x child/.clanka/au
 check "with no links where it names no bin" test ! -e child/bin
 check "nothing is written in a product" test "$(ls -A product)" = ".git
 README"
+rules=.codex/rules/clankos.rules
+check "Codex's rules are written in the garden" test -f $rules
+check "with a rule for each link to a command, in three spellings" \
+    grep -qxF 'prefix_rule(pattern=[["bin/pos-capture", "./bin/pos-capture", "'"$work"'/garden/bin/pos-capture"]], decision="allow")' $rules
+check "and for each skill's scripts/clankos" grep -qF '"./.agents/skills/clankos-lint/scripts/clankos"' $rules
+check "and for a mounted responsibility's" grep -qF '"./child/.agents/skills/clankos-lint/scripts/clankos"' $rules
+check "a mounted responsibility has its own" \
+    grep -qF '"./.agents/skills/clankos-lint/scripts/clankos", "'"$work"'/garden/child/.agents/skills/clankos-lint/scripts/clankos"' child/$rules
+check "with no rule for a bin it does not name" sh -c "! grep -q bin/ child/$rules"
+check "and none in a product" test ! -e product/.codex
 check "no repository sees a change" \
     test -z "$(git status --porcelain)$(git -C child status --porcelain)$(git -C product status --porcelain)"
 
@@ -61,6 +71,7 @@ rm bin/pos-capture && printf 'mine\n' > bin/pos-capture
 check "a name that is taken exits 1" test $? -eq 1
 check "and is named on stderr" grep -qx 'clankos: name-taken bin/pos-capture (untracked)' ../err
 check "what has the name is left" test "$(cat bin/pos-capture)" = mine
+check "and is no longer a rule" sh -c "! grep -q '\"bin/pos-capture\"' $rules"
 "$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
 check "it is said again before every command" grep -q '^clankos: name-taken bin/pos-capture' ../err
 check "and the command runs all the same" grep -q 'START-UP PROMPTS' ../out
@@ -84,6 +95,14 @@ check "a command of the garden's own under a slot's name exits 0" test $? -eq 0
 check "and is not reported" test ! -s ../err
 check "and is left as the garden's" test "$(bin/wrap-up)" = ours -a ! -L bin/wrap-up
 check "while the other slot commands are linked" test -L bin/capture -a -L bin/start-up
+
+git add -f $rules && git commit -qm 'Track the rules'
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "a tracked rules file is a name taken" test $? -eq 1
+check "and is named on stderr" grep -q "^clankos: name-taken $rules (tracked, added in " ../err
+git rm -q --cached $rules && git commit -qm 'Untrack the rules'
+"$bin/clankos-run" refresh > ../out 2> ../err
+check "untracked again, it is written" test $? -eq 0 -a -f $rules
 cd ..
 
 mkdir plain

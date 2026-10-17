@@ -22,6 +22,10 @@ mounted responsibility's or project's, the source is installed:
                      .pos/auto/
     bin/NAME         where the configuration says "bin: bin", a link to
                      each command in auto/bin/
+    .codex/rules/clankos.rules
+                     Codex's approvals: a rule for each way the
+                     repository has of starting a command, so that
+                     Codex runs ClankOS's commands without asking
 
 All of it is untracked, its paths in Git's info/exclude. So a new
 clone has none of it until a command or initiate has run there. A
@@ -36,6 +40,19 @@ the repository it is installed in.
 
 A repository with no configuration is a product. Nothing is written in
 it.
+
+Codex asks before a command no rule of its allows. The rules file
+holds a prefix_rule for each link to a command and each installed
+skill's scripts/clankos, in the repository and in each configured
+repository mounted beneath it, each in three spellings: relative to
+the repository, with ./ before it, and absolute, which holds from any
+directory. The command's arguments are not matched, so a rule allows
+every use of the command. Codex reads the file when it is started in
+the repository and the repository is trusted there; its documentation
+says how a project is trusted and how its rules are read. The file is
+written whether or not Codex is used, and replaced whole when what it
+lists changes. Where the repository tracks a file of that name, it is
+left as it is and reported as a taken name (section 3).
 
 
 2. When it runs

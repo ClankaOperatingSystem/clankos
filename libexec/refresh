@@ -29,16 +29,21 @@ for dir in .clanka .clankos .pos; do
         break
     fi
 done
+# The directory is made now, so that its appearance in auto/ is not a
+# change the first refresh after it made the directory would see.
+[ -z "$kept" ] || mkdir -p "$kept"
 
 # The paths refresh reads: the configuration directories, the skills,
-# the lock files, the directories of links, and Git's info/exclude.
+# the lock files, the directories of links, Codex's rules, and Git's
+# info/exclude.
 listed() {
     find "$root" \( -name .git -o -name '_*' -o -name node_modules \
             -o -name archives -o -name attic -o -path '*/auto/refresh' \) -prune \
         -o \( -path '*/.clanka' -o -path '*/.clanka/*' -o -path '*/.clankos' \
             -o -path '*/.clankos/*' -o -path '*/.pos' -o -path '*/.pos/*' \
             -o -path '*/.agents/skills' -o -path '*/.agents/skills/*' \
-            -o -name skills-lock.json -o -name bin -o -path '*/bin/*' \) -print
+            -o -name skills-lock.json -o -name bin -o -path '*/bin/*' \
+            -o -path '*/.codex/rules' -o -path '*/.codex/rules/*' \) -print
     git -C "$root" rev-parse --path-format=absolute --git-path info/exclude
 }
 
@@ -58,6 +63,85 @@ signature() {
             done' sh
         tr '\n' '\0' < "$1" | xargs -0 -r sha256sum -- 2>&1 | grep -v ': Is a directory$'
     } | sha256sum
+}
+
+# Codex's approvals: in each repository the source is installed in,
+# .codex/rules/clankos.rules holds a rule for each way the repository,
+# and each configured repository beneath it, has of starting a command,
+# so that Codex runs ClankOS's commands without asking: docs/refresh.txt,
+# section 1. A way is a link to a command in an auto/bin/, or a skill's
+# scripts/clankos; a rule gives it relative to the repository, with ./
+# before it, and absolute. The file is untracked, its path in
+# info/exclude, and replaced whole when what it lists changes. Where
+# the repository tracks a file of that name, it is left and reported
+# as a taken name. Prints what it reports; exits 1 for a taken name.
+# pruned TEST ...: the paths under the root that pass TEST, less what
+# listed leaves out.
+pruned() {
+    find "$root" \( -name .git -o -name '_*' -o -name node_modules \
+            -o -name archives -o -name attic \) -prune -o "$@" -print
+}
+
+approvals() {
+    rules=.codex/rules/clankos.rules
+    taken=0
+    pruned \( -type l -o -path '*/.agents/skills/*/scripts/clankos' \) \
+        | while IFS= read -r path; do
+            if [ -L "$path" ]; then
+                case $(readlink "$path") in
+                    */auto/bin/*) ;;
+                    *) continue ;;
+                esac
+            elif [ ! -f "$path" ] || [ ! -x "$path" ]; then
+                continue
+            fi
+            printf '%s\n' "${path#"$root"/}"
+        done | LC_ALL=C sort > "$work/entries"
+    pruned \( -path '*/.clanka/auto/version' -o -path '*/.clankos/auto/version' \
+            -o -path '*/.pos/auto/version' \) | LC_ALL=C sort > "$work/repos"
+    while IFS= read -r version; do
+        repo=${version%/.*/auto/version}
+        rel=${repo#"$root"}
+        rel=${rel#/}
+        file=$repo/$rules
+        if git -C "$repo" ls-files --error-unmatch -- "$rules" >/dev/null 2>&1; then
+            added=$(git -C "$repo" log --diff-filter=A --format=%h -1 -- "$rules")
+            echo "clankos: name-taken ${rel:+$rel/}$rules (tracked, added in $added)"
+            taken=1
+            continue
+        fi
+        at=$(printf '%s' "$repo" | sed 's/[\\"]/\\&/g')
+        {
+            echo '# Written by ClankOS before each of its commands, and replaced whole:'
+            echo '# "clankos-run help refresh", section 1. Each rule is one way of'
+            echo "# starting one of ClankOS's commands in this repository."
+            while IFS= read -r entry; do
+                case $rel in
+                    '') ;;
+                    *) case $entry in
+                           "$rel"/*) entry=${entry#"$rel"/} ;;
+                           *) continue ;;
+                       esac ;;
+                esac
+                entry=$(printf '%s' "$entry" | sed 's/[\\"]/\\&/g')
+                printf 'prefix_rule(pattern=[["%s", "./%s", "%s/%s"]], decision="allow")\n' \
+                    "$entry" "$entry" "$at" "$entry"
+            done < "$work/entries"
+        } > "$work/rules"
+        if ! cmp -s "$work/rules" "$file"; then
+            if ! { mkdir -p "${file%/*}" && cp "$work/rules" "$file"; } 2> "$work/failed"; then
+                echo "clankos: cannot write ${rel:+$rel/}$rules: $(cat "$work/failed")"
+                continue
+            fi
+        fi
+        exclude=$(git -C "$repo" rev-parse --path-format=absolute --git-path info/exclude)
+        if ! grep -qxF "/$rules" "$exclude" 2>/dev/null; then
+            mkdir -p "${exclude%/*}"
+            [ ! -s "$exclude" ] || [ -z "$(tail -c1 "$exclude")" ] || echo >> "$exclude"
+            echo "/$rules" >> "$exclude"
+        fi
+    done < "$work/repos"
+    return $taken
 }
 
 if [ -n "$changed" ] && [ -n "$kept" ] && [ -f "$kept/signature" ] \
@@ -115,6 +199,9 @@ emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     (kill-emacs 1)))' \
     "$root" "$source" 2> "$work/said"
 status=$?
+if [ "$status" -le 1 ]; then
+    approvals >> "$work/said" || status=1
+fi
 cat "$work/said" >&2
 
 # What was seen is kept only when refresh changed none of the paths, so
