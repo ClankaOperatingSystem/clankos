@@ -1,0 +1,10 @@
+#!/bin/sh
+# pos-person add NAME | identity PERSON SCOPE | rename ID NAME
+#          | wait TARGET PERSON [NOTE] | arrived TARGET [STATE [NOTE]]
+# The protocol is docs/pos-person.txt.
+if [ $# -lt 2 ] || [ $# -gt 4 ]; then
+    echo "Usage: pos-person add NAME | identity PERSON SCOPE | rename ID NAME" >&2
+    echo "       | wait TARGET PERSON [NOTE] | arrived TARGET [STATE [NOTE]]" >&2
+    exit 2
+fi
+exec "$(dirname -- "$0")/pos-emacs" -l pos-person -f pos-person-batch "$@"
