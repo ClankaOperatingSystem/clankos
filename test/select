@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Print the tests in test/ that the changed paths on standard input
+# bear on, one a line, for test/run. A command's pieces share its
+# name: bin/NAME, libexec/NAME, docs/NAME.txt, test/NAME.sh and
+# skills/clankos-NAME. A test runs the commands its text names, and a
+# command runs the commands its text names, so a change to a command
+# selects the tests that name it or name one of its callers. A path
+# no rule knows selects every test. Exit: 0, or 2 for a usage error.
+set -uo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
+[ $# -eq 0 ] || { echo "Usage: test/select < CHANGED-PATHS" >&2; exit 2; }
+
+all() { printf '%s\n' test/*.sh; exit 0; }
+
+# The tests that install skills fetch them from this repository at the
+# image's commit, through the skills image.
+installers=$(grep -l '^image_remote$' test/*.sh)
+
+# callers NAME: the commands and scripts whose text runs NAME.
+callers() {
+    grep -lE "\\\$\\(dirname -- \"\\\$0\"\\)/$1([^a-z-]|\$)" libexec/* 2>/dev/null
+    grep -lE "(\"\\\$run\"|clankos-run\") (--host-network )?$1([^a-z-]|\$)" bin/* 2>/dev/null
+}
+
+# naming NAME: the tests whose text runs NAME.
+naming() {
+    grep -lE "bin/$1([^a-z-]|\$)|clankos-run\"? +$1([^a-z-]|\$)" test/*.sh 2>/dev/null
+}
+
+commands=
+tests=
+want() { tests=$(printf '%s\n' "$tests" "$@"); }
+changed() { commands=$(printf '%s\n%s\n' "$commands" "$1"); }
+
+while IFS= read -r path; do
+    case $path in
+        Dockerfile|lisp/*|libexec/run|libexec/refresh|libexec/pos-emacs|bin/clankos-run) all ;;
+        test/lib/*|test/run|test/select|.github/*) all ;;
+        README|LICENSE|AGENTS.md|bin/install.sh) ;;
+        test/fixtures/*) name=${path#test/fixtures/}; want "test/${name%%/*}.sh" ;;
+        test/*.sh) want "$path" ;;
+        docs/*) want $(grep -l '\$repo/docs' test/*.sh) ;;
+        skills/clankos-*)
+            name=${path#skills/clankos-}; name=${name%%/*}
+            [ ! -f "test/$name.sh" ] || want "test/$name.sh"
+            want $installers $(grep -l '\$repo/skills' test/*.sh) ;;
+        skills/*) want $installers $(grep -l '\$repo/skills' test/*.sh) ;;
+        clankos-skills/*) want $installers ;;
+        libexec/install-sources) changed install ;;
+        libexec/install|libexec/methodology|libexec/initiate|libexec/pos-lint) changed "${path#libexec/}"; want $installers ;;
+        bin/*|libexec/*) changed "${path#*/}" ;;
+        *) all ;;
+    esac
+done
+
+# For each changed command, the tests naming it or a caller of it,
+# the callers taken to a close. A command no test names selects every
+# test, since nothing says what runs it.
+for name in $(printf '%s\n' "$commands" | grep . | sort -u); do
+    seen=
+    found=
+    queue=$name
+    while [ -n "$queue" ]; do
+        name=$(printf '%s\n' "$queue" | head -n 1)
+        queue=$(printf '%s\n' "$queue" | tail -n +2)
+        case " $seen " in *" $name "*) continue ;; esac
+        seen="$seen $name"
+        case $name in install|methodology|initiate) want $installers; found=1 ;; esac
+        named=$(naming "$name")
+        [ -z "$named" ] || { want $named; found=1; }
+        for caller in $(callers "$name"); do
+            queue=$(printf '%s\n%s\n' "$queue" "$(basename -- "$caller")")
+        done
+    done
+    [ -n "$found" ] || all
+done
+
+printf '%s\n' "$tests" | grep . | sort -u
