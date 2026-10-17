@@ -3,7 +3,7 @@
 # through bin/startup-prompt and bin/archive-integrity.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir .pos
 printf 'pos: 2\nprojects: projects/\n' > .pos/config.yaml

@@ -62,7 +62,7 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
             git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | test/select > "$RUNNER_TEMP/tests"
-            echo "== $(wc -l < "$RUNNER_TEMP/tests") of $(ls test/*.sh | wc -l) tests selected"
+            echo "== $(wc -l < "$RUNNER_TEMP/tests") tests selected"
             [ -s "$RUNNER_TEMP/tests" ] || exit 0
             xargs test/run < "$RUNNER_TEMP/tests"
           else

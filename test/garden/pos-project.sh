@@ -2,7 +2,7 @@
 # Run bin/pos-project against a new garden.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
 
 git init -q .

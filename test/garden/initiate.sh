@@ -2,7 +2,7 @@
 # Run bin/initiate, from this repository, against new Git repositories.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
 
 registry=ghcr.io/clankaoperatingsystem/clankos

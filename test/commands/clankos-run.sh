@@ -3,7 +3,7 @@
 # for the workspace and which image it would run. Starts no container.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 # shows WORKSPACE IMAGE: whether --show, run here, prints those two.
 shows() {

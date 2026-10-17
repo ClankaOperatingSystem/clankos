@@ -2,7 +2,7 @@
 # Run bin/pos-person against a new workspace.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
-. "$(dirname -- "${BASH_SOURCE[0]}")/lib/check.sh"
+. "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 mkdir .clanka
 printf 'pos: 2\n' > .clanka/config.yml
