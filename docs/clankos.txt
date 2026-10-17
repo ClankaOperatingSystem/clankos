@@ -42,7 +42,8 @@ command commits: the diff is read, and the commit made, by whoever ran
 it.
 
 "clankos-run help words" lists what ClankOS calls things, one line
-each, and where each word is defined.
+each, and where each word is defined. "clankos-run help model" says
+how the things fit together and which code enforces each.
 
 
 2. The commands
