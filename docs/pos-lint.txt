@@ -26,16 +26,22 @@ Each file is checked for:
     placed, and a done one is to be retired;
   - a WAITING item that does not say who or what it waits on, in a
     DELEGATED_TO property or in its own text, or since when, in the
-    record of its change to WAITING or a date in its own text.
+    record of its change to WAITING or a date in its own text;
+  - no file-level ID, or an empty one: an ID in the property drawer
+    before the first heading. A heading's ID or CUSTOM_ID names the
+    heading, not the file.
 
 A product's Org files are among those checked. In a file the root's
 repository does not hold, a product's or another repository's of the
 tree, a #+TODO line is not reported: the line is that file's own.
+Nor is a missing file-level ID: the root lays no rule on such a file.
 
 Then the whole tree, for:
 
   - a task heading written in more than one file, each copy naming
     the others;
+  - a file-level ID that more than one file has, at each file the
+    root's repository holds, naming the others;
   - an entry of a node's skills-lock.json of a skill that its declared
     source's entry does not name (poslib's doc/pos-directory.txt,
     section 6), at the entry's line, as "lock-undeclared: NAME: ...".
