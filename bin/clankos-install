@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# The install and methodology commands of clankos-run, which reads this
+# file once it has found the workspace and the image and defined
+# clankos, the function that runs a command in the ClankOS container.
+# "clankos-run help install" and "clankos-run help methodology" print
+# their protocols. Run on its own, this file does nothing but say so.
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    echo "clankos-install: run clankos-run install, or clankos-run methodology" >&2
+    exit 2
+fi
+
+# install_skills [SKILL ...]: the ClankOS container reads the
+# configuration, the clankos-skills container runs the skills CLI on it,
+# and the ClankOS container runs the lint. Only the skills container is
+# given the SSH agent and GH_TOKEN. Each SKILL is one to uninstall that
+# install would leave. Exit: install.mjs's, and then the lint's, with
+# installed set once the skills CLI has done its part; 4 install-sources
+# refused the configuration.
+installed=
+install_skills() {
+    local skills sources named agent token status
+    skills=${CLANKOS_SKILLS_IMAGE:-}
+    if [ -z "$skills" ]; then
+        named=${image%%@*}
+        case ${named##*/} in
+            *:*) skills=${named%:*}-skills:${named##*:} ;;
+            *) skills=$named-skills ;;
+        esac
+    fi
+    terminal=()
+    sources=$(clankos install-sources "$@") || return 4
+    agent=()
+    if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
+        agent=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock" -e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
+    fi
+    token=()
+    [ -z "${GH_TOKEN:-}" ] || token=(-e GH_TOKEN)
+    status=0
+    printf '%s\n' "$sources" | docker run --rm -i \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/tmp \
+        -e XDG_CONFIG_HOME="$home" \
+        -e GIT_CONFIG_COUNT=1 \
+        -e GIT_CONFIG_KEY_0=safe.directory \
+        -e GIT_CONFIG_VALUE_0='*' \
+        -v "$workspace:$workspace" \
+        -w "$here" \
+        ${agent[@]+"${agent[@]}"} \
+        ${token[@]+"${token[@]}"} \
+        ${network[@]+"${network[@]}"} \
+        "$skills" \
+        node /usr/local/libexec/clankos-skills/install.mjs || status=$?
+    [ $status -eq 0 ] || return $status
+    installed=1
+    clankos pos-lint
+}
+
+if [ "$1" = install ]; then
+    [ $# -eq 1 ] || { echo "Usage: clankos-run install" >&2; exit 2; }
+    status=0
+    install_skills || status=$?
+    [ $status -ne 4 ] || status=2
+    exit $status
+fi
+
+# methodology: the ClankOS container changes the configuration and names
+# the skills to uninstall, asking where there is a terminal; install
+# follows. Where install refuses, the configuration is put back.
+config=
+for file in .clanka/config.yaml .clanka/config.yml .clankos/config.yaml .clankos/config.yml .pos/config.yaml .pos/config.yml; do
+    [ ! -f "$file" ] || config=$file
+done
+before=$(mktemp)
+trap 'rm -f "$before"' EXIT
+[ -z "$config" ] || cp -p "$config" "$before"
+ask=()
+[ ! -t 0 ] || ask=(--ask)
+shift
+terminal=()
+names=$(clankos methodology ${ask[@]+"${ask[@]}"} "$@") || exit
+status=0
+# shellcheck disable=SC2086
+install_skills $names || status=$?
+if [ $status -ne 0 ] && [ -z "$installed" ] && [ $status -ne 3 ] && [ -n "$config" ] \
+    && ! cmp -s "$config" "$before"; then
+    cp -p "$before" "$config"
+    echo "methodology: install refused, and $config is as it was" >&2
+fi
+[ $status -ne 4 ] || status=2
+exit $status
