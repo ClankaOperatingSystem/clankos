@@ -19,7 +19,7 @@ git -C child add . && git -C child commit -qm 'Add a responsibility'
 mkdir -p garden/.clanka && cd garden && git init -q -b master
 printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    remote: %s\n  - path: product\n    remote: %s\n' \
     "$work/child" "$work/product" > .clanka/config.yml
-printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' intray > intray.org
 git clone -q "$work/child" child
 git clone -q "$work/product" product
 git add .clanka intray.org && git commit -qm 'Add a garden'

@@ -61,7 +61,7 @@ shared='  - source: https://git.example/shared.git
     kind: skills-repository
 '
 configure "$(hello v1)" "$shared"
-printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' intray > intray.org
 git add .clanka intray.org && git commit -qm 'Add a garden'
 
 # A link an earlier refresh made to one of the image's skills, which Git

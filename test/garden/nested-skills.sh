@@ -19,13 +19,13 @@ printf 'pos: 2\nmethodologies: methodologies/\nbin: bin\nchildren:\n  - path: me
 printf 'methodology: 1\n' > grand/methodologies/adr/methodology.yaml
 printf -- '---\nname: adr-record\ndescription: Record a decision.\n---\n' \
     > grand/methodologies/adr/skills/adr-record/SKILL.md
-printf '* NEXT In the project\n' > grand/project.org
+printf ':PROPERTIES:\n:ID: grand\n:END:\n* NEXT In the project\n' > grand/project.org
 git -C grand add . && git -C grand commit -qm 'Add a project'
 
 mkdir -p child/.clanka && git -C child init -q -b master
 printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: projects/grand\n    remote: %s\n' \
     "$work/grand" > child/.clanka/config.yml
-printf '#+TITLE: Intray\n\n* Unsorted\n' > child/intray.org
+printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' child-intray > child/intray.org
 git -C child add . && git -C child commit -qm 'Add a responsibility'
 
 mkdir -p garden/.clankos garden/home/.pos garden/home/study/.pos
@@ -35,7 +35,7 @@ printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    r
 printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: study\n' > home/.pos/config.yaml
 printf 'pos: 2\nprojects: projects/\n' > home/study/.pos/config.yaml
 for dir in . home home/study; do
-    printf '#+TITLE: Intray\n\n* Unsorted\n' > "$dir/intray.org"
+    printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' "intray-$dir" > "$dir/intray.org"
 done
 git clone -q "$work/child" child
 git clone -q "$work/grand" child/projects/grand

@@ -41,7 +41,7 @@ origin slot v1 capture
 
 mkdir -p garden/.clanka && cd garden && git init -q -b master
 printf 'pos: 2\n# The skills.\nbin: bin\n' > .clanka/config.yml
-printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' intray > intray.org
 git add .clanka intray.org && git commit -qm 'Add a garden'
 run() { "$bin/clankos-run" methodology "$@" > ../out 2> ../err < /dev/null; }
 
