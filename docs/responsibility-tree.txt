@@ -51,16 +51,18 @@ in that directory.
 
   - A responsibility NAME. The directory NAME is made, with
     .clanka/config.yml saying its projects belong in projects/ and
-    naming the image this garden runs, and intray.org. Its path is
+    naming the image this garden runs, and intray.org, with a file
+    ID. Its path is
     added to this garden's children.
   - A project NAME. The file NAME.org is made where this garden's
     projects belong, with a title and a heading for its tasks. A
     garden whose configuration does not say where they belong is told
     so, and the project is not made. Making
     the file is the commitment, and nothing declares it: the file
-    begins with a property drawer whose STATUS is COMMITTED, by which
-    startup-prompt lists the project until it has a review scheduled,
-    and whose OUTCOME is empty, to be written as one line.
+    begins with a property drawer with a new ID, whose STATUS is
+    COMMITTED, by which startup-prompt lists the project until it has
+    a review scheduled, and whose OUTCOME is empty, to be written as
+    one line.
   - A product PATH=REMOTE. An entry with that path and remote is
     added: to this garden's children, or, where a responsibility of
     this garden is on the way to PATH, to that responsibility's, since

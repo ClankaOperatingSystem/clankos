@@ -17,7 +17,8 @@ repository. What makes a repository a garden is small:
                          attics among them; how its archive is kept;
                          and, as the tree grows, what is declared
                          beneath it
-    intray.org           where tasks are captured, under "Unsorted"
+    intray.org           where tasks are captured, under "Unsorted",
+                         with a file ID
     bin/                 links to the scripts that start the
                          commands, which ClankOS installs in
                          .clanka/auto/ and Git does not keep

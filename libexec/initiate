@@ -114,7 +114,8 @@ ignore '_*/'
 if [ -e intray.org ]; then
     echo "kept      intray.org"
 else
-    printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+    printf ':PROPERTIES:\n:ID:       %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' \
+        "$(cat /proc/sys/kernel/random/uuid)" > intray.org
     echo "wrote     intray.org"
 fi
 
