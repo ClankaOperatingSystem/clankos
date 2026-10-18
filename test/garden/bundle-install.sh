@@ -12,7 +12,7 @@ bundle="$work/bundle store/lint/scripts/clankos"
 cd garden || exit 1
 git init -qb master
 printf 'pos: 2\nprojects: projects/\nbin: bin\n' > .clankos/config.yml
-printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+printf ':PROPERTIES:\n:ID: intray\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 for slot in capture start-up wrap-up; do
     mkdir -p ".agents/skills/$slot"
     printf '#!/bin/sh\nprintf "Owned slot.\\n"\n' > "bin/$slot"
@@ -21,7 +21,9 @@ for slot in capture start-up wrap-up; do
 done
 git add . && git commit -qm 'Create owned slots'
 "$bundle" clankos-run install > "$work/out" 2> "$work/err"
-check 'external bundle installs through both images' test $? -eq 0
+install_status=$?
+check 'external bundle installs through both images' test "$install_status" -eq 0
+if [ "$install_status" -ne 0 ]; then cat "$work/out"; fi
 cat "$work/err"
 for slot in capture start-up wrap-up; do
     check "$slot command remains owned" git diff --quiet -- "bin/$slot"
