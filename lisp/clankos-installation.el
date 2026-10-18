@@ -1,14 +1,15 @@
-;;; clankos-installation.el --- Plan one repository's installation -*- lexical-binding: t; -*-
+;;; clankos-installation.el --- Plan and edit one repository's installation -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Read configuration with poslib and keep discovery inside one repository.
-;; The plan describes nodes and saved intent.  It performs no installation.
+;; Save edit intent before configuration.  These commands perform no installation.
 
 ;;; Code:
 (require 'cl-lib)
 (require 'json)
 (require 'pos-node)
 (require 'pos-lock)
+(require 'pos-sources)
 (require 'pos-bytes)
 
 (defun clankos-installation--read (file)
@@ -169,6 +170,125 @@ Read only local configured nodes and previously managed identities."
   (condition-case err
       (pos-bytes-print (clankos-installation-plan default-directory))
     (error (message "installation-plan: %s" (error-message-string err)) (kill-emacs 1))))
+
+(defun clankos-installation--write (file text)
+  "Replace FILE with TEXT by renaming a temporary file beside it."
+  (let ((temporary (make-temp-file (concat file "."))))
+    (unwind-protect
+        (progn
+          (when (file-exists-p file)
+            (set-file-modes temporary (file-modes file)))
+          (with-temp-file temporary (insert text))
+          (rename-file temporary file t))
+      (when (file-exists-p temporary) (delete-file temporary)))))
+
+(defun clankos-installation--identity (entry)
+  "Return the identity of a managed ENTRY."
+  (list (alist-get 'node entry)
+        (pos-node-source-key (alist-get 'source entry))
+        (alist-get 'skill entry)))
+
+(defun clankos-installation-edit (root path action words &optional keep kind)
+  "Edit the configured node PATH in ROOT using ACTION and WORDS.
+KEEP retains removed skills; KIND selects an added source's kind.
+Save ownership and removal intent before replacing the configuration."
+  (let* ((plan (clankos-installation-plan root))
+         (node (seq-find (lambda (each) (equal (alist-get 'path each) path))
+                         (alist-get 'nodes plan))))
+    (unless (and node (equal (alist-get 'status node) "configured"))
+      (error "Not a configured node in this repository: %s" path))
+    (let* ((file (expand-file-name (alist-get 'config node) root))
+           (dir (expand-file-name path root))
+           (state-file (expand-file-name
+                        "installation-state.json"
+                        (file-name-directory (clankos-installation--config root))))
+           (managed (append (clankos-installation--state state-file) nil))
+           (lock-file (expand-file-name pos-lock-file dir))
+           (text (clankos-installation--read file))
+           entries)
+      (when (file-symlink-p lock-file) (error "Symbolic skills lock: %s" lock-file))
+      (when (file-exists-p lock-file)
+        (setq entries (pos-lock--entries lock-file))
+        (when (or (eq entries :invalid)
+                  (seq-some (lambda (pair)
+                              (not (string-match-p pos-node-skill-name-regexp (car pair))))
+                            entries))
+          (error "Invalid skills lock: %s" lock-file)))
+      (let* ((removed (and (equal action "remove")
+                           (pos-sources-remove text dir (car words) (cdr words))))
+             (new (pcase action
+                    ("add" (pos-sources-add text (car words) (cadr words) (cddr words) kind))
+                    ("remove" (alist-get 'text removed))
+                    ("adopt" (pos-sources-adopt text dir words))
+                    (_ (error "Unknown edit action: %s" action))))
+             (sources (append (alist-get 'sources node) nil))
+             (declared (alist-get 'methodologies (pos-node-read-config new)))
+             (after (and (vectorp declared) (append declared nil))))
+        (unless (eq (alist-get 'image node) :null)
+          (push (alist-get 'image node) sources))
+        ;; Seed from the sources declared before the edit.  Add and adopt
+        ;; also claim installed skills that the new declaration selects.
+        (dolist (pair entries)
+          (let* ((name (car pair))
+                 (source (pos-sources--url (cdr pair)))
+                 (before (pos-sources--find sources source))
+                 (added (and (member action '("add" "adopt"))
+                             (pos-sources--find after source)))
+                 (names (and added (alist-get 'skills added)))
+                 (entry (list (cons 'node path)
+                              (cons 'source (pos-node-source-key source))
+                              (cons 'skill name) (cons 'disposition :null))))
+            (when (and (or before
+                           (and added (or (eq names :null) (seq-contains-p names name))))
+                       (not (seq-find
+                             (lambda (old)
+                               (equal (clankos-installation--identity old)
+                                      (clankos-installation--identity entry))) managed)))
+              (push entry managed))))
+        (when removed
+          (dolist (entry managed)
+            (when (and (equal path (alist-get 'node entry))
+                       (equal (pos-node-source-key (car words))
+                              (pos-node-source-key (alist-get 'source entry)))
+                       (or (not (cdr words))
+                           (member (alist-get 'skill entry) (cdr words))))
+              (setf (alist-get 'disposition entry) (if keep "keep" "remove")))))
+        ;; A failed configuration write leaves intent available for retry.
+        ;; Apply must use the configuration on disk, never replay this edit.
+        (let ((state (concat (json-serialize `((schema . 1) (managed . ,(vconcat managed)))
+                                            :null-object :null) "\n")))
+          (unless (and (file-exists-p state-file)
+                       (equal state (clankos-installation--read state-file)))
+            (clankos-installation--write state-file state)))
+        (unless (equal text new) (clankos-installation--write file new))
+        `((config . ,(alist-get 'config node)) (state . ,(file-relative-name state-file root)))))))
+
+(defun clankos-installation-edit-batch ()
+  "Edit configuration and saved intent without installing skills."
+  (let* ((args command-line-args-left) (path (pop args)) (action (pop args))
+         keep kind words)
+    (setq command-line-args-left nil)
+    (cl-flet ((usage ()
+                (message "Usage: installation-edit NODE add SOURCE REF [SKILL ...] [--kind KIND]")
+                (message "       installation-edit NODE remove SOURCE [SKILL ...] [--keep]")
+                (message "       installation-edit NODE adopt SKILL ...")
+                (kill-emacs 2)))
+      (while args
+        (let ((arg (pop args)))
+          (cond ((and (equal arg "--keep") (equal action "remove") (not keep))
+                 (setq keep t))
+                ((and (equal arg "--kind") (equal action "add") args (not kind))
+                 (setq kind (pop args)))
+                ((string-prefix-p "-" arg) (usage))
+                (t (push arg words)))))
+      (setq words (nreverse words))
+      (unless (and path (pcase action
+                          ("add" (>= (length words) 2))
+                          ((or "remove" "adopt") words)))
+        (usage)))
+    (condition-case err
+        (pos-bytes-print (clankos-installation-edit default-directory path action words keep kind))
+      (error (message "installation-edit: %s" (error-message-string err)) (kill-emacs 1)))))
 
 (provide 'clankos-installation)
 ;;; clankos-installation.el ends here

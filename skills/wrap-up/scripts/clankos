@@ -101,7 +101,7 @@ if [ -z "$show" ]; then
     esac
     # BEGIN runtime commands
     case $1 in
-        archive-integrity|archive-migrate|help|initiate|install|install-sources|installation-plan|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
+        archive-integrity|archive-migrate|help|initiate|install|install-sources|installation-edit|installation-plan|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
         *) echo "clankos: no such command: $1" >&2; exit 127 ;;
     esac
     # END runtime commands
@@ -189,7 +189,7 @@ if [ -f "$workspace/.git" ]; then
         "$workspace/"*) ;;
         *)
             case $1 in
-                help|install-sources|installation-plan) ;;
+                help|install-sources|installation-plan|installation-edit) ;;
                 *)
                     if [ ! -d "$common_dir/info" ]; then
                         echo "clankos-run: create $common_dir/info before running a command that refreshes this worktree" >&2

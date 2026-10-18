@@ -95,6 +95,7 @@ image's own before it runs.
                           it
     clankos-run refresh   bring what ClankOS installs to the image's
     installation-plan    print a read-only plan for one repository
+    installation-edit    save configuration and keep/remove choices
 
     clankos-run install   install the skills of the sources the
                           configuration declares
