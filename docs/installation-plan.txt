@@ -1,0 +1,47 @@
+installation-plan
+=================
+
+    clankos-run installation-plan
+
+Print a JSON plan for the Git repository whose root is the working
+directory. Exit 0 after printing the plan, 1 for refused configuration
+or state, and 2 for arguments or a working directory other than the
+repository root. The Emacs function is clankos-installation-plan.
+
+Planning reads configuration with poslib. It does not run refresh,
+install skills, write configuration or state, stage files, or commit.
+This command discovers nodes and retained intent. It does not yet
+calculate individual installation actions or apply them.
+
+The plan has schema 1, a nodes array sorted by path, and a skipped
+array. Paths are relative to the repository root; the root is '.'.
+Each node has status, config, sources, legacy, image and managed fields.
+A configured node supplies its configuration path and declared sources.
+legacy holds the old methodology-directory setting when present.
+image describes the runtime's own skills at the repository root.
+
+Follow configured children and direct subdirectories of the configured
+projects directory. Visit a directory once. Stop before reading any
+nested repository, including one partway along a configured path.
+Children declared with a remote are skipped even if not cloned yet.
+Symbolic links in node paths, configuration paths or state paths are
+refused. Paths containing empty, '.' or '..' components are refused.
+
+Read installation-state.json beside the root configuration, if present:
+
+    {"schema":1,"managed":[
+      {"node":"area","source":"example/method","skill":"method-one",
+       "disposition":"keep"}
+    ]}
+
+Each identity has exactly node, source, skill and disposition. A
+disposition is null, 'keep' or 'remove'. Source comparison uses poslib's
+source key. Duplicate identities and malformed state are refused.
+An absent state file is an empty history, not evidence of removals.
+The planner never creates or updates this file.
+
+A managed node no longer configured has status cleanup, or missing if
+its directory is gone. If it now lies inside another repository, its
+status is blocked and its contents are not read. These nodes retain
+their saved managed identities and dispositions. No deletion or keep
+choice is acted on by planning.
