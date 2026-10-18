@@ -30,10 +30,14 @@ check "a line that is not a finding is one at the project" grep -qx 'projects/p:
 check "the methodology's own file is not linted" sh -c '! grep -q methodologies/adr/README out'
 check "nothing is written" sh -c 'find . -type f ! -name before ! -name out ! -name err | sort | diff - before'
 
-printf '* DONE Parent\n** TODO Child\n' > projects/p/project.org
+printf '* DONE Parent\n** TODO Child\n[[file:gone.org]] [[file:../../intray.org]]\n' > projects/p/project.org
 "$bin/pos-lint" > out 2> err
 check "a done entry with an open child is reported" grep -qx 'projects/p/project.org:1: done entry has open children' out
 check "a file with no file ID is reported" grep -qx 'projects/p/project.org:1: no file-level ID' out
+check "a link to nothing is reported" \
+    grep -qx 'projects/p/project.org:3: D-links-resolve: does not resolve: file:gone.org' out
+check "a link out of the scope is reported" \
+    grep -qx 'projects/p/project.org:3: D-canon-links: forbidden: outside the scope: file:../../intray.org' out
 
 printf '** NEXT Call the plumber\n** WAITING Hear back\n' >> intray.org
 "$bin/pos-lint" > out 2> err
