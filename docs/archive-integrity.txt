@@ -46,6 +46,16 @@ prints both. It is for a seal that needs no review.
 
 A plan records absolute paths. It is applied where it was made.
 
+A directory whose files link to one another is sealed as a
+collection: a directory whose README.org holds the line
+"#+COLLECTION: t". A link between two files of a collection stays as
+written. In a directory that is not a collection, such a link is
+rewritten to cite the file it leads to by its CID, so links that form
+a loop are refused. A link to a directory is refused, and so is a
+file whose name begins with a dot. A sealed item never grows, so a
+record that belongs inside it, such as a close-out, is put in the
+directory before the seal is planned.
+
 Sealing rewrites the links in the item's own files, links by ID among
 them. The links to the item from the rest of the garden are rewritten
 by a second plan, so that none is left leading where nothing is:
