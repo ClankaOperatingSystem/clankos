@@ -1,0 +1,41 @@
+installation-edit NODE add SOURCE REF [SKILL ...] [--kind KIND]
+installation-edit NODE remove SOURCE [SKILL ...] [--keep]
+installation-edit NODE adopt SKILL ...
+
+Run at the Git worktree root. NODE is . or a configured local node's
+path from that root. Discovery follows installation-plan: separate
+repositories and paths through symlinks cannot be edited.
+
+Add declares a source and revision, optionally selecting skills and a
+kind (methodology or skills-repository). Remove deletes a source, or
+selected skills from it. Adopt declares selected wild-caught skills at
+the revisions recorded in skills-lock.json. These edits use the same
+configuration rules as methodology.
+
+Before changing configuration, save ownership and removal choices in
+installation-state.json beside the root configuration. Seed ownership
+from installed skills of currently declared sources and implicit method
+zero. Add and adopt also record installed skills selected by the new
+declaration. Unrelated wild-caught entries remain unowned. Versions and
+hashes remain in skills-lock.json.
+
+Remove saves "remove" by default, or "keep" with --keep. This includes
+previously managed identities whose files or lock entries are missing.
+A selected skill can be kept while other skills remain declared from
+its source. Add and adopt preserve existing choices; apply must consult
+the desired configuration before acting on pending removals.
+
+Each file is replaced by renaming a temporary file beside it. State is
+saved first. If replacing configuration fails, the saved intent remains
+and the configuration on disk still governs what apply should do.
+Correct the error and repeat the edit. Malformed state or the target
+node's lock file is refused before either file is changed.
+
+This command changes configuration and saved intent only. It does not
+refresh, fetch sources, install or uninstall skills, or change the lock,
+Git index or commits. Apply is a separate operation, not yet provided by
+this command. The existing methodology command still installs immediately;
+it does not consume these saved choices.
+
+Success prints JSON naming the configuration and state files. Exit 0:
+saved; 1: refused or a write failed; 2: usage or not at the repository root.
