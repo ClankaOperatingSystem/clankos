@@ -15,6 +15,11 @@ printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 printf '#+TITLE: Journal\n' > journal.org
 mkdir archives
 check 'target begins without host wrappers' test ! -e .clankos/auto/bin
+printf '** NEXT Fixture lint\n' >> intray.org
+"$bundle" pos-lint > "$work/out" 2> "$work/err"
+check 'isolated bundle reaches lint before wrappers exist' test $? -eq 1
+check 'lint reports the seeded finding' grep -qx 'intray.org:4: NEXT item in the intray: clarified, to be placed' "$work/out"
+printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 "$bundle" capture -- 'Fixture capture' > "$work/out" 2> "$work/err"
 check 'isolated bundle reaches capture in the image' test $? -eq 0
 cat "$work/err"

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+printf '%s\0' "$@" > "$DOCKER_ARGS"
+count=$(cat "$DOCKER_LOG/count" 2>/dev/null || echo 0)
+count=$((count + 1))
+printf '%s' "$count" > "$DOCKER_LOG/count"
+cp "$DOCKER_ARGS" "$DOCKER_LOG/$count"
+cat > "$DOCKER_STDIN"
+printf 'runtime stdout\n'
+printf 'runtime stderr\n' >&2
+exit "${DOCKER_STATUS:-0}"
