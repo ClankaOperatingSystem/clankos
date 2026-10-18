@@ -46,7 +46,34 @@ Then the whole tree, for:
     source's entry does not name (poslib's doc/pos-directory.txt,
     section 6), at the entry's line, as "lock-undeclared: NAME: ...".
     An entry of a source no configuration declares is wild-caught, and
-    is not reported.
+    is not reported;
+  - a reference, in a file the root's repository holds, that the
+    dependency rule forbids, as "RULE: ...".
+
+The dependency rule: a scope's canon refers to its own canon and its
+own archive, archives/, and to its children's canon. A reference is an
+Org link by file or by ID, also in a property's value, an Org #+INCLUDE
+or #+SETUPFILE, a Markdown link, or a path into a home directory in any
+file. In a file that is neither Org nor Markdown, a relative path that
+climbs, ../, and Python's Path.parents[N] are references too. Every
+file of the corpus's directories is read for them, not only the Org
+files; a hidden file and a hidden directory are not.
+Each finding names the rule it breaks:
+
+  D-canon-links          the target is in the tree, outside the scope
+  D-attic-links          the target is in an attic, attic/
+  D-child-archive-links  the target is in a child's archive
+  D-sibling-links        the target is beside the root, or a relative
+                         path climbs out of it
+  D-outside-links        the target is elsewhere on disk
+  D-links-resolve        nothing is at the target, or no file or two
+                         hold the ID
+
+An ID resolves in the corpus's Org files and the people's files in
+each configuration directory. A line is exempt from a rule where
+"doctrine: allow RULE" is written on it, on the line above, or on the
+line above the code block that holds it; a file is, where
+"doctrine: allow-file RULE" is written in its first five lines.
 
 Then each methodology a project of the tree uses (poslib's
 doc/pos-methodology.txt): each executable scripts/check-* of each of
