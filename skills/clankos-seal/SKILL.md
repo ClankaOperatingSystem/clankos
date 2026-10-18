@@ -33,6 +33,22 @@ what a plan holds, what is refused and why.
 
 Then run `check .` and, when it is clean, `checkpoint .`.
 
+## A directory of files
+
+A directory whose files link to one another is sealed as a
+collection. Before planning its seal:
+
+- Give it a `README.org` that holds the line `#+COLLECTION: t` and
+  says what the collection holds and where to begin. Links between its
+  files then stay as written. Without it, a loop of links among them
+  is refused.
+- Put in it any record that belongs inside it, such as a close-out.
+  A sealed item never grows, so `write-new` refuses a path inside it.
+- Change a link to a directory into a link to a file in it, or into
+  the directory's name as text. A link to a directory is refused.
+- Delete a file whose name begins with a dot, or rename it without
+  the dot. Such a file is refused.
+
 ## Open tasks in the item
 
 A document that was worked in, an attic or a set of notes, may hold
@@ -58,6 +74,11 @@ another file would lead nowhere. Before applying the seal:
 Apply the seal plan, then the relink plan, each with `apply PLAN HASH`.
 The links then cite the sealed item. A new record made with
 `write-new` was never linked to, and needs none of this.
+
+`links-into` finds links in Org files only. Search for the item's path
+as text as well, in repositories mounted in the garden too. `relink`
+does not rewrite a file of another repository, which changes by that
+repository's own process.
 
 ## What to get right
 
