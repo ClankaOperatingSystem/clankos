@@ -201,7 +201,7 @@ if [ -f "$workspace/.git" ]; then
 fi
 
 # A file the host sees in the workspace, for the container to look for.
-probe=$(find "$workspace" -mindepth 1 -maxdepth 1 -print -quit)
+probe=$(find "$workspace" -mindepth 1 -maxdepth 1 ! -type l -print -quit)
 
 config_home=${XDG_CONFIG_HOME:-$HOME/.config}
 tokens=()
