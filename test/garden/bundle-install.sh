@@ -39,4 +39,28 @@ check 'installed bundle runs from fresh clone' test $? -eq 0
 cat "$work/err"
 check 'explicit bundle bypasses owned slot command' grep -q 'Fresh clone task' intray.org
 check 'refresh reconstructs wrappers after startup' test -x .clankos/auto/bin/clankos-run
+mkdir -p "$work/mock-bin" "$work/calls"
+cp "$repo/test/lib/fake-docker" "$work/mock-bin/docker"
+chmod +x "$work/mock-bin/docker"
+export PATH="$work/mock-bin:$PATH" DOCKER_ARGS="$work/args" DOCKER_STDIN="$work/stdin" DOCKER_LOG="$work/calls"
+cd "$work" || exit 1
+python3 - <<'SOCKET'
+import socket
+with socket.socket(socket.AF_UNIX) as agent:
+    agent.bind('agent.sock')
+SOCKET
+cd "$work/clone" || exit 1
+CLANKOS_IMAGE=example/clankos:root GH_TOKEN=fixture-token SSH_AUTH_SOCK="$work/agent.sock" "$bundle" clankos-run install > "$work/out" 2> "$work/err"
+check 'nested dispatcher completes installer orchestration' test $? -eq 0
+check 'only Node receives installer credentials' python3 - "$DOCKER_LOG" <<'CHECK'
+import pathlib, sys
+root = pathlib.Path(sys.argv[1]); count = int((root / 'count').read_text())
+calls = [(root / str(i)).read_bytes().split(b'\0')[:-1] for i in range(count - 2, count + 1)]
+for call in (calls[0], calls[2]):
+    assert b'GH_TOKEN' not in call
+    assert not any(b'SSH_AUTH_SOCK' in arg for arg in call)
+assert b'GH_TOKEN' in calls[1]
+assert b'SSH_AUTH_SOCK=/tmp/ssh-agent.sock' in calls[1]
+assert b'example/clankos-skills:root' in calls[1]
+CHECK
 [ "$failures" -eq 0 ]

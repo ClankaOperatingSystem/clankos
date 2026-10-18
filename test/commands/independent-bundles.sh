@@ -11,18 +11,7 @@ git -C 'target garden' init -q
 mkdir -p 'target garden/.clankos' 'target garden/child/.clankos'
 printf 'pos: 2\nimage: example/clankos:root\n' > 'target garden/.clankos/config.yml'
 printf 'pos: 2\nimage: example/clankos:child\n' > 'target garden/child/.clankos/config.yml'
-cat > mock-bin/docker <<'MOCK'
-#!/usr/bin/env bash
-printf '%s\0' "$@" > "$DOCKER_ARGS"
-count=$(cat "$DOCKER_LOG/count" 2>/dev/null || echo 0)
-count=$((count + 1))
-printf '%s' "$count" > "$DOCKER_LOG/count"
-cp "$DOCKER_ARGS" "$DOCKER_LOG/$count"
-cat > "$DOCKER_STDIN"
-printf 'runtime stdout\n'
-printf 'runtime stderr\n' >&2
-exit "${DOCKER_STATUS:-0}"
-MOCK
+cp "$repo/test/lib/fake-docker" mock-bin/docker
 chmod +x mock-bin/docker
 export PATH="$work/mock-bin:$PATH" DOCKER_ARGS="$work/args" DOCKER_STDIN="$work/stdin" DOCKER_LOG="$work/calls"
 cd 'target garden/child/deep' || exit 1
@@ -96,26 +85,7 @@ mkdir -p "$work/target garden/nested"
 git -C "$work/target garden/nested" init -q
 cd "$work/target garden/nested" || exit 1
 check 'nested Git repository stops image inheritance' test "$("$bundle" --show | tail -1)" = 'image ghcr.io/clankaoperatingsystem/clankos:latest'
-cd "$work" || exit 1
-python3 - <<'SOCKET'
-import socket
-with socket.socket(socket.AF_UNIX) as agent:
-    agent.bind('agent.sock')
-SOCKET
 cd "$work/target garden" || exit 1
-GH_TOKEN=fixture-token SSH_AUTH_SOCK="$work/agent.sock" "$bundle" clankos-run install > "$work/out" 2> "$work/err"
-check 'nested dispatcher completes installer orchestration' test $? -eq 0
-check 'only Node receives installer credentials' python3 - "$DOCKER_LOG" <<'CHECK'
-import pathlib, sys
-root = pathlib.Path(sys.argv[1]); count = int((root / 'count').read_text())
-calls = [(root / str(i)).read_bytes().split(b'\0')[:-1] for i in range(count - 2, count + 1)]
-for call in (calls[0], calls[2]):
-    assert b'GH_TOKEN' not in call
-    assert not any(b'SSH_AUTH_SOCK' in arg for arg in call)
-assert b'GH_TOKEN' in calls[1]
-assert b'SSH_AUTH_SOCK=/tmp/ssh-agent.sock' in calls[1]
-assert b'example/clankos-skills:root' in calls[1]
-CHECK
 git -c user.name=Fixture -c user.email=fixture@example.invalid commit --allow-empty -qm 'Start fixture'
 git worktree add -qb linked "$work/linked garden"
 cd "$work/linked garden" || exit 1
