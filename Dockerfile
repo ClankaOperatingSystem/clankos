@@ -65,7 +65,7 @@ RUN cd /usr/local/share/clankos \
         magit-section/magit-section.el org-roam/*.el \
     && emacs -Q --batch -l lisp/clankos-packages.el \
         --eval '(setq byte-compile-error-on-warn t)' \
-        -f batch-byte-compile poslib/lisp/*.el \
+        -f batch-byte-compile poslib/lisp/*.el lisp/clankos-installation.el \
     && rm -rf /root/.emacs.d
 
 # The commands, which bin/clankos-run starts through run; and the
