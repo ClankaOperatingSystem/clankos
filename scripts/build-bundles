@@ -21,7 +21,7 @@ if source.count('# BEGIN runtime commands') != 1 or source.count('# END runtime 
 content = re.sub(r'    # BEGIN runtime commands.*?    # END runtime commands',
                  lambda _: block, source, flags=re.S).encode()
 outputs = {launcher: (content, 0o755)}
-resources = ['clankos-install', 'capture', 'start-up', 'wrap-up']
+resources = ['clankos-install', 'clankos-pair', 'capture', 'start-up', 'wrap-up']
 for skill in sorted((root / 'skills').iterdir()):
     if not (skill / 'SKILL.md').is_file():
         continue
@@ -29,6 +29,7 @@ for skill in sorted((root / 'skills').iterdir()):
     outputs[destination / 'clankos'] = (content, 0o755)
     for name in resources:
         outputs[destination / name] = ((root / 'bin' / name).read_bytes(), 0o755)
+outputs[root / 'skills/clankos-bootstrap/scripts/bootstrap'] = ((root / 'bin/initiate').read_bytes(), 0o755)
 stale = []
 for path, (content, mode) in outputs.items():
     if args.check:

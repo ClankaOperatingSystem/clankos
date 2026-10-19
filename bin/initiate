@@ -1,49 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 usage() {
     cat <<'HELP'
-Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
-                [--keeper URL] [--bin DIR] [--no-tree] [--project]
+Usage: initiate --image vX.Y.Z [--ask] [--archive committed|uncommitted|remote]
+                [--keeper URL] [--no-tree] [--project]
        initiate --help
 
-Make the Git repository in the working directory a garden, in the
-ClankOS container.
+Bootstrap one Git repository with a fixed image pair and explicit apply.
 "clankos-run help initiate" prints the protocol.
-
-At a terminal it asks what no option answers. Without one it takes
-the defaults, and --ask makes it ask all the same, reading the answers
-from standard input.
-
-  --image TAG     the image the garden's commands run in: latest, the
-                  default, or a version to pin, such as v0.0.1
-  --archive KEPT  how the garden's archive is kept: uncommitted, the
-                  default, on disk and ignored by Git; committed; or
-                  remote, by a keeper
-  --keeper URL    with --archive remote, the keeper's address
-  --bin DIR       where the scripts go; bin unless given
-  --no-tree       do not go on to responsibility-tree
-  --project       make a project, to be mounted where a responsibility
-                  keeps its projects: its configuration says nowhere
-                  that projects belong, and it has no tree
-
-Writes .clanka/config.yml, intray.org, lines in .gitignore, and the
-scripts in bin/, as the image has them. Then runs install, which
-installs the skills in .agents/skills/ and needs the network. Makes AGENTS.md, or in one
-that is there writes only its own marked block, which sends an agent
-to "clankos-run help". Updates the managed archive
-rules in Git's info/exclude from the saved configuration, including
-child scopes. Keeps existing configuration and content, and commits
-nothing. In an existing garden it also adds what is missing.
-
-Exit: 0 done, 2 refused or usage; install's own if it fails; 125, 126
-and 127 are clankos-run's.
+Needs Git, Bash and Docker. Installs no host software. Existing configuration
+is preserved. No wrappers, staging or commits are made. For an existing garden,
+the configured fixed image may be used without --image.
 HELP
 }
-
-case "${1:-}" in
-    help|-h|--help) usage; exit 0 ;;
-esac
-run="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run"
-"$run" initiate "$@"
-exec "$run" install
+case "${1:-}" in help|-h|--help) usage; exit 0 ;; esac
+command -v git >/dev/null || { echo 'initiate: git not found' >&2; exit 127; }
+root=$(git rev-parse --show-toplevel) || exit 2
+[ "$root" -ef . ] || { echo 'initiate: run at the repository root' >&2; exit 2; }
+resources=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+run=$resources/clankos
+[ -x "$run" ] || run=$resources/clankos-run
+args=("$@")
+while [ $# -gt 0 ]; do
+    case $1 in
+        --image)
+            [ $# -ge 2 ] && [[ $2 =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { usage >&2; exit 2; }
+            export CLANKOS_TARGET_RELEASE=$2
+            export CLANKOS_IMAGE=${CLANKOS_IMAGE:-ghcr.io/clankaoperatingsystem/clankos:$2}
+            shift 2 ;;
+        *) shift ;;
+    esac
+done
+"$run" --check-pair
+"$run" initiate "${args[@]}"
+exec "$run" apply-v1

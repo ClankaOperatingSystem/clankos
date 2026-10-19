@@ -20,7 +20,7 @@ for script in "$repo"/bin/*; do
     name=${script##*/}
     check "$name is listed in the image's account of a garden" grep -q "^    $name " "$account"
     case $name in
-        clankos-run|clankos-install|install.sh) continue ;;
+        clankos-run|clankos-install|clankos-pair|install.sh) continue ;;
     esac
     check "$name has a document" test -f "$repo/docs/$name.txt"
     check "$name --help names it" sh -c "'$script' --help | grep -qF '\"clankos-run help $name\"'"
@@ -32,7 +32,7 @@ done
 # image.
 for command in "$repo"/libexec/* "$repo"/bin/*; do
     name=${command##*/}
-    case $name in run|pos-emacs|install-sources|clankos-install|install.sh) continue ;; esac
+    case $name in run|pos-emacs|install-sources|clankos-install|clankos-pair|install.sh) continue ;; esac
     check "$name is named by a test" named "$name"
 done
 

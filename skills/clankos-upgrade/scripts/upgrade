@@ -1,61 +1,17 @@
-#!/bin/sh
-# upgrade
-# Bring the repository this is run in, and each configured repository
-# mounted beneath it, to the ClankOS image that is published: pull the
-# image, install its skills in each node whose skills-lock.json
-# differs from its configuration, and commit the skills there. Nothing
-# else is committed, and nothing is pushed.
-# Run it on the host, by its path, from anywhere in the repository.
-# Exit: 0 done, and refresh then finds nothing; 1 a node is left as it
-# was, or refresh still finds something; 2 usage.
-if [ $# -ne 0 ]; then
-    echo "Usage: upgrade" >&2
+#!/usr/bin/env bash
+# Upgrade one repository; keep its index and history unchanged.
+set -euo pipefail
+if [ $# -ne 2 ] || [ "$1" != --image ] || [[ ! $2 =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo 'Usage: upgrade --image vX.Y.Z' >&2
     exit 2
 fi
-clankos=$(cd -- "$(dirname -- "$0")" && pwd -P)/clankos
-top=$(git rev-parse --show-toplevel 2>/dev/null) || {
-    echo "upgrade: not in a Git repository" >&2
-    exit 2
-}
-cd "$top" || exit 2
-
-# The image the repository's commands run in, and its skills image. A
-# pull that fails, as offline or for a local image, leaves the one there.
-image=$("$clankos" clankos-run --show | sed -n 's/^image //p')
-skills=${CLANKOS_SKILLS_IMAGE:-$(printf '%s\n' "$image" | sed 's/\(:[^:/]*\)\{0,1\}$/-skills&/')}
-for name in "$image" "$skills"; do
-    docker pull -q "$name" > /dev/null 2>&1 || echo "upgrade: $name was not pulled; the one there is used" >&2
-done
-
-# Each node whose skills-lock.json refresh finds different.
-nodes=$("$clankos" clankos-run refresh 2>&1 > /dev/null \
-    | sed -n 's|^clankos: lock-differs \(.*\)skills-lock\.json (.*$|./\1|p' | sort -u)
-commit=
-for dir in .clanka .clankos .pos; do
-    [ -f "$dir/auto/commit" ] && commit=$(cut -c1-7 "$dir/auto/commit") && break
-done
-said=$(mktemp)
-trap 'rm -f "$said"' EXIT
-status=0
-for node in $nodes; do
-    # install exits 1 for the lint's findings as well as for a refusal,
-    # which it says it is.
-    (cd "$node" && "$clankos" clankos-run install) 2> "$said"
-    installed=$?
-    cat "$said" >&2
-    if [ "$installed" -gt 1 ] || grep -q '^install: nothing was changed' "$said"; then
-        echo "upgrade: $node: install failed, and nothing there is committed" >&2
-        status=1
-        continue
-    fi
-    git -C "$node" add -A -- ':(glob).*/skills/**' skills-lock.json
-    if git -C "$node" diff --cached --quiet -- ':(glob).*/skills/**' skills-lock.json; then
-        continue
-    fi
-    git -C "$node" commit -q -m "Install the skills of ClankOS $commit" \
-        -- ':(glob).*/skills/**' skills-lock.json \
-        && echo "committed $node at ClankOS $commit"
-done
-
-"$clankos" clankos-run refresh > /dev/null || status=1
-exit "$status"
+export CLANKOS_TARGET_RELEASE=$2
+target=ghcr.io/clankaoperatingsystem/clankos:$2
+clankos=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/clankos
+top=$(git rev-parse --show-toplevel) || exit 2
+cd "$top"
+export CLANKOS_IMAGE=${CLANKOS_IMAGE:-$target}
+"$clankos" --check-pair
+"$clankos" installation-edit . image "$target"
+# Save intent before apply; a failed apply can be retried against this target.
+exec "$clankos" apply-v1

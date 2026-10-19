@@ -39,10 +39,12 @@ writes. Migrate them as described below. Apply covers all skill sources,
 including the runtime's method-zero skills. It does not change the configured
 image or provide source-selection switches.
 
-Use runtime and skills images that both provide apply-v1. The input schema
-is checked before writes; an older skills image without this entry fails
-before changing the repository. Release metadata and fixed-pair selection
-remain separate work.
+Both images must declare the same release, full source commit and apply-v1
+protocol. The launcher checks the pair before managed writes and calls the
+stable apply-v1 entry directly, without ordinary-command dispatch. A missing
+image is pulled; an unavailable or mismatched pair refuses with retry guidance.
+Fixed vX.Y.Z tags must match their metadata. Local development pairs declare
+dev and require an explicit CLANKOS_IMAGE. See docs/releases.txt.
 
 Exit 0: complete; 1: preflight refused; 2: usage or not at a worktree root;
 3: incomplete after saving ownership. Installer output names completed

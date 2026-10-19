@@ -1,11 +1,11 @@
 #!/bin/sh
 # initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote]
-#          [--keeper URL] [--bin DIR] [--no-tree] [--project]
+#          [--keeper URL] [--no-tree] [--project]
 # Make the Git repository in the working directory a garden, or with
 # --project a project to be mounted in one. The protocol is
 # docs/initiate.txt.
 usage() {
-    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--bin DIR] [--no-tree] [--project]" >&2
+    echo "Usage: initiate [--ask] [--image TAG] [--archive committed|uncommitted|remote] [--keeper URL] [--no-tree] [--project]" >&2
     exit 2
 }
 refuse() {
@@ -16,7 +16,7 @@ refuse() {
 registry=ghcr.io/clankaoperatingsystem/clankos
 ask=
 [ ! -t 0 ] || ask=1
-tag= archive= keeper= bin=bin tree=1 project=
+tag= archive= keeper= tree=1 project=
 while [ $# -gt 0 ]; do
     case $1 in
         --ask) ask=1; shift ;;
@@ -25,7 +25,6 @@ while [ $# -gt 0 ]; do
         --image) [ $# -ge 2 ] || usage; tag=$2; shift 2 ;;
         --archive) [ $# -ge 2 ] || usage; archive=$2; shift 2 ;;
         --keeper) [ $# -ge 2 ] || usage; keeper=$2; shift 2 ;;
-        --bin) [ $# -ge 2 ] || usage; bin=$2; shift 2 ;;
         *) usage ;;
     esac
 done
@@ -49,22 +48,12 @@ question() {
     printf '%s\n' "${answer:-$2}"
 }
 
-case $bin in
-    ''|/*|*..*) refuse "not a directory in the repository: $bin" ;;
-esac
-
 if [ -n "$config" ]; then
     echo "kept      $config (this is a garden already)"
-    # A garden made before commands were links says where they go.
-    if ! grep -q '^bin:' "$config"; then
-        [ -z "$(tail -c 1 "$config")" ] || printf '\n' >> "$config"
-        printf 'bin: %s\n' "$bin" >> "$config"
-        echo "added     bin: $bin to $config"
-    fi
 else
-    [ -n "$tag" ] || tag=$(question "The image: latest, which follows new versions, or a version to pin, such as v0.0.1" latest)
+    [ -n "$tag" ] || tag=$(cat /usr/local/share/clankos-release)
     case $tag in
-        ''|*[!A-Za-z0-9._-]*) refuse "not an image tag: $tag" ;;
+        ''|latest|*[!A-Za-z0-9._-]*) refuse "not an image tag: $tag" ;;
     esac
     [ -n "$archive" ] || archive=$(question "The archive: uncommitted (on disk, ignored by Git), committed, or remote (kept by a keeper)" uncommitted)
     case $archive in
@@ -87,7 +76,7 @@ else
         # A project is a leaf, and says nowhere that projects belong.
         printf 'pos: 2\n'
         [ -n "$project" ] || printf 'projects: projects/\n'
-        printf 'image: %s:%s\nbin: %s\n' "$registry" "$tag" "$bin"
+        printf 'image: %s:%s\n' "$registry" "$tag"
         # The directories no command reads, written out so that a reader
         # of the file can see why; these are what poslib assumes when a
         # node declares none.
@@ -130,33 +119,24 @@ $begin
 ## ClankOS
 
 This repository is a ClankOS garden: a tree of responsibilities kept
-in Org files. Its commands are the scripts in $bin/.
+in Org files. Its skills are in .agents/skills/. Each skill carries the
+scripts it needs; run them by their path from the working directory.
 
-ClankOS's skills are in .agents/skills/, each named clankos-NAME, or
-capture, start-up or wrap-up, the three slots a repository may fill
-with a skill of its own. Each
-says when a command is used, how to run it and what to check. Use the
-skill that fits the work in hand. The commands' help need not be read
-before that: a skill names the help it needs.
+Use the skill that fits the work. For an account of the garden and its
+commands, run .agents/skills/clankos-bootstrap/scripts/clankos help.
 
-For what a garden is, run \`$bin/clankos-run help\`. It prints what
-the garden's ClankOS image holds, so it describes the commands and the
-skills as they are here.
+Search within this repository, not the user's home or the rest of the
+machine, unless asked.
 
-Search for files within this repository. Do not search the user's
-home directory or the rest of the machine unless the user asks for
-that.
+To apply configured skill sources, run
+.agents/skills/clankos-bootstrap/scripts/clankos apply-v1 at the repository
+root. Apply installs method zero and optional configured sources, and keeps
+ownership in installation-state.json beside the root configuration.
+Review and commit configuration, ownership, skills and skills-lock.json
+together. Apply never stages or commits. Separate repositories need their
+own apply. A fresh clone uses its committed bundles directly.
 
-The skills are installed by \`$bin/clankos-run install\` from the
-repositories the configuration names, and from ClankOS's own, and are
-committed with the repository. The scripts in $bin/ are links ClankOS
-makes, and Git does not keep them. Where they are missing, as in a new
-clone, run this at the root of the repository, which makes them and
-changes nothing else:
-
-    sh -c "\$(curl -fsSL https://www.clankos.org/initiate.sh)"
-
-\`$bin/initiate\` writes this block. Write outside it.
+The bootstrap skill writes this block. Write outside it.
 $end
 BLOCK
 }
@@ -203,20 +183,6 @@ emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
                 (let-alist f (princ (format "finding   %s %s\n" .finding .path)))))' \
     || refuse "could not configure archive exclusions"
 
-# The scripts that start this image's commands: links in $bin to what
-# refresh installs beside the configuration.
-"$(dirname -- "$0")/refresh"
-installed=$?
-[ "$installed" -le 1 ] || refuse "could not install the commands"
-for script in /usr/local/share/clankos/source/bin/*; do
-    name=${script##*/}
-    if [ -L "$bin/$name" ]; then
-        echo "linked    $bin/$name"
-    else
-        echo "kept      $bin/$name (it is not ClankOS's link; rename or remove it)"
-    fi
-done
-
 if [ -n "$tree" ] && [ -n "$ask" ]; then
     "$(dirname -- "$0")/responsibility-tree" --ask || true
 fi
@@ -227,6 +193,6 @@ if [ -n "$project" ]; then
     echo "Mount it where a responsibility keeps its projects, with responsibility-tree there."
 else
     echo "This repository is a garden. Nothing is committed: read git status, and commit."
-    echo "Add to the tree at any time with $bin/responsibility-tree."
+    echo "Add to the tree with the clankos-tree skill."
 fi
-echo "$bin/clankos-run help says what a garden is and lists the commands."
+echo "The bundled clankos help command describes the garden."

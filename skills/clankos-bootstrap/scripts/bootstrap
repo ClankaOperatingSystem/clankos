@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+usage() {
+    cat <<'HELP'
+Usage: initiate --image vX.Y.Z [--ask] [--archive committed|uncommitted|remote]
+                [--keeper URL] [--no-tree] [--project]
+       initiate --help
+
+Bootstrap one Git repository with a fixed image pair and explicit apply.
+"clankos-run help initiate" prints the protocol.
+Needs Git, Bash and Docker. Installs no host software. Existing configuration
+is preserved. No wrappers, staging or commits are made. For an existing garden,
+the configured fixed image may be used without --image.
+HELP
+}
+case "${1:-}" in help|-h|--help) usage; exit 0 ;; esac
+command -v git >/dev/null || { echo 'initiate: git not found' >&2; exit 127; }
+root=$(git rev-parse --show-toplevel) || exit 2
+[ "$root" -ef . ] || { echo 'initiate: run at the repository root' >&2; exit 2; }
+resources=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+run=$resources/clankos
+[ -x "$run" ] || run=$resources/clankos-run
+args=("$@")
+while [ $# -gt 0 ]; do
+    case $1 in
+        --image)
+            [ $# -ge 2 ] && [[ $2 =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { usage >&2; exit 2; }
+            export CLANKOS_TARGET_RELEASE=$2
+            export CLANKOS_IMAGE=${CLANKOS_IMAGE:-ghcr.io/clankaoperatingsystem/clankos:$2}
+            shift 2 ;;
+        *) shift ;;
+    esac
+done
+"$run" --check-pair
+"$run" initiate "${args[@]}"
+exec "$run" apply-v1

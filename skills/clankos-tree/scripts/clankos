@@ -5,6 +5,7 @@ usage() {
     cat <<'HELP'
 Usage: clankos-run [--host-network] COMMAND [ARG ...]
        clankos-run --show
+       clankos-run --check-pair
        clankos-run --help
 
 Run a ClankOS command in the ClankOS container, on the workspace the
@@ -43,6 +44,7 @@ installs.
 
 --host-network gives the containers the host's network, which signing
 in needs. --show prints the workspace and the image and runs nothing.
+--check-pair checks release metadata without mounting the repository.
 
 "clankos-run install" brings the skills of the node in the working
 directory to the sources its configuration declares: "clankos-run help
@@ -67,18 +69,20 @@ resources=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 [ "${1:-}" != clankos-run ] || shift
 network=()
 show=
+pair=
 case "${1:-}" in
     -h|--help) usage; exit 0 ;;
     --host-network) network=(--network host); shift ;;
     --show) show=1; shift ;;
+    --check-pair) pair=1; shift ;;
 esac
-if [ -n "$show" ]; then
+if [ -n "$show$pair" ]; then
     [ $# -eq 0 ] || { usage >&2; exit 2; }
 else
     [ $# -ge 1 ] || { usage >&2; exit 2; }
 fi
 
-if [ -z "$show" ]; then
+if [ -z "$show$pair" ]; then
     case $1 in
         capture|start-up|wrap-up)
             slot=$1
@@ -168,6 +172,13 @@ command -v docker >/dev/null || {
     exit 127
 }
 
+# Check installation images before mounting or changing the repository.
+if [ -n "$pair" ] || [ "${1:-}" = apply-v1 ] || [ "${1:-}" = initiate ]; then
+    . "$resources/clankos-pair"
+    check_pair || exit 1
+    [ -z "$pair" ] || exit 0
+fi
+
 # A linked worktree points outside its workspace. Git metadata is read-only
 # except info/ for commands that explicitly maintain exclusion rules.
 git_mounts=()
@@ -234,6 +245,11 @@ fi
 
 # The ClankOS container, running ARG ... through run.
 clankos() {
+    local entry=/usr/local/libexec/clankos/run
+    if [ "$1" = apply-v1 ]; then
+        entry=/usr/local/libexec/clankos/apply-v1
+        shift
+    fi
     docker run --rm -i \
         ${terminal[@]+"${terminal[@]}"} \
         --user "$(id -u):$(id -g)" \
@@ -255,7 +271,7 @@ clankos() {
         ${timezone[@]+"${timezone[@]}"} \
         ${network[@]+"${network[@]}"} \
         "$image" \
-        /usr/local/libexec/clankos/run "$@"
+        "$entry" "$@"
 }
 
 # install, methodology and apply-v1 run a second container, the skills image,

@@ -39,3 +39,10 @@ it does not consume these saved choices.
 
 Success prints JSON naming the configuration and state files. Exit 0:
 saved; 1: refused or a write failed; 2: usage or not at the repository root.
+
+To select a fixed runtime without installing, run:
+
+    clankos-run installation-edit . image IMAGE:vX.Y.Z
+
+Only the root image field changes. Upgrade checks the target pair before this
+edit and runs apply afterwards. The editor does not stage or commit.
