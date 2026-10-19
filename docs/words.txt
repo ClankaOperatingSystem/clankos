@@ -35,9 +35,10 @@ A skill folder is the agentskills.io format: https://agentskills.io.
                       file, a responsibility's directory, or the root
                       ("clankos-run help", 1)
     mount             a responsibility, project or product that is a
-                      repository of its own within the tree; the
-                      tree's commands stop at its edge, and it has a
-                      configuration and skills of its own
+                      repository of its own within the tree; a
+                      command run above it reads it and writes none of
+                      it, and it has a configuration and skills of its
+                      own
                       ("clankos-run help responsibility-tree", and
                       "help initiate" for --project)
     configuration     config.yaml or config.yml in a node's .clanka,
@@ -72,7 +73,8 @@ A skill folder is the agentskills.io format: https://agentskills.io.
     skill             a folder holding SKILL.md in the agentskills.io
                       format, which tells an agent when and how to do
                       one kind of work; its references/ hold what it
-                      reads, its scripts/ what it runs
+                      reads, its scripts/ what it runs ("clankos-run
+                      help model", 1)
     methodology       a repository of skills, with checks, that a node
                       declares in its configuration at a ref and
                       installs; each skill is named with the
@@ -83,10 +85,9 @@ A skill folder is the agentskills.io format: https://agentskills.io.
                       installed at the commit the image was built
                       from, and declared by no configuration
                       ("clankos-run help", 3)
-    gnome             a methodology that also holds a doctrine, its
-                      policies and its cases, so that a bugflow server
-                      judges by it and a garden writes to it; bugflow's
-                      docs/gnomes.md defines it
+    gnome             bugflow's word, in its docs/words.md; to a
+                      garden, a methodology that also holds a doctrine,
+                      its policies and its cases
     skills repository a source declared with kind skills-repository:
                       skills taken as they are, named as their author
                       named them, with no checks ("clankos-run help
@@ -104,10 +105,10 @@ A skill folder is the agentskills.io format: https://agentskills.io.
     wild-caught       a skill installed, by the skills CLI run by
                       hand, from a source the configuration does not
                       declare ("clankos-run help wild-caught")
-    check             an executable scripts/check-NAME in a
-                      methodology's skill, run by the lint, which
-                      reports what it finds as the lint's own findings
-                      ("clankos-run help pos-lint")
+    check             bugflow's word, in its docs/words.md; to a
+                      garden, an executable scripts/check-NAME in a
+                      methodology's skill, whose findings the lint
+                      reports as its own ("clankos-run help pos-lint")
     lint              pos-lint: what is wrong in a node's Org files,
                       and what the checks of its methodologies report
                       ("clankos-run help pos-lint")
