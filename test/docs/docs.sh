@@ -30,9 +30,4 @@ while read -r name section; do
     check "docs/$name.txt has a section $section" grep -q "^$section\. " "$docs/$name.txt"
 done < sections
 
-# The words document's short references, "help NAME", name documents too.
-grep -ho '"help [a-z-]*"' "$docs/words.txt" | sort -u | sed 's/^"help \(.*\)"$/\1/' | while read -r name; do
-    check "words refers to docs/$name.txt" test -f "$docs/$name.txt"
-done
-
 [ "$failures" -eq 0 ]

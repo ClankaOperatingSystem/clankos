@@ -12,7 +12,8 @@ root = Path(__file__).resolve().parent.parent
 model = root / 'docs/model.txt'
 heading = '3. The requirements, and what holds each\n'
 groups = ['tree', 'configuration', 'source', 'skill', 'check', 'lock',
-          'method-zero', 'slots', 'harness', 'gnome']
+          'method-zero', 'slots', 'harness', 'gnome', 'words',
+          'words-coverage']
 
 def wrapped(text, first, rest=None):
     return textwrap.fill(text, width=72, initial_indent=first,
@@ -22,7 +23,7 @@ section = heading + '\n' + wrapped(
     'Each requirement is the name of a check in test/model/, one script '
     'for each group, and scripts/render-model writes this section from '
     'them. A requirement poslib holds runs poslib\'s test in the image. '
-    'One marked "not tested" names what holds it instead.', '    ')
+    'One marked "not tested here" names what holds it instead.', '    ')
 for group in groups:
     script = root / f'test/model/{group}.sh'
     text = script.read_text()
@@ -39,9 +40,9 @@ for group in groups:
     for requirement, (tested, holders) in entries.items():
         for holder in holders:
             if holder == 'nothing':
-                requirement += ' Not tested: nothing holds it.'
+                requirement += ' Not tested here: nothing holds it.'
             else:
-                requirement += f' {"Also" if tested else "Not tested:"} held by {holder}.'
+                requirement += f' {"Also" if tested else "Not tested here:"} held by {holder}.'
         section += wrapped(requirement, '      - ')
 
 old = model.read_text()
