@@ -1,0 +1,19 @@
+name: links
+
+# The links between the products' documents can break in any of the
+# repositories test/docs/links.sh reads, so it runs each day as well as
+# with the other tests.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the links between the products' documents
+        run: test/docs/links.sh
