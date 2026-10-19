@@ -157,10 +157,11 @@ command or a method that other projects would use.
 The record ends with what was decided, in the person's words, and what
 was not. Each matter not decided becomes a task in the project's file,
 so that the next review is not the only place it is held. The record
-is sealed in the archive at archives/ of the directory that holds the
-project's file, as reviews/DATE-SLUG.org, where SLUG is the name of
-the project's file without .org ("clankos-run help archive-integrity"),
-and then the review item is marked done.
+is sealed in the archive of the directory that holds the project's
+file, archives/ in that directory's configuration directory, as
+reviews/DATE-SLUG.org, where SLUG is the name of the project's file
+without .org ("clankos-run help archive-integrity", 1), and then the
+review item is marked done.
 
 A responsibility's review asks whether its purpose is still the one
 held; whether each held goal is still wanted and each reachable goal

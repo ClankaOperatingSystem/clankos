@@ -11,16 +11,35 @@ https://github.com/ClankaOperatingSystem/poslib
 1. What is kept
 
 An archive is a directory of sealed items. A sealed item never changes;
-an archive only grows. Beside the archive, not in it, is
-archive-integrity/:
+an archive only grows. A scope keeps its archive, and the record of
+what the archive holds, in its configuration directory, .clanka/,
+.clankos/ or .pos/:
 
-    ledger/        one file for each seal, numbered and chained by hash:
-                   the item, the files it added with their CIDs, and
-                   the archive's root CID afterwards
-    checkpoints/   records of the ledger's head, by which an archive
-                   that vanished or was rewritten is noticed
+    archives/                  the archive
+    archive-integrity/ledger/  one file for each seal, numbered and
+                               chained by hash: the item, the files it
+                               added with their CIDs, and the
+                               archive's root CID afterwards
+    archive-integrity/checkpoints/
+                               records of the ledger's head, by which
+                               an archive that vanished or was
+                               rewritten is noticed
+
+The configuration directory is the one that holds the scope's
+config.yaml or config.yml. A scope with no configuration file uses its
+one configuration directory; a scope with none uses .clankos/, which
+the first seal makes, with no configuration file in it. A scope with
+two configuration directories and no configuration file is refused.
+An archive that a keeper keeps has no archives/ directory, only its
+archive-integrity/.
 
 Sealed files, ledger events and checkpoints have no write bits.
+
+Earlier gardens kept archives/ and archive-integrity/ beside the
+scope's other files. Those archives are still read and checked, but
+nothing is sealed into them, and a checkpoint is not written there:
+those commands are refused, as relocation-required, until the archive
+is moved (section 6). An archive at two places in one scope is refused.
 
 
 2. Sealing: plan, review, apply
@@ -30,8 +49,12 @@ reviewed.
 
   - Plan. "seal SOURCE DESTINATION" prints a plan as JSON and changes
     nothing. SOURCE is a file or directory in the workspace;
-    DESTINATION is where it goes in an archive. "write-new DESTINATION"
-    plans a new record from standard input instead.
+    DESTINATION is where it goes in an archive, such as
+    .clankos/archives/2026-01-01-note.txt. A DESTINATION written as
+    the scope's archives/PATH, or in another configuration directory's
+    archives/, is the same path in the archive of the scope's
+    configuration directory. "write-new DESTINATION" plans a new record
+    from standard input instead.
   - Review. A person or an agent reads the plan: what goes where, how
     each link in the item is resolved, and which rumours are sealed
     with it. The reviewer saves the plan to a file, as printed. The
@@ -168,7 +191,37 @@ archive a keeper keeps, since its files are not on disk, and that is
 not evidence that no record exists. Search with the command.
 
 
-6. In the container
+6. Moving archives from an earlier layout
+
+An archive and its archive-integrity/ that lie beside the scope's
+other files are moved into its configuration directory by two
+commands. Neither rewrites a sealed file, a ledger event or a
+checkpoint, and neither commits.
+
+  - "relocate-plan ROOT" prints each scope under ROOT whose archive or
+    archive-integrity/ would move, from where and to where, and every
+    blocker: two places for one scope's archive or ledger, a
+    configuration directory that cannot be chosen, a check that is not
+    clean, a legacy ledger still inside its archive, which
+    archive-migrate rebuilds first, a directory that cannot be written,
+    a configured repository that is missing, and bookkeeping that Git
+    does not track. It changes nothing.
+  - "relocate-apply ROOT" refuses if relocate-plan finds a blocker.
+    Otherwise it moves each scope in turn: archives/ and
+    archive-integrity/ are renamed into the configuration directory
+    with "git mv", or with a plain rename for an archive kept
+    uncommitted, which Git ignores; the scope is checked after its
+    move; and when every scope has moved, the managed archive block in
+    Git's info/exclude is written again to name the new paths. A
+    destination that already exists is refused.
+
+The moves are left in the working tree, as renames, for the person to
+read and commit. A run that stops part way is run again: the scopes
+already moved are reported as done, and the others move. A run after
+all have moved changes nothing.
+
+
+7. In the container
 
 bin/archive-integrity gives its arguments to bin/clankos-run, which
 starts the container.
@@ -188,7 +241,7 @@ starts the container.
     the host, which every command's container mounts.
 
 
-7. Exit status
+8. Exit status
 
     0     done, or clean
     1     findings

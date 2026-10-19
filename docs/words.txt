@@ -117,11 +117,12 @@ A skill folder is the agentskills.io format: https://agentskills.io.
     intray            intray.org: where a task is written the moment
                       it comes to mind, to be placed later
                       ("clankos-run help", 1)
-    archive           sealed records that never change, with a ledger
-                      beside them ("clankos-run help
-                      archive-integrity")
-    ledger            the numbered, chained events beside an archive,
-                      by which a change to a sealed record is noticed
+    archive           sealed records that never change, with a ledger,
+                      kept in a scope's configuration directory
+                      ("clankos-run help archive-integrity")
+    ledger            the numbered, chained events kept beside an
+                      archive in archive-integrity/, by which a change
+                      to a sealed record is noticed
                       ("clankos-run help archive-integrity")
     seal              to put a record in an archive and write its
                       event, after which it is cited by content

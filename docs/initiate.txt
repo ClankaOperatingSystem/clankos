@@ -27,8 +27,10 @@ repository. What makes a repository a garden is small:
     AGENTS.md            a block that tells an agent this is a garden
                          and to run "clankos-run help"
 
-Archives and ledgers are made by the first seal, and responsibilities
-and projects as they are needed (docs/responsibility-tree.txt).
+The archive and its ledger are made by the first seal, in
+.clanka/archives/ and .clanka/archive-integrity/
+(docs/archive-integrity.txt), and responsibilities and projects as
+they are needed (docs/responsibility-tree.txt).
 
 
 2. The questions
@@ -81,8 +83,10 @@ Run at the root of a Git repository, it writes, in this order:
     brought to what this image writes. Nothing outside the block is
     changed;
   - in Git's info/exclude, poslib's managed archive block: each scope's
-    archive is ignored when its own configuration says uncommitted,
-    including that default when no entry says otherwise.
+    archive, archives/ in its configuration directory, is ignored when
+    its own configuration says uncommitted, including that default when
+    no entry says otherwise. The ledger, in archive-integrity/, is not
+    ignored.
 
 It updates the managed archive block from the saved configuration,
 including in an existing garden. Other ignore rules and already
