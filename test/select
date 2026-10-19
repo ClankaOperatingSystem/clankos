@@ -45,6 +45,7 @@ while IFS= read -r path; do
         README|LICENSE|AGENTS.md|bin/install.sh) ;;
         test/fixtures/*) name=${path#test/fixtures/}; want $(named "${name%%/*}") ;;
         test/model/*.sh) want "$path" test/docs/model.sh ;;
+        scripts/render-model) want test/docs/model.sh ;;
         test/*/*.sh) want "$path" ;;
         docs/*) want "${readers[@]}" ;;
         skills/clankos-*)

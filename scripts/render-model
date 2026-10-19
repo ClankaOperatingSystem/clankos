@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Write the requirements section of docs/model.txt from test/model/."""
+import argparse
+import re
+import textwrap
+from pathlib import Path
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--check', action='store_true', help='report a stale docs/model.txt')
+args = parser.parse_args()
+root = Path(__file__).resolve().parent.parent
+model = root / 'docs/model.txt'
+heading = '3. The requirements, and what holds each\n'
+groups = ['tree', 'configuration', 'source', 'skill', 'check', 'lock',
+          'method-zero', 'slots', 'harness', 'gnome']
+
+def wrapped(text, first, rest=None):
+    return textwrap.fill(text, width=72, initial_indent=first,
+                         subsequent_indent=rest or ' ' * len(first)) + '\n'
+
+section = heading + '\n' + wrapped(
+    'Each requirement is the name of a check in test/model/, one script '
+    'for each group, and scripts/render-model writes this section from '
+    'them. A requirement poslib holds runs poslib\'s test in the image. '
+    'One marked "not tested" names what holds it instead.', '    ')
+for group in groups:
+    script = root / f'test/model/{group}.sh'
+    text = script.read_text()
+    title = re.search(r'^# ([^:]*):', text, re.M).group(1)
+    section += '\n' + f'    {title}, test/model/{group}.sh\n'
+    # Each requirement once, in the order the script first names it;
+    # one both checked and held_by is tested in part.
+    entries = {}
+    for line in text.splitlines():
+        if m := re.match(r'check "([^"]*)"', line):
+            entries.setdefault(m.group(1), [True, []])[0] = True
+        elif m := re.match(r'held_by "([^"]*)" "([^"]*)"', line):
+            entries.setdefault(m.group(2), [False, []])[1].append(m.group(1))
+    for requirement, (tested, holders) in entries.items():
+        for holder in holders:
+            if holder == 'nothing':
+                requirement += ' Not tested: nothing holds it.'
+            else:
+                requirement += f' {"Also" if tested else "Not tested:"} held by {holder}.'
+        section += wrapped(requirement, '      - ')
+
+old = model.read_text()
+new = old[:old.index(heading)] + section
+if args.check:
+    if new != old:
+        print('docs/model.txt: stale; run scripts/render-model')
+        raise SystemExit(1)
+else:
+    model.write_text(new)
