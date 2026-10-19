@@ -20,7 +20,8 @@ mv legacy archives
 git init -q -b master && git add -A && git commit -qm 'Add a legacy archive'
 
 "$bin/archive-integrity" relocate-plan . > out 2>&1
-check "relocation names a legacy ledger as a blocker" grep -q legacy out
+blocked=$?
+check "relocation names a legacy ledger as a blocker" sh -c "[ $blocked -eq 2 ] && grep -q legacy-ledger out"
 check "relocation is refused before migration" status 2 "$bin/archive-integrity" relocate-apply .
 check "and moves nothing" test -d archives/.archive-integrity
 
