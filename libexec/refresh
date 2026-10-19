@@ -35,10 +35,13 @@ done
 
 # The paths refresh reads: the configuration directories, the skills,
 # the lock files, the directories of links, Codex's rules, and Git's
-# info/exclude.
+# info/exclude. What is in an archive or an archive-integrity/, which
+# lie in a configuration directory, is not read, since a seal changes
+# nothing that refresh installs.
 listed() {
     find "$root" \( -name .git -o -name '_*' -o -name node_modules \
-            -o -name archives -o -name attic -o -path '*/auto/refresh' \) -prune \
+            -o -name archives -o -name archive-integrity -o -name attic \
+            -o -path '*/auto/refresh' \) -prune \
         -o \( -path '*/.clanka' -o -path '*/.clanka/*' -o -path '*/.clankos' \
             -o -path '*/.clankos/*' -o -path '*/.pos' -o -path '*/.pos/*' \
             -o -path '*/.agents/skills' -o -path '*/.agents/skills/*' \
@@ -79,7 +82,8 @@ signature() {
 # listed leaves out.
 pruned() {
     find "$root" \( -name .git -o -name '_*' -o -name node_modules \
-            -o -name archives -o -name attic \) -prune -o "$@" -print
+            -o -name archives -o -name archive-integrity -o -name attic \) \
+        -prune -o "$@" -print
 }
 
 approvals() {
