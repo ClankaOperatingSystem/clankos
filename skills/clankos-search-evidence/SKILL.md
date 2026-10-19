@@ -3,9 +3,10 @@ name: clankos-search-evidence
 description: Find where words occur in a garden's archives, whether the files are on disk or held by a keeper, and cite each hit by its ipfs:// link. Use when a record, a passage or a past decision is wanted and its link is not known. Never grep an archive directory for it. Not for files outside an archive, which grep still serves.
 ---
 
-A garden's archives hold its sealed records. Some are on disk under
-`archives/`; others are held by a keeper and not on disk at all, with
-only the ledger in the garden. Grep finds nothing in a kept archive,
+A garden's archives hold its sealed records. Some are on disk, in a
+scope's configuration directory under `.clanka/archives/`,
+`.clankos/archives/` or `.pos/archives/`; others are held by a keeper
+and not on disk at all, with only the ledger in the garden. Grep finds nothing in a kept archive,
 and a miss there is not evidence that no record exists. The command
 below searches both kinds the same way and names each hit by the link
 the clankos-read-evidence skill reads.
