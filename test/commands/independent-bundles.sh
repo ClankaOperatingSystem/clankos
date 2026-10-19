@@ -96,7 +96,7 @@ args = pathlib.Path(sys.argv[1]).read_bytes().split(b'\0')[:-1]
 mounts = [args[i+1].decode() for i, arg in enumerate(args[:-1]) if arg == b'-v']
 common, target = sys.argv[2:]
 assert common + ':' + common + ':ro' in mounts, mounts
-assert common + '/info:' + common + '/info' in mounts, mounts
+assert common + '/info:' + common + '/info' not in mounts, mounts
 assert target + ':' + target in mounts, mounts
 assert not any(m.startswith(str(pathlib.Path(common).parent) + ':') for m in mounts), mounts
 CHECK

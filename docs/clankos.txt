@@ -125,9 +125,10 @@ help that skill names; it does not read every command's help first.
 Each skill's scripts/clankos runs from its own bundle. Invoke it by
 path from the target directory; the caller's directory selects the
 workspace and image. The bundle can live outside the target repository.
-It does not require auto/bin to start. The runtime still refreshes the
-repository before ordinary operations. Linked worktrees mount their
-external Git metadata read-only. Commands that refresh also mount the
+It does not require auto/bin to start. Ordinary operations leave installed
+skills and wrappers unchanged. Run apply-v1 to apply configured sources.
+Linked worktrees mount their external Git metadata read-only. Explicit
+installation commands also mount the
 common Git info directory writable to maintain exclusion rules. They
 never mount the main worktree's files. Create the common info directory
 first if the repository has none.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run refresh, alone and before another command, against new gardens.
+# Run explicit refresh; ordinary commands leave installation unchanged.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
@@ -55,8 +55,8 @@ printf 'scribble\n' > .clanka/auto/scribble
 printf 'an older version\n' > .clanka/auto/version
 rm bin/pos-capture
 "$bin/clankos-run" pos-capture -- 'A task' > ../out 2> ../err
-check "a command runs refresh first: another version is replaced whole" test ! -e .clanka/auto/scribble
-check "and a missing link is made" test -L bin/pos-capture
+check "a command leaves the installed version alone" grep -qx scribble .clanka/auto/scribble
+check "and leaves a missing link absent" test ! -L bin/pos-capture
 check "and the command then runs" grep -q 'A task' intray.org
 
 printf '%040d\n' 0 > .clanka/auto/commit
@@ -73,19 +73,16 @@ check "and is named on stderr" grep -qx 'clankos: name-taken bin/pos-capture (un
 check "what has the name is left" test "$(cat bin/pos-capture)" = mine
 check "and is no longer a rule" sh -c "! grep -q '\"bin/pos-capture\"' $rules"
 "$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
-check "it is said again before every command" grep -q '^clankos: name-taken bin/pos-capture' ../err
+check "ordinary commands do not replay refresh findings" test ! -s ../err
 check "and the command runs all the same" grep -q 'START-UP PROMPTS' ../out
 
-# A command's refresh reads nothing again when nothing has changed: it
-# says again what the last refresh said, which is kept in auto/refresh/.
+# Ordinary commands neither replay nor update the old refresh cache.
 printf 'clankos: kept\n' >> .clanka/auto/refresh/said
-"$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
-check "a command's refresh skips when nothing has changed" grep -qx 'clankos: kept' ../err
-check "and says again what the last refresh said" grep -q '^clankos: name-taken bin/pos-capture' ../err
+cp .clanka/auto/refresh/said ../said
 printf '# A comment.\n' >> .clanka/config.yml
 "$bin/clankos-run" startup-prompt --view next > ../out 2> ../err
-check "a changed configuration is read again" sh -c '! grep -q "clankos: kept" ../err'
-check "and what it says is said" grep -q '^clankos: name-taken bin/pos-capture' ../err
+check "changed configuration does not trigger installation" test ! -s ../err
+check "ordinary commands leave the refresh cache alone" cmp -s ../said .clanka/auto/refresh/said
 
 # A command of the garden's own under a slot's name is its filling of
 # the slot: not a name taken.

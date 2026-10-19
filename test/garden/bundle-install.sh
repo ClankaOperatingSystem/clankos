@@ -40,7 +40,7 @@ check 'fresh clone has no ignored wrappers' test ! -e .clankos/auto/bin
 check 'installed bundle runs from fresh clone' test $? -eq 0
 cat "$work/err"
 check 'explicit bundle bypasses owned slot command' grep -q 'Fresh clone task' intray.org
-check 'refresh reconstructs wrappers after startup' test -x .clankos/auto/bin/clankos-run
+check 'capture leaves wrappers absent in a fresh clone' test ! -e .clankos/auto
 mkdir -p "$work/mock-bin" "$work/calls"
 cp "$repo/test/lib/fake-docker" "$work/mock-bin/docker"
 chmod +x "$work/mock-bin/docker"

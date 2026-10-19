@@ -33,10 +33,10 @@ If a node fails after an earlier node changed, configuration and pending
 ownership remain. Correct the error and repeat apply-v1. No rollback is
 attempted. An unchanged second apply changes no managed files.
 
-Apply does not refresh, lint, stage, commit or push. Ordinary commands still
-run refresh during this transition. Legacy path methodologies are refused
-before any writes; use the existing refresh command for them. This version
-applies all skill sources, including the runtime's method-zero skills. It
+Apply does not refresh, lint, stage, commit or push. Ordinary commands do
+not refresh installation. Legacy path methodologies are refused before any
+writes. Migrate them as described below. Apply covers all skill sources,
+including the runtime's method-zero skills. It
 does not change the configured image or provide source-selection switches.
 
 Use runtime and skills images that both provide apply-v1. The input schema
@@ -47,3 +47,32 @@ remain separate work.
 Exit 0: complete; 1: preflight refused; 2: usage or not at a worktree root;
 3: incomplete after saving ownership. Installer output names completed
 operations; errors explain what must be corrected before retry.
+
+Migrating path methodologies
+
+Replace a scalar setting such as "methodologies: methodologies/" with a
+list of Git sources. For each methodology, identify its repository, pin a
+revision and select its skill names:
+
+    methodologies:
+      - source: https://github.com/example/hello.git
+        ref: <commit>
+        skills: [hello-greet]
+
+Commit any unpublished skill changes in the source repository first. Keep
+the old checkout until its changes and required commands are accounted for.
+Source installation copies skills and their bundled resources; it does not
+install a methodology's top-level bin directory. Move required command
+resources into the source's skill bundle before migration.
+
+Inspect old links under .agents/skills and the configured harness folders.
+Remove only links that point into the old methodology checkout. Preserve
+local files and resolve any same-name files before applying; apply refuses
+unknown files and links rather than taking ownership of them. Remove obsolete
+methodology children from configuration only when they no longer belong in
+the responsibility tree.
+
+Run apply-v1 at the repository root, check the installed skills, then commit
+the configuration, ownership file, skills and lock file together. Repeat in
+each separate repository. Installed bundles run directly from a fresh clone;
+ordinary commands do not recreate auto/bin or the old methodology links.
