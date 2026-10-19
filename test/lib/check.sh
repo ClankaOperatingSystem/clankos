@@ -1,16 +1,21 @@
 # Sourced by the tests. Makes a new workspace under _test/ in the
 # repository, since Docker may share only some host directories, starts
 # in it, and removes it on exit. The image is the one CLANKOS_IMAGE names.
+# The workspace is in a directory of the test's own, so that files a
+# test keeps in .. meet no other test's when tests run at once.
 # shellcheck shell=bash
 
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
 bin=$repo/bin
 mkdir -p "$repo/_test"
-work=$(mktemp -d "$repo/_test/$(basename -- "$0" .sh).XXXXXX")
+own=$(mktemp -d "$repo/_test/$(basename -- "$0" .sh).XXXXXX")
+work=$own/work
+mkdir "$work"
 # The cache clankos-run mounts goes beside it, not in the user's own.
-XDG_CACHE_HOME=$(mktemp -d "$repo/_test/cache.XXXXXX")
+XDG_CACHE_HOME=$own/cache
+mkdir "$XDG_CACHE_HOME"
 export XDG_CACHE_HOME
-trap 'chmod -R u+w "$work" "$XDG_CACHE_HOME"; rm -rf "$work" "$XDG_CACHE_HOME"' EXIT
+trap 'chmod -R u+w "$own"; rm -rf "$own"' EXIT
 cd "$work" || exit 1
 
 failures=0
