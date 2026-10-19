@@ -6,6 +6,10 @@ on:
     branches: [master]
     tags: ['*']
 
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   image:
     runs-on: ubuntu-latest
