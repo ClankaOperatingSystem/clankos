@@ -79,6 +79,15 @@ file whose name begins with a dot. A sealed item never grows, so a
 record that belongs inside it, such as a close-out, is put in the
 directory before the seal is planned.
 
+A scope is retired by sealing its directory into its parent's archive.
+Where the scope keeps its archive or archive-integrity/ in its
+configuration directory, the plan seals a copy of the scope, made in
+_seal/ in the parent, with those two directories at the top of the
+item, as archives/ and archive-integrity/, their bytes and modes kept.
+The configuration directory is left out of the copy when nothing else
+is in it; anything else hidden is refused. The scope is removed only
+when the seal is applied.
+
 Sealing rewrites the links in the item's own files, links by ID among
 them. The links to the item from the rest of the garden are rewritten
 by a second plan, so that none is left leading where nothing is:
@@ -198,27 +207,33 @@ other files are moved into its configuration directory by two
 commands. Neither rewrites a sealed file, a ledger event or a
 checkpoint, and neither commits.
 
-  - "relocate-plan ROOT" prints each scope under ROOT whose archive or
-    archive-integrity/ would move, from where and to where, and every
-    blocker: two places for one scope's archive or ledger, a
-    configuration directory that cannot be chosen, a check that is not
-    clean, a legacy ledger still inside its archive, which
-    archive-migrate rebuilds first, a directory that cannot be written,
-    a configured repository that is missing, and bookkeeping that Git
-    does not track. It changes nothing.
-  - "relocate-apply ROOT" refuses if relocate-plan finds a blocker.
-    Otherwise it moves each scope in turn: archives/ and
-    archive-integrity/ are renamed into the configuration directory
-    with "git mv", or with a plain rename for an archive kept
-    uncommitted, which Git ignores; the scope is checked after its
-    move; and when every scope has moved, the managed archive block in
-    Git's info/exclude is written again to name the new paths. A
-    destination that already exists is refused.
+  - "relocate-plan ROOT" prints, as JSON, each scope under ROOT whose
+    archive, archive-integrity/ or legacy checkpoints lie outside its
+    configuration directory: the directory selected, each rename from
+    where to where, and every blocker. The blockers are two places for
+    one scope's archive, ledger or checkpoints; a configuration
+    directory that cannot be chosen; a destination that exists; a check
+    of the scope's archive that is not clean; a legacy ledger still
+    inside its archive, which archive-migrate rebuilds first; a
+    directory that cannot be written; and an archive-integrity/ with a
+    file that Git does not track. It does not enter an archive, so
+    scopes retired into one stay as they were sealed, and it does not
+    enter another repository: each is listed under "repositories", to
+    be moved by a run of its own. It changes nothing, and exits 0 with
+    nothing to move, 1 with something to move and 2 with a blocker.
+  - "relocate-apply ROOT" makes the plan again and refuses, exit 2, if
+    it has any blocker, before anything moves. Otherwise it moves each
+    scope in turn: each rename is "git mv" where Git tracks the path,
+    and a plain rename where it does not, as for an archive kept
+    uncommitted; the scope's archive is checked again, and must report
+    the same heads, events, files and root CIDs as before; and the
+    repository's managed archive block in Git's info/exclude is written
+    again, so that an uncommitted archive is ignored where it now lies.
 
 The moves are left in the working tree, as renames, for the person to
-read and commit. A run that stops part way is run again: the scopes
-already moved are reported as done, and the others move. A run after
-all have moved changes nothing.
+read and commit. A run that stops part way is run again: a scope
+already moved has nothing left to move, and the others move. A run
+with nothing to move changes nothing.
 
 
 7. In the container
