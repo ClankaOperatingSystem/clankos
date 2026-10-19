@@ -49,9 +49,9 @@ of its own keeps the handover as that command says.
 Commit what the session changed, `journal.org` and the ledger among
 it, by the repository's own rules for a commit. The ledger is in
 `archive-integrity/` in the directory's configuration directory,
-`.clanka/`, `.clankos/` or `.pos/`, which may be new and untracked. Do not push, amend or
-rewrite history, and do not create a repository, a schedule or a
-migration as part of closing.
+`.clanka/`, `.clankos/` or `.pos/`, which may be new and untracked. Do
+not push, amend or rewrite history, and do not create a repository, a
+schedule or a migration as part of closing.
 
 Finish with a few lines: the line the command printed, the commits and
 the open matters. Do not reopen the work.

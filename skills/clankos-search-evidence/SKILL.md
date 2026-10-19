@@ -6,10 +6,10 @@ description: Find where words occur in a garden's archives, whether the files ar
 A garden's archives hold its sealed records. Some are on disk, in a
 scope's configuration directory under `.clanka/archives/`,
 `.clankos/archives/` or `.pos/archives/`; others are held by a keeper
-and not on disk at all, with only the ledger in the garden. Grep finds nothing in a kept archive,
-and a miss there is not evidence that no record exists. The command
-below searches both kinds the same way and names each hit by the link
-the clankos-read-evidence skill reads.
+and not on disk at all, with only the ledger in the garden. Grep finds
+nothing in a kept archive, and a miss there is not evidence that no
+record exists. The command below searches both kinds the same way and
+names each hit by the link the clankos-read-evidence skill reads.
 
 ## Run
 
