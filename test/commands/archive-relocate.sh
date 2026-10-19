@@ -49,7 +49,7 @@ check "a seal is refused until the archive is moved" sh -c "[ $refused -eq 2 ] &
 
 listing > ../before
 "$bin/archive-integrity" relocate-plan . > ../plan 2>&1
-check "relocate-plan exits 0" test $? -eq 0
+check "relocate-plan exits 1, with something to move" test $? -eq 1
 check "it names the root's archive" grep -q 'archive-integrity' ../plan
 check "and the project's" grep -q 'projects/study' ../plan
 listing | diff -q - ../before > /dev/null
@@ -84,6 +84,7 @@ check "relocate-apply run again exits 0" test $? -eq 0
 listing | diff -q - ../before > /dev/null
 check "and changes nothing" test $? -eq 0
 check "nor anything Git sees" test -z "$(git status --porcelain)"
+check "and relocate-plan finds nothing to move" status 0 "$bin/archive-integrity" relocate-plan .
 
 echo "After." | "$bin/archive-integrity" write-new archives/2026-01-03-after.txt --apply > /dev/null 2>&1
 check "a fresh seal writes into .clanka" test -f .clanka/archives/2026-01-03-after.txt
