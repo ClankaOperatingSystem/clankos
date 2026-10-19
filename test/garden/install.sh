@@ -129,6 +129,7 @@ git -C token init -q .
 printf 'pos: 2\nprojects: projects/\n' > token/.clanka/config.yml
 cat > token-bin/docker <<'MOCK'
 #!/bin/sh
+[ -t 0 ] || cat > /dev/null
 case " $* " in
     *" -e GH_TOKEN "*) printf '%s\n' "$GH_TOKEN" >> "$DOCKER_TOKENS" ;;
     *) printf 'none\n' >> "$DOCKER_TOKENS" ;;
