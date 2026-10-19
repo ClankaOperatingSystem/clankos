@@ -40,8 +40,9 @@ A skill folder is the agentskills.io format: https://agentskills.io.
                       configuration and skills of its own
                       ("clankos-run help responsibility-tree", and
                       "help initiate" for --project)
-    configuration     .pos/config.yaml in a node: what the node
-                      declares, its methodologies among them
+    configuration     config.yaml or config.yml in a node's .clanka,
+                      .clankos or .pos: what the node declares, its
+                      methodologies among them
                       ("clankos-run help install", 1)
 
 
