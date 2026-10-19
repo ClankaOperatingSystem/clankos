@@ -18,7 +18,8 @@ The launcher verifies the runtime and companion skills image before any garden
 writes. Both must name the same release, source commit and apply-v1 protocol.
 It writes a new .clanka/config.yml with the selected image, projects directory,
 archive policy and exclusions; an intray with a file ID; _*/ in .gitignore;
-and a marked ClankOS block in AGENTS.md. Existing configuration and content
+and a marked ClankOS block in AGENTS.md. An explicit --image updates the root
+image setting, including in an existing garden. Other configuration and content
 outside that block are preserved. Git's managed archive exclusions are updated
 from the saved configuration, including local child scopes.
 
