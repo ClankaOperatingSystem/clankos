@@ -1,6 +1,6 @@
 ---
 name: clankos-migrate-archive
-description: Rebuild an archive that has a legacy ledger, kept inside the archive with no content identifiers, so that it is as a new one. Use when an archive check reports a legacy ledger, or when asked to migrate an archive. Not for an archive that already has its ledger beside it, and not for sealing.
+description: Rebuild an archive that has a legacy ledger, kept inside the archive with no content identifiers, so that it is as a new one. Use when an archive check reports a legacy ledger, or when asked to migrate an archive. Not for an archive that already has its ledger outside it, and not for sealing.
 ---
 
 Migration is the one time sealed bytes are rewritten. It is done once

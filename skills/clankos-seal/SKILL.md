@@ -7,6 +7,12 @@ An archive holds sealed items. A sealed item never changes, and a
 ledger beside the archive lets any change be noticed. So sealing is
 done in three steps, and what is sealed is what was read.
 
+A scope's archive is `archives/` in its configuration directory, the
+one of `.clanka/`, `.clankos/` and `.pos/` that holds its
+`config.yml` or `config.yaml`, and its ledger and checkpoints are in
+`archive-integrity/` beside it. A scope with no configuration
+directory gets `.clankos/` at its first seal.
+
 ## Run
 
     scripts/clankos archive-integrity COMMAND ...
@@ -22,9 +28,10 @@ what a plan holds, what is refused and why.
 
 1. **Plan.** `seal SOURCE DESTINATION` for a file or directory that is
    there, or `write-new DESTINATION` with a new record on standard
-   input. It prints a plan and changes nothing. Save the plan to a
-   file exactly as printed, in a directory whose name begins with an
-   underscore.
+   input. DESTINATION is a path in the scope's archive, such as
+   `.clanka/archives/reviews/2026-01-01-garden.org`. It prints a plan
+   and changes nothing. Save the plan to a file exactly as printed, in
+   a directory whose name begins with an underscore.
 2. **Review.** Read the plan: what goes where, how each link in the
    item is resolved, and what is sealed with it.
 3. **Apply.** `apply PLAN HASH`, where HASH is the SHA-256 of the saved
@@ -94,6 +101,10 @@ repository's own process.
   a ledger or replacing a file. `repair` restores permissions and
   empty directories only, as after a clone.
 - `sign-in` opens a browser and is not for an agent to run.
+- A refusal that says relocation-required means that the scope's
+  archive or ledger still lies beside its other files, as earlier
+  images kept it. Do not seal elsewhere to get round it. Report it:
+  the clankos-upgrade skill moves it, with the person's agreement.
 
 ## Afterwards
 
