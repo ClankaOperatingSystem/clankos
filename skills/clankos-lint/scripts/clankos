@@ -169,7 +169,7 @@ command -v docker >/dev/null || {
 }
 
 # A linked worktree points outside its workspace. Git metadata is read-only
-# except info/ during explicit installation, which maintains exclusions.
+# except info/ for commands that explicitly maintain exclusion rules.
 git_mounts=()
 exclude_mounts=()
 if [ -f "$workspace/.git" ]; then

@@ -11,6 +11,8 @@ printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
     --product work/widget=https://example.org/widget.git \
     --product vendor/lib=https://example.org/lib.git > out 2>&1
 check "it succeeds" test $? -eq 0
+check "tree editing does not create installation wrappers" test ! -e .clanka/auto
+check "tree editing does not install skills" test ! -e .agents
 check "a responsibility has a configuration that says so" \
     test "$(cat health/.clanka/config.yml)" = "pos: 2
 projects: projects/"
