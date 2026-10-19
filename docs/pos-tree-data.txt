@@ -1,0 +1,106 @@
+pos-tree-data: the tree as one document of data
+
+bin/pos-tree-data runs this protocol in the ClankOS container. The
+command is poslib's pos-tree-data, at the commit the image was built
+with: https://github.com/ClankaOperatingSystem/poslib.
+
+
+1. What it is for
+
+A viewer of the tree, such as a web site with the tree as its menu,
+needs to know the scopes, where each lies, how each repository is
+configured and what is waiting in each. pos-tree-data prints all of
+it as one line of JSON, from one walk of the tree, so that the viewer
+runs no Emacs of its own and reads nothing else.
+
+It reads the files and writes nothing. It uses no network.
+
+
+2. What is read
+
+The working directory is the root. The files read are those
+startup-prompt reads, and each belongs to the scope startup-prompt
+gives it ("clankos-run help startup-prompt", section 3).
+
+
+3. The document
+
+The document is a JSON object:
+
+    version       1, the version of this form. It changes when the
+                  meaning of a field does
+    made          when the document was made, as an ISO 8601 time
+                  with its offset
+    files_read    the count of Org files read
+    not_read      path and reason for each configuration not read
+    scopes        each scope, the root first
+    repositories  each repository, the root's first
+    ids           each Org ID, with its file, its line and its scope
+    views         the start-up views, as startup-prompt --json gives
+                  them
+
+A scope is the root, a responsibility, a project or a product:
+
+    path              relative to the root; "." for the root; a
+                      one-file project's file without .org
+    kind              root, responsibility, project or product
+    title             the #+TITLE of its main file
+    file              its main file: a one-file project's own file,
+                      else project.org, else index.org, in the scope's
+                      directory
+    id                the ID before the main file's first heading
+    parent            the path of the scope directly above it
+    children          the paths of the scopes directly beneath it
+    repository        the path of the repository that holds it
+    files             its Org files
+    status            a project's STATUS
+    outcome           a project's OUTCOME
+    review            the date, YYYY-MM-DD, of the earliest open
+                      review that covers it
+    configuration     its configuration's file, and the content as
+                      poslib reads it, with defaults filled in
+    image             the image its commands run in
+    image_from        the path of the scope whose configuration names
+                      that image, in the same repository
+    installed_skills  the skills installed from its configuration's
+                      sources
+    findings          what the walk did not read beneath it, and how
+                      its skills-lock.json differs from its
+                      configuration: finding, path, skill and detail
+
+A repository:
+
+    path       relative to the root
+    remote     from the children entry that declares it
+    branch     from the same entry; master where it names none
+    installed  the version and commit of what auto/ holds
+
+What a scope or a repository lacks is null: the root's parent, the
+remote of the root's repository, the configuration of a product.
+
+An ID before a file's first heading is at line 1. An ID written twice
+is given where it is first found.
+
+With no --view, every view startup-prompt has is given. "--view
+NAME", repeated, gives those views only.
+
+
+4. In the container
+
+bin/pos-tree-data gives its arguments to bin/clankos-run. The files
+are the host's, at their own paths. The working directory's
+pos-config.el, if it has one, is loaded, and can change what the views
+cover as it does for startup-prompt.
+
+The document is on stdout, as UTF-8, with a newline. Emacs's own
+messages are on stderr.
+
+
+5. Exit status
+
+    0     printed
+    2     usage
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found
