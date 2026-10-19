@@ -79,4 +79,6 @@ while :; do
     done <<< "$list"
     [ -n "$cloned" ] || break
 done
+# Nested declarations become visible after their containing clone exists.
+"$run" responsibility-tree < /dev/null || status=$?
 exit "$status"
