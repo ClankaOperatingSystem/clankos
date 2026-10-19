@@ -10,7 +10,8 @@ day() {
 }
 
 mkdir -p .pos projects/alpha projects/beta/.clanka projects/beta/methodologies/adr \
-    home/.clanka garden/.clanka shed/.clanka tools/widget archives _tmp drafts
+    home/.clanka garden/.clanka shed/.clanka tools/widget .pos/archives shed/archives \
+    _tmp drafts
 # The root excludes a directory of its own besides the default ones, and
 # declares beta, a project that is a directory with a configuration,
 # and widget, a repository with none, which is a product.
@@ -45,7 +46,10 @@ printf '* TODO Prune the hedge\n* WAITING Hear from the roofer\n* SOMEDAY Learn 
 # The root's reviews, in a file of the root's own naming.
 printf '* Reviews\n** TODO Weekly review :review:\nSCHEDULED: <%s ++1w>\n** TODO Monthly review :review:\nSCHEDULED: <%s ++4w>\n' \
     "$(day 2)" "$(day 23)" > life.org
-printf '* NEXT Archived\n' > archives/old.org
+# The root's archive is in .pos/; shed's lies beside its files, as
+# earlier gardens kept it.
+printf '* NEXT Archived\n' > .pos/archives/old.org
+printf '* NEXT Archived beside\n' > shed/archives/old.org
 printf '* NEXT Generated\n' > _tmp/scratch.org
 # A responsibility and a project as responsibility-tree makes them.
 "$bin/responsibility-tree" --responsibility health > /dev/null 2>&1
@@ -80,7 +84,7 @@ check "and a product's under theirs" \
 check "waiting lists a WAITING item by its scope" \
     sh -c "grep -A1 '^WAITING items\$' out | grep -q '^  garden/index  *WAITING Hear from the roofer\$'"
 check "someday is not printed unless named" sh -c '! grep -q "^SOMEDAY items" out'
-check "an archive is not read" sh -c '! grep -q Archived out'
+check "an archive is not read, in .pos or beside the files" sh -c '! grep -q Archived out'
 check "an underscore directory is not read" sh -c '! grep -q Generated out'
 check "a directory the configuration excludes is not read" sh -c '! grep -q Drafted out'
 check "a methodology's own file is not read" sh -c '! grep -q "Inside the methodology" out'

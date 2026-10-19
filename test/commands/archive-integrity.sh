@@ -4,28 +4,33 @@
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
+# The workspace's one configuration directory, .pos/, holds its archive
+# and the archive's ledger.
 mkdir _seal .pos
 echo "A note." > _seal/note.txt
+archive=.pos/archives
 
-"$bin/archive-integrity" seal _seal/note.txt archives/2026-01-01-note.txt > plan.json
+"$bin/archive-integrity" seal _seal/note.txt $archive/2026-01-01-note.txt > plan.json
 check "seal prints a plan" grep -q '"operation":"seal"' plan.json
-check "a plan changes nothing" test ! -e archives
+check "a plan changes nothing" test ! -e $archive
 
 mv plan.json _seal/plan.json
 "$bin/archive-integrity" apply _seal/plan.json "$(sha256 _seal/plan.json)" > applied.json
-check "apply seals the item" test -f archives/2026-01-01-note.txt
-check "the sealed item is read-only" test ! -w archives/2026-01-01-note.txt
-check "the sealed item is the invoking user's" test "$(owner archives/2026-01-01-note.txt)" = "$(id -u)"
-check "apply writes a ledger event" test -n "$(ls archive-integrity/ledger 2>/dev/null)"
+check "apply seals the item in the configuration directory" test -f $archive/2026-01-01-note.txt
+check "the sealed item is read-only" test ! -w $archive/2026-01-01-note.txt
+check "the sealed item is the invoking user's" test "$(owner $archive/2026-01-01-note.txt)" = "$(id -u)"
+check "apply writes a ledger event beside the archive" test -n "$(ls .pos/archive-integrity/ledger 2>/dev/null)"
+check "nothing is made beside the workspace's files" sh -c '! ls -d archives archive-integrity 2>/dev/null'
 check "a plan under another hash is refused" status 2 "$bin/archive-integrity" apply _seal/plan.json 0000
 rm -f applied.json
 
 check "check is clean" status 0 "$bin/archive-integrity" check .
 
 echo "Second." | "$bin/archive-integrity" write-new archives/2026-01-02-second.txt --apply >/dev/null
-check "write-new seals standard input" grep -q Second. archives/2026-01-02-second.txt
+check "write-new seals standard input" grep -q Second. $archive/2026-01-02-second.txt
+check "a destination spelled archives/ is the configuration directory's" test ! -e archives
 
-link=$("$bin/archive-integrity" link archives/2026-01-02-second.txt)
+link=$("$bin/archive-integrity" link $archive/2026-01-02-second.txt)
 "$bin/archive-integrity" search . Second > found 2> err
 check "search prints each hit as LINK:LINE:TEXT" test "$(cat found)" = "$link:1:Second."
 check "search with a regex is grep -E's" \
@@ -42,7 +47,7 @@ printf 'See [[file:trial/notes.org::*Result][the result]] and [[id:trial-notes][
 check "links-into prints each link into a path, by file and by ID" \
     test "$(sort found)" = "index.org:1: file:trial/notes.org::*Result -> trial/notes.org
 index.org:1: id:trial-notes -> trial/notes.org"
-"$bin/archive-integrity" seal trial archives/2026-01-03-trial > _seal/trial.json
+"$bin/archive-integrity" seal trial $archive/2026-01-03-trial > _seal/trial.json
 "$bin/archive-integrity" relink . _seal/trial.json > _seal/relink.json 2> err
 check "relink prints a plan of the links to the item" \
     sh -c "grep -q '\"operation\":\"relink\"' _seal/relink.json && grep -q '\"file\":\"index.org\"' _seal/relink.json"
@@ -51,14 +56,14 @@ check "a relink plan is refused before its seal is applied" \
 "$bin/archive-integrity" apply _seal/trial.json "$(sha256 _seal/trial.json)" >/dev/null 2>&1
 "$bin/archive-integrity" apply _seal/relink.json "$(sha256 _seal/relink.json)" > applied.json 2> err
 check "applied after the seal, it reports the files rewritten" grep -q '"rewritten":\["index.org"\]' applied.json
-item=$("$bin/archive-integrity" link archives/2026-01-03-trial)
+item=$("$bin/archive-integrity" link $archive/2026-01-03-trial)
 check "and each link cites the sealed item" \
     test "$(cat index.org)" = "See [[$item/notes.org::*Result][the result]] and [[$item/notes.org][the notes]]."
 rm -f applied.json found index.org
 
 mkdir sub
 check "paths are relative to the working directory" \
-    sh -c "cd sub && '$bin/archive-integrity' check ../archives >/dev/null"
+    sh -c "cd sub && '$bin/archive-integrity' check ../$archive >/dev/null"
 
 check "checkpoint records the heads" status 0 "$bin/archive-integrity" checkpoint .
 
@@ -82,25 +87,34 @@ check "a source outside the root is refused" status 2 "$bin/archive-integrity" s
 
 "$bin/archive-integrity" links-into . attic > out 2> err
 check "links-into lists the copy's link" grep -q '^intray.org:[0-9]*: file:attic/note.org::\*Call the plumber -> attic/note.org$' out
-"$bin/archive-integrity" seal attic archives/2026-01-03-attic > _seal/attic.json
+"$bin/archive-integrity" seal attic $archive/2026-01-03-attic > _seal/attic.json
 "$bin/archive-integrity" relink . _seal/attic.json > _seal/attic-relink.json
 check "relink prints a plan" grep -q '"operation":"relink"' _seal/attic-relink.json
 "$bin/archive-integrity" apply _seal/attic.json "$(sha256 _seal/attic.json)" > /dev/null
 "$bin/archive-integrity" apply _seal/attic-relink.json "$(sha256 _seal/attic-relink.json)" > out 2> err
 check "applying the relink names the files rewritten" grep -q '"rewritten":\["intray.org"\]' out
-item=$("$bin/archive-integrity" link archives/2026-01-03-attic)
+item=$("$bin/archive-integrity" link $archive/2026-01-03-attic)
 check "the copy cites the sealed item" \
     grep -qF "Salvaged from [[$item/note.org::*Call the plumber][attic/note.org]]" intray.org
 check "check is clean after the retirement" status 0 "$bin/archive-integrity" check .
 
-chmod u+w archives/2026-01-01-note.txt
-echo "Changed." >> archives/2026-01-01-note.txt
+# An archive beside the workspace's files as well is a second place.
+mkdir archives
+echo "Third." | "$bin/archive-integrity" write-new $archive/2026-01-04-third.txt --apply > out 2>&1
+refused=$?
+check "a seal is refused while an archive lies beside the files" \
+    sh -c "[ $refused -eq 2 ] && grep -q relocation-required out"
+check "and check refuses two archives in one scope" status 2 "$bin/archive-integrity" check .
+rmdir archives
+
+chmod u+w $archive/2026-01-01-note.txt
+echo "Changed." >> $archive/2026-01-01-note.txt
 check "check finds a changed item" status 1 "$bin/archive-integrity" check .
 
-# The workspace's configuration, as poslib's doc/pos-directory.txt has it.
-chmod u-w archives/2026-01-01-note.txt
-rmdir .pos
-mkdir .clanka
+# The workspace's configuration, as poslib's doc/pos-directory.txt has
+# it. The archive moves with the configuration directory.
+chmod u-w $archive/2026-01-01-note.txt
+mv .pos .clanka
 printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
 check "a version 2 configuration in .clanka is read" status 1 "$bin/archive-integrity" check .
 mv .clanka .clankos

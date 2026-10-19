@@ -40,8 +40,10 @@ check "with --no-clone a product is not cloned, and is reported as to clone" \
     sh -c 'test ! -e vendor/lib && grep -qx "to clone  vendor/lib" out && grep -qx "to clone  work/widget" out'
 check "poslib's plan finds nothing wrong but that the image's skills are not installed" \
     sh -c "! grep '^finding' out | grep -v '^finding   lock-differs .*: not installed)\$'"
-check "new responsibilities have ignored archives before they exist" \
-    sh -c 'git check-ignore -q health/archives/evidence && git check-ignore -q work/archives/evidence'
+check "new responsibilities have ignored archives in .clanka before they exist" \
+    sh -c 'git check-ignore -q health/.clanka/archives/evidence && git check-ignore -q work/.clanka/archives/evidence'
+check "their ledgers are not ignored" \
+    sh -c '! git check-ignore -q health/.clanka/archive-integrity/ledger/event'
 check "a responsibility itself is not ignored" sh -c '! git check-ignore -q health/intray.org'
 
 cp .clanka/config.yml before
@@ -59,7 +61,7 @@ check "a new responsibility names the image its container runs" \
     grep -qx 'image: example.org/clankos:v9' work/clients/.clanka/config.yml
 check "run in a responsibility, it adds beneath that one" \
     sh -c "test -f work/clients/.clanka/config.yml && grep -qx '  - path: clients' work/.clanka/config.yml"
-check "a nested responsibility's archive is ignored" git check-ignore -q work/clients/archives/evidence
+check "a nested responsibility's archive is ignored" git check-ignore -q work/clients/.clanka/archives/evidence
 
 printf 'garden-two\n\nbook\n\n\n' | "$bin/responsibility-tree" --no-clone --ask >/dev/null 2>&1
 check "--ask reads the answers from standard input" test -d garden-two -a -f projects/book.org

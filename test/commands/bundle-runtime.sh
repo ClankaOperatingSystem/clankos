@@ -13,7 +13,6 @@ printf 'pos: 2\nprojects: projects/\n' > 'target garden/.clankos/config.yml'
 cd 'target garden' || exit 1
 printf '#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 printf '#+TITLE: Journal\n' > journal.org
-mkdir archives
 check 'target begins without host wrappers' test ! -e .clankos/auto/bin
 printf '** NEXT Fixture lint\n' >> intray.org
 "$bundle" pos-lint > "$work/out" 2> "$work/err"
@@ -32,6 +31,7 @@ printf 'Fixture handover.\n' | "$bundle" wrap-up -- 'Fixture session' > "$work/o
 check 'isolated bundle passes handover stdin to the image' test $? -eq 0
 cat "$work/err"
 check 'wrap-up returns a content citation' grep -q 'ipfs://' "$work/out"
+check 'wrap-up seals into the archive in .clankos' test -d .clankos/archives/journal
 cd "$work" || exit 1
 mkdir -p 'main garden/.clankos'
 printf 'pos: 2\nprojects: projects/\n' > 'main garden/.clankos/config.yml'

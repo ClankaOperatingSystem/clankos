@@ -46,11 +46,13 @@ check "a file marked skip is left" grep -q 'DONE Draft the outline' projects/alp
 check "nothing has closed this week" test "$(cat out)" = "[]"
 mkdir -p _sweep/2026-W01 && printf '* DONE Old\n' > _sweep/2026-W01/intray.org_archive
 "$bin/pos-sweep" close > out 2>/dev/null
-check "a week that has closed has a seal plan" grep -q '"destination":".*archives/sweep/2026-W01"' out
+check "a week that has closed has a seal plan" grep -q '"destination":".*/\.pos/archives/sweep/2026-W01"' out
 check "close changes nothing" test -d _sweep/2026-W01
 "$bin/pos-sweep" close --apply > out 2>/dev/null
-check "close --apply seals the week" grep -q '^sealed archive-integrity/' out
-check "the sealed week is in the archive" test -f archives/sweep/2026-W01/intray.org_archive
+check "close --apply seals the week" grep -q '^sealed \.pos/archive-integrity/' out
+check "the sealed week is in the configuration directory's archive" \
+    test -f .pos/archives/sweep/2026-W01/intray.org_archive
+check "no archive is made beside the files" test ! -e archives
 check "the week is gone from _sweep" test ! -e _sweep/2026-W01
 check "the archive checks clean" status 0 "$bin/archive-integrity" check .
 check "an unknown command is usage" status 2 "$bin/pos-sweep" bogus
