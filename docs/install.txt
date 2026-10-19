@@ -90,8 +90,8 @@ installs in one step ("clankos-run help methodology").
 
 install commits nothing. The skill folders and skills-lock.json are
 committed by whoever ran it, so that a new clone has its skills with
-no network and no command. refresh then compares the two with the
-configuration, with no network, on every command
+no network and no command. Explicit refresh compares the two with the
+configuration, with no network
 ("clankos-run help refresh").
 
 Methodologies declared as a path, the earlier form, are not

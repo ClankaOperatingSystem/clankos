@@ -66,6 +66,14 @@ status() {
         return 1
     fi
 }
+# A legacy child must refuse the whole plan before installing the root.
+cp area/.pos/config.yaml "$work/child-config"
+printf 'pos: 2\nmethodologies: methodologies/\n' > area/.pos/config.yaml
+check 'legacy paths refuse apply before installation' status 1 "$bin/clankos-run" apply-v1
+check 'legacy refusal gives a migration route' grep -q 'replace the path with source declarations' "$work/status-err"
+check 'legacy refusal leaves root skills absent' test ! -e .agents
+check 'legacy refusal leaves ownership absent' test ! -e .clankos/installation-state.json
+cp "$work/child-config" area/.pos/config.yaml
 check 'apply installs local nodes without entering a nested repository' apply
 check 'root source is installed' grep -qx v1 .agents/skills/hello-part/SKILL.md
 check 'child source is installed' grep -qx v1 area/.agents/skills/hello-greet/SKILL.md

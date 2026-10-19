@@ -28,15 +28,14 @@ mounted responsibility's or project's, the source is installed:
                      Codex runs ClankOS's commands without asking
 
 All of it is untracked, its paths in Git's info/exclude. So a new
-clone has none of it until a command or initiate has run there. A
+clone has none of it until refresh or initiate has run there. A
 command of a slot's name, capture, start-up or wrap-up, is linked only
 where the repository holds none of its own (section 3).
 
 The image's skills are not linked. install installs them, as a source
 of the repository's skills-lock.json: from the repository the image
 was built from, at its commit ("clankos-run help install"). Each
-skill's scripts/clankos runs the commands in auto/bin/ at the top of
-the repository it is installed in.
+skill's scripts/clankos starts the configured runtime directly.
 
 A repository with no configuration is a product. Nothing is written in
 it.
@@ -57,20 +56,13 @@ left as it is and reported as a taken name (section 3).
 
 2. When it runs
 
-Every command but help runs refresh first, in the repository the
-working directory is in, so that a garden whose image is newer than
-what it has installed is brought to that image without being asked.
-initiate runs it once it has written the configuration. "clankos-run
-refresh" runs it alone.
+Ordinary commands do not run refresh. Invoke "clankos-run refresh" to
+rebuild wrappers and approvals explicitly. Initiate also runs refresh after
+writing configuration. Use apply-v1 to apply configured skill sources;
+migrate path methodologies to source declarations (docs/apply-v1.txt).
 
-Before a command, refresh reads nothing again when nothing it reads
-has changed since the last refresh: the image's version, and the
-content of each file and the entries of each directory in a
-configuration directory, in .agents/skills/ and in a directory named
-bin, and of each skills-lock.json and Git's info/exclude. It then says
-again what the last refresh said, and exits as it did. What it saw is
-kept in auto/refresh/. A path that changed while a refresh ran is read
-again by the next. Run alone, refresh always reads everything.
+The explicit --if-changed option can reuse the last refresh result when
+its inputs have not changed. It is not invoked by ordinary commands.
 
 It uses no network and clones nothing. It also brings to the same
 state each configured repository mounted beneath the one it runs in.

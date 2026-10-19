@@ -311,7 +311,7 @@ Save ownership and removal intent before replacing the configuration."
                  (when (equal (alist-get 'status node) "blocked")
                    (error "Managed node became a separate repository: %s" (alist-get 'path node)))
                  (unless (eq (alist-get 'legacy node) :null)
-                   (error "Legacy path methodologies need refresh; apply-v1 supports source declarations"))
+                   (error "Legacy path methodologies: replace the path with source declarations before apply-v1; see clankos-run help apply-v1"))
                  (let* ((file (alist-get 'config node))
                         (text (unless (eq file :null)
                                 (clankos-installation--read (expand-file-name file root))))

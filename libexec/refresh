@@ -2,7 +2,7 @@
 # refresh [--if-changed]
 # Bring what ClankOS installs in the repository the working directory
 # is in to what this image holds. The protocol is docs/refresh.txt.
-# With --if-changed, which run gives before a command, nothing is read
+# With the explicit --if-changed option, nothing is read
 # again when the image and the paths that refresh reads are as they
 # were after the last refresh: what it said is said again, and its exit
 # status is the exit status.
@@ -116,7 +116,7 @@ approvals() {
         fi
         at=$(printf '%s' "$repo" | sed 's/[\\"]/\\&/g')
         {
-            echo '# Written by ClankOS before each of its commands, and replaced whole:'
+            echo '# Written by explicit ClankOS refresh, and replaced whole:'
             echo '# "clankos-run help refresh", section 1. Each rule is one way of'
             echo "# starting one of ClankOS's commands in this repository."
             while IFS= read -r entry; do

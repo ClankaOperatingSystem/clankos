@@ -47,7 +47,7 @@ check 'linked worktree reaches capture' test $? -eq 0
 cat "$work/err"
 check 'linked intray changes' grep -q 'Linked fixture' intray.org
 check 'main worktree remains unchanged' cmp -s "$work/main-intray" "$work/main garden/intray.org"
-check 'refresh writes common Git exclusions' grep -q '/.clankos/auto' "$work/main garden/.git/info/exclude"
+check 'capture leaves common Git exclusions unchanged' sh -c '! grep -q /\.clankos/auto "$1"' _ "$work/main garden/.git/info/exclude"
 
 # Substitute a runtime operation to observe bytes after Docker and run.
 export REAL_DOCKER=$(command -v docker) PROBE_SCRIPT="$work/runtime-probe"
@@ -59,6 +59,7 @@ cat > probe-stdin
 git rev-parse --show-toplevel > probe-root || exit 98
 common=$(git rev-parse --git-common-dir) || exit 98
 if (printf 'must not write\n' >> "$common/config") 2>/dev/null; then exit 99; fi
+if (printf 'must not write\n' >> "$common/info/exclude") 2>/dev/null; then exit 99; fi
 printf 'probe stdout\n'
 printf 'probe stderr\n' >&2
 exit 37

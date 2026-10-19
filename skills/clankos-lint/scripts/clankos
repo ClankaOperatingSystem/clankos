@@ -22,8 +22,8 @@ instead. It is mounted at its own path, and the command starts in the
 working directory, so paths mean the same inside the container as
 outside. The command runs as the invoking user.
 
-Before the command, what ClankOS installs in the repository is brought
-to what the image holds: "clankos-run help refresh" says what that is.
+Ordinary commands do not change installed skills or wrappers.
+Run "clankos-run apply-v1" explicitly to apply configured skill sources.
 
 {config}/pos, where {config} is $XDG_CONFIG_HOME or ~/.config, is
 mounted too when it exists: the tokens that signing in to a keeper
@@ -169,7 +169,7 @@ command -v docker >/dev/null || {
 }
 
 # A linked worktree points outside its workspace. Git metadata is read-only
-# except info/, where refresh maintains exclude rules by atomic replacement.
+# except info/ during explicit installation, which maintains exclusions.
 git_mounts=()
 exclude_mounts=()
 if [ -f "$workspace/.git" ]; then
@@ -189,8 +189,7 @@ if [ -f "$workspace/.git" ]; then
         "$workspace/"*) ;;
         *)
             case $1 in
-                help|install-sources|installation-plan|installation-edit) ;;
-                *)
+                apply-v1|initiate|refresh|install|methodology|responsibility-tree)
                     if [ ! -d "$common_dir/info" ]; then
                         echo "clankos-run: create $common_dir/info before running a command that maintains exclusions" >&2
                         exit 2
