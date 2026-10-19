@@ -96,6 +96,7 @@ image's own before it runs.
     clankos-run refresh   bring what ClankOS installs to the image's
     installation-plan    print a read-only plan for one repository
     installation-edit    save configuration and keep/remove choices
+    apply-v1             apply skill sources within one repository
 
     clankos-run install   install the skills of the sources the
                           configuration declares
@@ -105,7 +106,7 @@ image's own before it runs.
     clankos-run wild-caught
                           list the skills each repository has
                           installed and does not configure
-    clankos-install       the install and methodology commands, which
+    clankos-install       install, methodology and apply-v1, which
                           clankos-run reads from it
     install.sh            pull the image
 

@@ -23,6 +23,7 @@
 //
 // Exit: 0 done, 1 refused and nothing changed, 2 usage, 3 the skills CLI
 // failed while changing the node.
+import { locks, hash, paths } from './installation.mjs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   existsSync, lstatSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync,
@@ -110,9 +111,19 @@ try {
 } catch {
   fail(2, ['the configuration was not given on standard input']);
 }
+const explicit = plan.mode === 'apply-v1';
 const declared = plan.sources || [];
 const sources = plan.image ? [...declared, { ...plan.image, kind: 'image' }] : declared;
 const uninstall = new Set(plan.uninstall || []);
+let initial;
+try { if (explicit) initial = locks(node); }
+catch (error) { fail(1, [error.message]); }
+const managed = plan.managed || [];
+const owned = (name, entry) => managed.find((each) => each.skill === name && key(each.source) === entryKey(entry));
+const keep = (name, entry) => explicit && owned(name, entry)?.disposition === 'keep';
+if (explicit) for (const [name, entry] of Object.entries(initial)) {
+  if (owned(name, entry) && !keep(name, entry)) uninstall.add(name);
+}
 const agents = [...new Set(['universal', ...(plan.harnesses || [])])];
 const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
 
@@ -159,6 +170,7 @@ if (refused.length) fail(1, [...refused, 'nothing was changed']);
 // lists them.
 function links(dir) {
   const run = skills(['list', '--json'], dir);
+  if (explicit && run.status !== 0) fail(1, [`cannot list installed skills: ${run.errors}`]);
   return new Map(run.results.map((each) => [each.name, [...(each.agents || [])].sort().join(', ')]));
 }
 
@@ -209,7 +221,7 @@ try {
       const others = new Set(supplied.flatMap((each) => each.names));
       names = names.filter((name) => !others.has(name));
     }
-    if (names.length) supplied.push({ source, names, links: links(dir) });
+    if (names.length) supplied.push({ source, names, links: links(dir), staged: explicit ? locks(dir) : {} });
   });
 } finally {
   rmSync(stage, { recursive: true, force: true });
@@ -217,12 +229,13 @@ try {
 if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
 // 3. The refusals of a name.
-const locked = lockEntries();
+const locked = explicit ? initial : lockEntries();
 const declaredKeys = new Set(sources.map((source) => key(source.source)));
-const wild = (name) => name in locked && !declaredKeys.has(entryKey(locked[name]))
-  && !uninstall.has(name);
+const wild = (name) => name in locked && (explicit
+  ? !owned(name, locked[name]) && !(plan.seed && declaredKeys.has(entryKey(locked[name])))
+  : !declaredKeys.has(entryKey(locked[name])) && !uninstall.has(name));
 const by = new Map();
-for (const { source, names } of supplied) {
+for (const { source, names, staged } of supplied) {
   for (const name of names) {
     const path = join(node, '.agents/skills', name);
     let present = false;
@@ -232,13 +245,21 @@ for (const { source, names } of supplied) {
     } catch {
       present = false;
     }
-    if (wild(name)) {
+    if (wild(name) && !(explicit && entryKey(locked[name]) === key(source.source))) {
       refused.push(`${name}: installed from ${locked[name].source}, which the configuration`
         + ` does not declare, and supplied by ${source.source}; remove one`);
       continue;
     }
-    const ours = name in locked || imageLink(path);
-    if (source.kind === 'image') continue;
+    let ours = name in locked || imageLink(path);
+    if (explicit && present && !ours && managed.some((entry) => entry.skill === name
+        && key(entry.source) === key(source.source))) {
+      try { ours = hash(path) === staged[name].computedHash; }
+      catch (error) { refused.push(error.message); }
+    }
+    if (source.kind === 'image') {
+      if (explicit && present && !ours) refused.push(`${name}: files have no recorded ownership`);
+      continue;
+    }
     if (source.kind === 'methodology' && !name.startsWith(`${source.name}-`)) {
       refused.push(`${name}: a skill of ${source.source} not named ${source.name}-NAME`);
     }
@@ -265,19 +286,60 @@ if (refused.length) fail(1, [...refused, 'nothing was changed']);
 // removed.
 const wanted = new Map();
 const wantedLinks = new Map();
-for (const { source, names, links: linked } of supplied) {
+const wantedHashes = new Map();
+for (const { source, names, links: linked, staged } of supplied) {
   for (const name of names) {
     wanted.set(name, source);
     wantedLinks.set(name, linked.get(name));
+    if (explicit) wantedHashes.set(name, staged[name].computedHash);
   }
 }
 const installedLinks = links(node);
+const changing = (name, entry) => {
+  const source = wanted.get(name);
+  if (explicit && !source && keep(name, entry)) return false;
+  if (!source && wild(name)) return false;
+  return !(source && entryKey(entry) === key(source.source) && entry.ref === source.ref
+    && installedLinks.get(name) === wantedLinks.get(name)
+    && (!explicit || (existsSync(join(node, '.agents/skills', name, 'SKILL.md'))
+      && wantedHashes.get(name) === entry.computedHash)));
+};
+let prepared;
+if (explicit) {
+  try {
+    paths(node, [...new Set([...Object.entries(locked).filter(([name, entry]) => wanted.has(name)
+      || changing(name, entry)).map(([name]) => name), ...wanted.keys(),
+    ...managed.filter((each) => each.disposition !== 'keep' && !(each.skill in locked)).map((each) => each.skill)])]);
+    const actual = {};
+    for (const [name, entry] of Object.entries(locked)) {
+      if (!wanted.has(name) && !changing(name, entry)) continue;
+      actual[name] = hash(join(node, '.agents/skills', name));
+      if (actual[name] !== null && actual[name] !== entry.computedHash) {
+        throw Error(`${name}: local changes or no recorded hash; restore or keep the skill before applying`);
+      }
+    }
+    for (const entry of managed) {
+      if (!(entry.skill in locked) && !wanted.has(entry.skill)
+          && entry.disposition !== 'keep' && existsSync(join(node, '.agents/skills', entry.skill))) {
+        throw Error(`${entry.skill}: managed files have no lock entry; removal cannot be verified`);
+      }
+    }
+    prepared = {
+      wanted: [...wanted].map(([skill, source]) => ({ skill, source: key(source.source), ref: source.ref, hash: wantedHashes.get(skill) })),
+      remove: Object.entries(locked).filter(([name, entry]) => changing(name, entry)).map(([name]) => name),
+      locked, actual,
+      owned: Object.entries(locked).filter(([name, entry]) => owned(name, entry) || (plan.seed && declaredKeys.has(entryKey(entry))))
+        .map(([skill, entry]) => ({ skill, source: entryKey(entry) })),
+    };
+    if (plan.prepare) { console.log(JSON.stringify(prepared)); process.exit(0); }
+    if (JSON.stringify(prepared) !== JSON.stringify(plan.expected)) {
+      throw Error('installation changed after preflight; repeat apply-v1');
+    }
+  } catch (error) { fail(1, [error.message]); }
+}
 const said = [];
 for (const [name, entry] of Object.entries(locked).sort()) {
-  if (wild(name)) continue;
-  const source = wanted.get(name);
-  if (source && entryKey(entry) === key(source.source) && entry.ref === source.ref
-      && installedLinks.get(name) === wantedLinks.get(name)) continue;
+  if (!changing(name, entry)) continue;
   const run = skills(['remove', name, '--yes'], node);
   if (run.status !== 0) fail(3, [...said, `removing ${name}: ${run.errors.trim()}`]);
   said.push(`removed ${name}`);

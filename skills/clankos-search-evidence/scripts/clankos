@@ -101,7 +101,7 @@ if [ -z "$show" ]; then
     esac
     # BEGIN runtime commands
     case $1 in
-        archive-integrity|archive-migrate|help|initiate|install|install-sources|installation-edit|installation-plan|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
+        apply-v1|archive-integrity|archive-migrate|help|initiate|install|install-sources|installation-edit|installation-plan|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
         *) echo "clankos: no such command: $1" >&2; exit 127 ;;
     esac
     # END runtime commands
@@ -192,7 +192,7 @@ if [ -f "$workspace/.git" ]; then
                 help|install-sources|installation-plan|installation-edit) ;;
                 *)
                     if [ ! -d "$common_dir/info" ]; then
-                        echo "clankos-run: create $common_dir/info before running a command that refreshes this worktree" >&2
+                        echo "clankos-run: create $common_dir/info before running a command that maintains exclusions" >&2
                         exit 2
                     fi
                     exclude_mounts=(-v "$common_dir/info:$common_dir/info") ;;
@@ -259,10 +259,10 @@ clankos() {
         /usr/local/libexec/clankos/run "$@"
 }
 
-# install and methodology run a second container, the skills image,
+# install, methodology and apply-v1 run a second container, the skills image,
 # between runs of the ClankOS container: bin/clankos-install, which is
 # read here and ends the script.
 case $1 in
-    install|methodology) . "$(dirname -- "${BASH_SOURCE[0]}")/clankos-install" ;;
+    install|methodology|apply-v1) . "$(dirname -- "${BASH_SOURCE[0]}")/clankos-install" ;;
     *) clankos "$@"; exit ;;
 esac

@@ -1,0 +1,49 @@
+apply-v1: apply skill sources within one repository
+
+Run "clankos-run apply-v1" at the Git worktree root, after editing
+configuration by hand or with installation-edit. It applies all configured
+local nodes and cleans up previously managed nodes that left the tree.
+Separate repositories are skipped; a formerly managed node that has become
+a separate repository is refused. Missing cleanup nodes need no removal.
+
+The runtime reads configuration. The skills image checks every node before
+any installation changes: sources and revisions, skill names, lock files,
+installation paths and hashes of files that it may replace or remove. A
+local modification or an unknown hash refuses the operation. Unrelated
+wild-caught skills are preserved. Configuration and installed material must
+remain unchanged between preflight and installation.
+
+After preflight, ownership is saved beside the root configuration before
+installation begins. Missing skills are installed, changed revisions and
+harness selections are reconciled, and undesired managed skills are removed.
+Each removal is tied to its source, so stale ownership cannot delete a
+same-name skill now supplied by a different source. A desired skill takes
+precedence over an old removal choice.
+
+A saved keep choice preserves the files and lock entry of an undesired
+skill. Successful apply releases its ownership. Later applies preserve it,
+including when the source still supplies other selected skills. When no
+ownership file exists, current declared sources and method zero seed it;
+once the file exists, absence from it does not imply ownership.
+
+All desired skills are checked against their source, revision and content
+hash after installation. Ownership is retained for those skills. Removed
+ownership and keep choices are cleared only after the whole apply succeeds.
+If a node fails after an earlier node changed, configuration and pending
+ownership remain. Correct the error and repeat apply-v1. No rollback is
+attempted. An unchanged second apply changes no managed files.
+
+Apply does not refresh, lint, stage, commit or push. Ordinary commands still
+run refresh during this transition. Legacy path methodologies are refused
+before any writes; use the existing refresh command for them. This version
+applies all skill sources, including the runtime's method-zero skills. It
+does not change the configured image or provide source-selection switches.
+
+Use runtime and skills images that both provide apply-v1. The input schema
+is checked before writes; an older skills image without this entry fails
+before changing the repository. Release metadata and fixed-pair selection
+remain separate work.
+
+Exit 0: complete; 1: preflight refused; 2: usage or not at a worktree root;
+3: incomplete after saving ownership. Installer output names completed
+operations; errors explain what must be corrected before retry.
