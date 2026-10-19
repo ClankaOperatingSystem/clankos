@@ -52,7 +52,7 @@ with socket.socket(socket.AF_UNIX) as agent:
     agent.bind('agent.sock')
 SOCKET
 cd "$work/clone" || exit 1
-CLANKOS_IMAGE=example/clankos:root GH_TOKEN=fixture-token SSH_AUTH_SOCK="$work/agent.sock" "$bundle" clankos-run install > "$work/out" 2> "$work/err"
+CLANKOS_IMAGE=example/clankos:root CLANKOS_SKILLS_IMAGE= GH_TOKEN=fixture-token SSH_AUTH_SOCK="$work/agent.sock" "$bundle" clankos-run install > "$work/out" 2> "$work/err"
 check 'nested dispatcher completes installer orchestration' test $? -eq 0
 check 'only Node receives installer credentials' python3 - "$DOCKER_LOG" <<'CHECK'
 import pathlib, sys
