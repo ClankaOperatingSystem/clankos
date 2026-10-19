@@ -189,8 +189,14 @@ import json
 assert all(e['node'] not in ('area','gone') for e in json.load(open('.clankos/installation-state.json'))['managed'])
 PY
 git worktree add -qb linked "$work/linked"
-(cd "$work/linked" && apply)
-check 'apply works in a linked worktree' test $? -eq 0
+# Keep source fixtures inside this worktree's mount. The main repository's
+# Git metadata must be reached through the launcher's separate mounts.
+cp -R "$work/remotes" "$work/linked/remotes"
+mkdir -p "$work/linked/config/git"
+printf '[url "file://%s/remotes/"]\n\tinsteadOf = https://git.example/\n[url "file://%s/remotes/clankos.git"]\n\tinsteadOf = https://github.com/ClankaOperatingSystem/clankos.git\n' \
+    "$work/linked" "$work/linked" > "$work/linked/config/git/config"
+(cd "$work/linked" && unset CLANKOS_WORKSPACE && export XDG_CONFIG_HOME="$work/linked/config" && apply)
+check 'apply works with Git metadata outside the worktree mount' test $? -eq 0
 cd area || exit 1
 check 'apply from a child refuses to widen scope' status 2 "$bin/clankos-run" apply-v1
 [ "$failures" -eq 0 ]
