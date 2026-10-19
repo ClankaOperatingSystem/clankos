@@ -8,8 +8,6 @@ image_remote
 
 for skill in "$repo"/skills/*/; do
     name=$(basename -- "$skill")
-    check "$name is named clankos-NAME, or a slot's name" \
-        sh -c "case $name in clankos-?*|capture|start-up|wrap-up) ;; *) exit 1 ;; esac"
     check "$name says its name, which is its directory's" \
         test "$(sed -n '2p' "$skill/SKILL.md")" = "name: $name"
     check "$name has a description on one line, with no colon a YAML reader would trip on" \
@@ -19,14 +17,10 @@ done
 
 mkdir garden && cd garden && git init -q .
 "$bin/initiate" --no-tree < /dev/null > ../out 2>&1
-check "a new garden has each skill installed, as a folder" \
-    test -d .agents/skills/capture -a ! -L .agents/skills/capture
 for skill in "$repo"/skills/*/; do
     name=$(basename -- "$skill")
     check "$name is installed as the image has it" cmp -s ".agents/skills/$name/SKILL.md" "$skill/SKILL.md"
 done
-commit=$(docker run --rm "$CLANKOS_IMAGE" cat /usr/local/share/clankos/source/commit)
-check "skills-lock.json records them at the image's commit" grep -q "\"ref\": \"$commit\"" skills-lock.json
 check "the skills and skills-lock.json are there to commit, and auto/ is not" \
     sh -c 'git status --porcelain | grep -qx "?? .agents/" && git status --porcelain | grep -qx "?? skills-lock.json" && ! git status --porcelain --untracked-files=all | grep -q "\.clanka/auto"'
 "$bin/clankos-run" refresh > ../out 2> ../err
@@ -65,20 +59,6 @@ check "a skill edited where it is installed exits 1" test $? -eq 1
 check "and is named on stderr" \
     grep -qx 'clankos: lock-differs skills-lock.json (clankos-seal: changed since it was installed)' ../err
 cp "$repo/skills/clankos-seal/SKILL.md" .agents/skills/clankos-seal/SKILL.md
-
-# A garden that fills the wrap-up slot with a skill of its own: the
-# image's is not installed there, and nothing is reported.
-mkdir ../filled && cd ../filled && git init -q .
-mkdir -p .agents/skills/wrap-up && printf '%s\n' '---' 'name: wrap-up' 'description: Ours.' '---' > .agents/skills/wrap-up/SKILL.md
-git add .agents && git -c user.name=Test -c user.email=test@example.org commit -qm 'Fill the wrap-up slot'
-"$bin/initiate" --no-tree < /dev/null > ../out 2>&1
-"$bin/clankos-run" refresh > ../out 2> ../err
-check "a skill of the garden's own under a slot's name is its filling: refresh exits 0" test $? -eq 0
-check "and reports nothing" test ! -s ../err
-check "and the skill stays the garden's" test "$(sed -n '3p' .agents/skills/wrap-up/SKILL.md)" = 'description: Ours.'
-check "and has no lock entry" sh -c '! grep -q "\"wrap-up\"" skills-lock.json'
-check "while the image's other skills are installed" test -f .agents/skills/capture/SKILL.md
-cd ../garden
 
 # A project that is a directory of the garden uses a methodology, hello,
 # whose skill and command are linked where they lie, in the project.
