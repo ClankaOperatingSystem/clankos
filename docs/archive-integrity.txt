@@ -40,6 +40,8 @@ scope's other files. Those archives are still read and checked, but
 nothing is sealed into them, and a checkpoint is not written there:
 those commands are refused, as relocation-required, until the archive
 is moved (section 6). An archive at two places in one scope is refused.
+A file of either name, such as the link bin/archive-integrity, is no
+archive and is passed over.
 
 
 2. Sealing: plan, review, apply
@@ -210,17 +212,22 @@ checkpoint, and neither commits.
   - "relocate-plan ROOT" prints, as JSON, each scope under ROOT whose
     archive, archive-integrity/ or legacy checkpoints lie outside its
     configuration directory: the directory selected, each rename from
-    where to where, and every blocker. The blockers are two places for
-    one scope's archive, ledger or checkpoints; a configuration
-    directory that cannot be chosen; a destination that exists; a check
-    of the scope's archive that is not clean; a legacy ledger still
-    inside its archive, which archive-migrate rebuilds first; a
-    directory that cannot be written; and an archive-integrity/ with a
-    file that Git does not track. It does not enter an archive, so
-    scopes retired into one stay as they were sealed, and it does not
-    enter another repository: each is listed under "repositories", to
-    be moved by a run of its own. It changes nothing, and exits 0 with
-    nothing to move, 1 with something to move and 2 with a blocker.
+    where to where, the files in what moves that Git does not track,
+    and every blocker. An untracked file moves with its directory and
+    stays untracked; an archive kept uncommitted, none of whose files
+    Git tracks, is not listed. The blockers are two places for one
+    scope's archive, ledger or checkpoints; a configuration directory
+    that cannot be chosen; a destination that exists; a check of the
+    scope's archive that is not clean; a legacy ledger still inside its
+    archive, which archive-migrate rebuilds first; a directory that
+    cannot be written; and a repository that a configuration declares
+    with a remote and that is not on disk, whose scopes cannot be
+    reached until it is cloned or its entry removed. It does not enter
+    an archive, so scopes retired into one stay as they were sealed,
+    and it does not enter another repository: each is listed under
+    "repositories", to be moved by a run of its own. It changes
+    nothing, and exits 0 with nothing to move, 1 with something to move
+    and 2 with a blocker.
   - "relocate-apply ROOT" makes the plan again and refuses, exit 2, if
     it has any blocker, before anything moves. Otherwise it moves each
     scope in turn: each rename is "git mv" where Git tracks the path,

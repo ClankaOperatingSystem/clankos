@@ -29,11 +29,16 @@ garden's root:
 
 1. Run `scripts/clankos archive-integrity relocate-plan .` and show
    the person what it prints: each scope whose archive or ledger would
-   move, from where and to where, and every blocker. It changes
-   nothing, and exits 0 with nothing to move, 1 with something to move
-   and 2 with a blocker. It does not enter a mounted repository: it
-   lists each under `repositories`, and is run in each of those too. A blocker is reported, not worked round; a legacy ledger
-   is first rebuilt with the clankos-migrate-archive skill.
+   move, from where and to where; under `untracked`, the files Git
+   does not track, which move with their directory and stay
+   untracked, so that the person decides whether any is to be
+   committed; and every blocker. It changes nothing, and exits 0 with
+   nothing to move, 1 with something to move and 2 with a blocker. It
+   does not enter a mounted repository: it lists each under
+   `repositories`, and is run in each of those too. A blocker is
+   reported, not worked round: a legacy ledger is first rebuilt with
+   the clankos-migrate-archive skill, and a declared repository that
+   is missing is cloned first.
 2. On the person's agreement, run `relocate-apply ROOT` in each
    repository, with its top directory as ROOT: in the garden's own
    repository, and for each mounted repository in a clone of it, on a
