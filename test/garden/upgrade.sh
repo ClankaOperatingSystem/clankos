@@ -21,6 +21,10 @@ printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    r
     "$work/child" > .clanka/config.yml
 git clone -q "$work/child" child
 git add .clanka && git commit -qm 'Add a garden'
+# Configure mount exclusions explicitly before any broad staging operation.
+"$bin/responsibility-tree" --no-clone > ../out 2> ../err
+check "tree setup excludes the mounted child" git check-ignore -q child
+
 
 # Each repository has the image's skills, recorded as from another
 # commit, as after a new image is published.
@@ -31,6 +35,7 @@ for dir in child .; do
         && sed -i.bak "s/$commit/$older/" skills-lock.json && rm skills-lock.json.bak \
         && git add -A && git commit -qm 'Install the skills')
 done
+check "fixture does not track the child as a gitlink" test -z "$(git ls-files --stage child)"
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "refresh finds each skills-lock.json from another commit" \
     sh -c 'grep -q "lock-differs skills-lock.json" ../err && grep -q "lock-differs child/skills-lock.json" ../err'

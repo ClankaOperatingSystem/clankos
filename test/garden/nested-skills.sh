@@ -12,13 +12,14 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.org
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.org
 
-mkdir -p grand/.pos grand/methodologies/adr/skills/adr-record
+mkdir -p adr/skills/adr-record grand/.pos
+git -C adr init -q -b master
+printf -- '---\nname: adr-record\ndescription: Record a decision.\n---\n' > adr/skills/adr-record/SKILL.md
+git -C adr add . && git -C adr commit -qm 'Add a methodology' && git -C adr tag v1
+git clone -q --bare adr "$work/remotes/adr.git"
+printf '[url "file://%s/remotes/adr.git"]\n\tinsteadOf = https://git.example/adr.git\n' "$work" >> "$XDG_CONFIG_HOME/git/config"
 git -C grand init -q -b master
-printf 'pos: 2\nmethodologies: methodologies/\nbin: bin\nchildren:\n  - path: methodologies/adr\n' \
-    > grand/.pos/config.yaml
-printf 'methodology: 1\n' > grand/methodologies/adr/methodology.yaml
-printf -- '---\nname: adr-record\ndescription: Record a decision.\n---\n' \
-    > grand/methodologies/adr/skills/adr-record/SKILL.md
+printf 'pos: 2\nbin: bin\nmethodologies:\n  - source: https://git.example/adr.git\n    ref: v1\n    skills: [adr-record]\n' > grand/.pos/config.yaml
 printf ':PROPERTIES:\n:ID: grand\n:END:\n* NEXT In the project\n' > grand/project.org
 git -C grand add . && git -C grand commit -qm 'Add a project'
 
@@ -58,9 +59,10 @@ for dir in . child child/projects/grand; do
     check "$dir: every skill is there to be read" \
         sh -c "for s in '$dir'/.agents/skills/*/SKILL.md; do [ -s \"\$s\" ] || exit 1; done"
 done
+check "the methodology skill is a regular installed directory" test ! -L child/projects/grand/.agents/skills/adr-record
 check "each has the commands where its repository keeps its configuration" \
     test -d .clankos/auto/bin -a -d child/.clanka/auto/bin -a -d child/projects/grand/.pos/auto/bin
-check "the methodology's skill is linked in its project alone" \
+check "the methodology's skill is installed in its project alone" \
     test ! -e .agents/skills/adr-record -a ! -e child/.agents/skills/adr-record
 check "a responsibility that is a directory of the garden is given nothing of its own" \
     test "$(ls -A home | tr '\n' ' ')" = ".pos intray.org study "
@@ -76,7 +78,7 @@ check "a mounted project's own skill reads the project" grep -q 'NEXT In the pro
 check "from the garden, the project's task is read as the project's" \
     grep -q '^  child/grand  *NEXT In the project$' ../out
 check "Git keeps nothing refresh installed, in any of the three" \
-    sh -c "! { git status --porcelain --untracked-files=all; git -C child status --porcelain --untracked-files=all; git -C child/projects/grand status --porcelain --untracked-files=all; } | grep -q 'auto/\|bin/\|\.agents/skills/adr-record'"
+    sh -c "! { git status --porcelain --untracked-files=all; git -C child status --porcelain --untracked-files=all; git -C child/projects/grand status --porcelain --untracked-files=all; } | grep -q 'auto/\|bin/'"
 
 cd "$work" && git clone -q grand alone && cd alone
 "$bin/clankos-run" install > ../out 2> ../err
