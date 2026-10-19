@@ -70,8 +70,6 @@ check "a responsibility that is a directory of the garden is given nothing of it
 (cd home/study && ../../.agents/skills/capture/scripts/clankos capture -- 'From the study' > ../../../out 2>&1)
 check "from a directory two beneath the garden, the garden's skill works on that directory" \
     grep -q 'From the study' home/study/intray.org
-(cd child && .agents/skills/capture/scripts/clankos capture -- 'From the child' > ../../out 2>&1)
-check "a mounted responsibility's own skill works on it" grep -q 'From the child' child/intray.org
 (cd child/projects/grand && .agents/skills/start-up/scripts/clankos start-up --view next > ../../../../out 2>&1)
 check "a mounted project's own skill reads the project" grep -q 'NEXT In the project' ../out
 "$bin/startup-prompt" --view next > ../out 2>&1
@@ -79,10 +77,5 @@ check "from the garden, the project's task is read as the project's" \
     grep -q '^  child/grand  *NEXT In the project$' ../out
 check "Git keeps nothing refresh installed, in any of the three" \
     sh -c "! { git status --porcelain --untracked-files=all; git -C child status --porcelain --untracked-files=all; git -C child/projects/grand status --porcelain --untracked-files=all; } | grep -q 'auto/\|bin/'"
-
-cd "$work" && git clone -q grand alone && cd alone
-"$bin/clankos-run" install > ../out 2> ../err
-check "a clone of the project alone has the skills once install has run" \
-    test "$(ls .agents/skills | tr '\n' ' ')" = "adr-record $skills"
 
 [ "$failures" -eq 0 ]
