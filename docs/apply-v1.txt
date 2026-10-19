@@ -36,8 +36,8 @@ attempted. An unchanged second apply changes no managed files.
 Apply does not refresh, lint, stage, commit or push. Ordinary commands do
 not refresh installation. Legacy path methodologies are refused before any
 writes. Migrate them as described below. Apply covers all skill sources,
-including the runtime's method-zero skills. It
-does not change the configured image or provide source-selection switches.
+including the runtime's method-zero skills. It does not change the configured
+image or provide source-selection switches.
 
 Use runtime and skills images that both provide apply-v1. The input schema
 is checked before writes; an older skills image without this entry fails
