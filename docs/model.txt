@@ -1,10 +1,9 @@
 model: the things ClankOS installs, and how they fit
 
 "clankos-run help model" prints this document. It names each thing,
-says what contains or points at what, and says which code enforces
-each, so that a change to the code and a change to this document are
-made together. "clankos-run help words" gives each word one line and
-says where it is defined.
+says what contains or points at what, and lists the requirements on
+each that the tests check. "clankos-run help words" gives each word one
+line and says where it is defined.
 
 
 1. The things
@@ -14,8 +13,9 @@ says where it is defined.
                      responsibility or a project with a configuration
                      of its own. A mount is a node or a product that is
                      a repository of its own.
-    configuration    .pos/config.yaml in a node: the image it runs, and
-                     the sources it declares under methodologies.
+    configuration    config.yaml or config.yml in a node's .clanka,
+                     .clankos or .pos: the image it runs, and the
+                     sources it declares under methodologies.
     source           a Git repository, declared at a ref, of one kind:
                      methodology, whose skills are named with the
                      repository's name and a hyphen and may carry
@@ -28,7 +28,7 @@ says where it is defined.
                      executable; the lint runs it and reports its
                      findings as its own.
     lock             skills-lock.json beside .agents/skills/: each
-                     skill installed, its source and the commit it was
+                     skill installed, its source and the ref it was
                      installed at.
     image            the ClankOS container image: Emacs, poslib and
                      the commands, and method zero, the image's own
@@ -52,9 +52,9 @@ says where it is defined.
                         └─ source (at a ref) ──┬─ methodology ── skill ── check
                                                └─ skills-repository ── skill
                                          │
-                      install copies each source's skills into
-                      .agents/skills/ and records them in the lock;
-                      refresh links the image's into the same place.
+                      install copies each source's skills, and the
+                      image's, into .agents/skills/ and records them
+                      in the lock.
                                          │
                       lint runs each methodology's checks;
                       a harness offers every skill to the agent.
@@ -66,34 +66,101 @@ says where it is defined.
     it at is the commit a binding pins it at. Nothing else is shared.
 
 
-3. Who enforces what
+3. The requirements, and what holds each
 
-    The tree, a node and the configuration's reading
-                     poslib: pos-corpus walks the tree and stops at a
-                     mount; pos-sources reads and writes the
-                     methodologies a configuration declares.
-    The source's form, the ref and the kind
-                     clankos: install's reader refuses a source that
-                     is not a Git URL at a tag or a full commit, a
-                     skill named against its kind, or a clankos- name.
-    The skill folder
-                     the skills CLI, which copies a skill folder and
-                     writes the lock; the format is agentskills.io's,
-                     and ClankOS reads only the folder's name.
-    The lock         clankos: refresh reports a lock that differs from
-                     the configuration or names a source it does not
-                     declare; the lint reports the same.
-    The checks       poslib: pos-lint runs each executable
-                     scripts/check-NAME of each methodology's skills.
-    Method zero      clankos: the image installs its own skills at the
-                     commit it was built from, ahead of the declared
-                     sources, and no configuration names them.
-    The slots        poslib's doc/pos-slots.txt gives the signatures;
-                     install leaves a slot the garden fills alone.
-    A gnome's doctrine, policies and cases
-                     bugflow, not ClankOS: ClankOS never reads them.
-                     A gnome's own tests keep the copies in a skill's
-                     references/ equal to the originals.
+    Each requirement is the name of a check in test/model/, one script
+    for each group, and scripts/render-model writes this section from
+    them. A requirement poslib holds runs poslib's test in the image.
+    One marked "not tested" names what holds it instead.
 
-A thing with no line here is enforced by nothing, and a document that
-says otherwise is wrong.
+    The tree, test/model/tree.sh
+      - A tree is a root, the responsibilities beneath it, and each
+        one's projects and products.
+      - A node is a responsibility or a project that has a configuration
+        of its own.
+      - A mount is a node or a product that is a repository of its own.
+      - A walk of the tree reads a mount's files.
+      - No command run above a mount writes a mount's files.
+      - A mount has a configuration, an install and a lock of its own.
+      - A command run in a mount works on that mount and never looks
+        upward.
+
+    The configuration, test/model/configuration.sh
+      - A node's configuration is one file, config.yaml or config.yml,
+        in a directory of the node named .clanka, .clankos or .pos.
+      - The configuration names the image the node runs.
+      - The configuration declares the node's sources under
+        methodologies.
+
+    A source, test/model/source.sh
+      - A source is declared by a Git URL.
+      - A source is declared at a tag or at a full commit.
+      - A source is of one kind: methodology or skills-repository.
+      - A methodology's skills are named with the repository's name and
+        a hyphen.
+      - A skills-repository's skills keep the names their author gave
+        them.
+      - No source supplies a skill whose name begins with clankos-.
+
+    A skill, test/model/skill.sh
+      - A skill is a folder that holds SKILL.md.
+      - A skill's references/ holds what the agent reads. Not tested:
+        held by agentskills.io's format.
+      - A skill's scripts/ holds what the agent runs. Not tested: held
+        by agentskills.io's format.
+      - A skill folder follows agentskills.io's format. Not tested: held
+        by the skills CLI.
+      - ClankOS reads only the skill folder's name. Not tested: nothing
+        holds it.
+
+    A check, test/model/check.sh
+      - A check is a file scripts/check-NAME in a skill of a
+        methodology.
+      - A check is executable.
+      - The lint runs each check of each methodology's skills.
+      - The lint reports a check's findings as its own.
+
+    Install and the lock, test/model/lock.sh
+      - Install copies each source's skills into .agents/skills/.
+      - The lock is the file skills-lock.json beside .agents/skills/.
+      - The lock names each skill installed, its source and the ref it
+        was installed at.
+      - Refresh reports a lock that differs from the configuration.
+      - A wild-caught skill is one whose lock entry names a source the
+        configuration does not declare.
+      - Refresh names each wild-caught skill and exits 0.
+      - The lint reports a lock entry of a skill that its declared
+        source does not name.
+      - The lint does not report a wild-caught skill.
+
+    The image and method zero, test/model/method-zero.sh
+      - The image holds Emacs, poslib, the commands and method zero.
+      - Method zero's skills are named clankos-NAME, apart from the
+        slots it fills.
+      - The image installs method zero at the commit the image was built
+        from.
+      - Method zero's skills are installed in .agents/skills/ as
+        folders.
+      - No configuration names method zero's skills.
+      - A declared source's skill of a slot's name is installed in place
+        of method zero's.
+
+    The slots, test/model/slots.sh
+      - A slot is a skill a repository may fill with a skill of its own:
+        capture, start-up or wrap-up.
+      - poslib's doc/pos-slots.txt gives each slot's signature. Not
+        tested: held by poslib's doc/pos-slots.txt.
+      - Install leaves a slot that the garden fills alone.
+
+    The harness, test/model/harness.sh
+      - A harness offers the agent every skill in .agents/skills/. Also
+        held by the harness.
+
+    A gnome, test/model/gnome.sh
+      - To ClankOS, a gnome is a methodology and nothing more. Not
+        tested: nothing holds it.
+      - ClankOS never reads a gnome's doctrine, policies or cases. Not
+        tested: nothing holds it.
+      - A gnome's own tests keep the copies in a skill's references/
+        equal to their originals. Not tested: held by each gnome's own
+        tests.
