@@ -37,7 +37,7 @@ cat AGENTS.md >> ../before
 printf '\nAfter the block.\n' >> ../before
 cp ../before AGENTS.md
 git add -A && git -c user.name=Test -c user.email=test@example.org commit -qm 'Bootstrap garden'
-"$bootstrap" --no-tree > ../out 2> ../err
+"$bootstrap" > ../out 2> ../err
 check 'repeat bootstrap succeeds' test $? -eq 0
 check 'repeat bootstrap preserves committed content' test -z "$(git status --porcelain)"
 git clone -q . ../clone
