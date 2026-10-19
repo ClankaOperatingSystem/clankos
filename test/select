@@ -5,21 +5,21 @@
 # skills/clankos-NAME. A test runs the commands its text names, and a
 # command runs the commands its text names, so a change to a command
 # selects the tests that name it or name one of its callers. The
-# tests in test/garden install skills, from this repository at the
-# image's commit, through the skills image; those in test/docs read
-# docs/ and the scripts. A path no rule knows selects every test.
+# tests in test/garden and test/model install skills, from this
+# repository at the image's commit, through the skills image; those in
+# test/docs read docs/, the scripts and test/model. A path no rule knows selects every test.
 # Exit: 0, or 2 for a usage error.
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 [ $# -eq 0 ] || { echo "Usage: test/select < CHANGED-PATHS" >&2; exit 2; }
 
-groups=(test/commands/*.sh test/garden/*.sh test/docs/*.sh)
+groups=(test/commands/*.sh test/garden/*.sh test/model/*.sh test/docs/*.sh)
 all() { printf '%s\n' "${groups[@]}"; exit 0; }
 
 # named NAME: the test of that name, in whichever group holds it.
 named() { ls test/*/"$1.sh" 2>/dev/null; }
 
-installers=(test/garden/*.sh)
+installers=(test/garden/*.sh test/model/*.sh)
 readers=(test/docs/*.sh)
 
 # callers NAME: the commands and scripts whose text runs NAME.
@@ -44,6 +44,7 @@ while IFS= read -r path; do
         test/lib/*|test/run|test/select|.github/*) all ;;
         README|LICENSE|AGENTS.md|bin/install.sh) ;;
         test/fixtures/*) name=${path#test/fixtures/}; want $(named "${name%%/*}") ;;
+        test/model/*.sh) want "$path" test/docs/model.sh ;;
         test/*/*.sh) want "$path" ;;
         docs/*) want "${readers[@]}" ;;
         skills/clankos-*)

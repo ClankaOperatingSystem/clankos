@@ -11,7 +11,7 @@ set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 
 account=$repo/docs/clankos.txt
-tests=("$repo"/test/commands/*.sh "$repo"/test/garden/*.sh "$repo"/test/docs/*.sh)
+tests=("$repo"/test/commands/*.sh "$repo"/test/garden/*.sh "$repo"/test/model/*.sh "$repo"/test/docs/*.sh)
 
 # named NAME: whether a test runs NAME, as test/select reads it.
 named() { grep -qE "bin/$1([^a-z-]|\$)|clankos-run\"? +$1([^a-z-]|\$)" "${tests[@]}"; }

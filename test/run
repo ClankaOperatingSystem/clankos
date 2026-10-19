@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run the tests given, or with none given every test in test/commands,
-# test/garden and test/docs, as many at a time as there are processors,
+# test/garden, test/model and test/docs, as many at a time as there are processors,
 # in the image CLANKOS_IMAGE names. Each test writes to its own
 # workspace, so they do not meet.
 # When all have run, each test's output is printed in turn, under its
@@ -8,7 +8,7 @@
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 tests=("$@")
-[ ${#tests[@]} -gt 0 ] || tests=(test/commands/*.sh test/garden/*.sh test/docs/*.sh)
+[ ${#tests[@]} -gt 0 ] || tests=(test/commands/*.sh test/garden/*.sh test/model/*.sh test/docs/*.sh)
 jobs=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 out=$(mktemp -d "${TMPDIR:-/tmp}/clankos-test.XXXXXX")
 trap 'rm -rf "$out"' EXIT
