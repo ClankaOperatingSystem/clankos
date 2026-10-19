@@ -30,7 +30,9 @@ garden's root:
 1. Run `scripts/clankos archive-integrity relocate-plan .` and show
    the person what it prints: each scope whose archive or ledger would
    move, from where and to where, and every blocker. It changes
-   nothing. A blocker is reported, not worked round; a legacy ledger
+   nothing, and exits 0 with nothing to move, 1 with something to move
+   and 2 with a blocker. It does not enter a mounted repository: it
+   lists each under `repositories`, and is run in each of those too. A blocker is reported, not worked round; a legacy ledger
    is first rebuilt with the clankos-migrate-archive skill.
 2. On the person's agreement, run `relocate-apply ROOT` in each
    repository, with its top directory as ROOT: in the garden's own
@@ -45,8 +47,8 @@ garden's root:
    mounted repository's clone on its branch, pushed for a pull
    request. The mount takes the move by a pull once the pull request
    is merged.
-4. Run `relocate-plan .` again. It should find nothing to move, save
-   in a mounted repository whose pull request is still open.
+4. Run `relocate-plan .` again in each repository. It should exit 0,
+   save in a mounted repository whose pull request is still open.
 
 ## What to get right
 
