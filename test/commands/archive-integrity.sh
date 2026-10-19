@@ -102,8 +102,8 @@ check "check is clean after the retirement" status 0 "$bin/archive-integrity" ch
 mkdir archives
 echo "Third." | "$bin/archive-integrity" write-new $archive/2026-01-04-third.txt --apply > out 2>&1
 refused=$?
-check "a seal is refused while an archive lies beside the files" \
-    sh -c "[ $refused -eq 2 ] && grep -q relocation-required out"
+check "a seal is refused while a second archive lies beside the files" \
+    sh -c "[ $refused -eq 2 ] && grep -q archive-location out"
 check "and check refuses two archives in one scope" status 2 "$bin/archive-integrity" check .
 rmdir archives
 
