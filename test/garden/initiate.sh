@@ -4,6 +4,17 @@ set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
 export GH_TOKEN=unused
+# A separate methodology has two revisions, served without the network.
+mkdir -p "$work/hello/skills/hello-greet"
+git -C "$work/hello" init -q
+for version in v1 v2; do
+    printf '%s\n' '---' 'name: hello-greet' 'description: Greet.' '---' "$version" > "$work/hello/skills/hello-greet/SKILL.md"
+    git -C "$work/hello" add .
+    git -C "$work/hello" -c user.name=Test -c user.email=test@example.org commit -qm "Write $version"
+    git -C "$work/hello" tag "$version"
+done
+git clone -q --bare "$work/hello" "$work/remotes/hello.git"
+git config -f "$XDG_CONFIG_HOME/git/config" url."file://$work/remotes/hello.git".insteadOf https://example.test/hello.git
 cp -R "$repo/skills/clankos-bootstrap" 'bootstrap bundle'
 bootstrap="$work/bootstrap bundle/scripts/bootstrap"
 mkdir garden && cd garden && git init -q
@@ -47,11 +58,15 @@ cp .pos/config.yaml ../config-before
 check 'existing configuration is preserved' cmp -s .pos/config.yaml ../config-before
 check 'no second configuration is made' test ! -e .clanka
 mkdir -p child/.pos
-printf 'pos: 2\nprojects: projects/\n' > child/.pos/config.yaml
+printf 'pos: 2\nprojects: projects/\nmethodologies:\n  - source: https://example.test/hello.git\n    ref: v1\n    skills: [hello-greet]\n' > child/.pos/config.yaml
 printf 'children:\n  - path: child\n' >> .pos/config.yaml
 "$bootstrap" --no-tree > ../out 2> ../err
-check 'local child is applied' test -s child/skills-lock.json
+check 'local child is applied' grep -qx v1 child/.agents/skills/hello-greet/SKILL.md
 check 'child archive exclusions are maintained' git check-ignore -q child/.pos/archives/evidence
+cp .pos/config.yaml ../selected-config
+sed 's/:v0.0.5/:v0.0.1/' ../selected-config > .pos/config.yaml
+"$bootstrap" --image v0.0.5 --no-tree > ../out 2> ../err
+check 'explicit bootstrap version updates an existing image setting' cmp -s .pos/config.yaml ../selected-config
 cd ..
 mkdir bad && cd bad && git init -q
 check 'floating release is refused before writes' status 2 "$bootstrap" --image latest

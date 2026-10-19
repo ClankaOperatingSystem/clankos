@@ -9,7 +9,8 @@ missing prerequisite; do not install host software.
 
 The bundle checks both images before writing configuration, then initiates
 the garden and runs apply-v1. It installs method zero without optional methods.
-For an existing configuration it applies the sources already declared there.
+An explicit --image updates an existing root image setting before apply. Other
+configuration is preserved, including the selected methodology sources.
 It creates no auto/bin and needs no other installed skill.
 
 Offer optional methodology sources after bootstrap. Use
