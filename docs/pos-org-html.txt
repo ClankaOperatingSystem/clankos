@@ -1,0 +1,81 @@
+pos-org-html: Org files as HTML for a viewer of the tree
+
+bin/pos-org-html runs this protocol in the ClankOS container. The
+command is poslib's pos-org-html, at the commit the image was built
+with: https://github.com/ClankaOperatingSystem/poslib.
+
+
+1. What it is for
+
+A viewer of the tree, such as a web site with the tree as its menu,
+can give each Org file a page of its own. pos-org-html prints the
+HTML of the files named, as Org's HTML exporter makes it, with each
+link leading to the viewer's page for what it names, so that the
+viewer runs no Emacs of its own.
+
+A file's HTML depends on no other file, so a viewer need print only
+the files that have changed.
+
+It reads the files and writes nothing. It evaluates no source block
+and uses no network.
+
+
+2. The files
+
+Each FILE is a path from the working directory. --file-url FORMAT is
+the address of a file's page, a format of its path from the working
+directory; it is /file/%s where none is given. --id-url FORMAT is the
+address of an Org ID, a format of the ID; it is /id/%s where none is
+given.
+
+
+3. The links
+
+    a file: link to an Org file under the working directory
+                        the address of that file's page; ::*HEADING
+                        and ::#CUSTOM-ID are the heading's anchor
+    an id: link         the address of the ID, which the viewer finds,
+                        as pos-tree-data's ids give it
+    a link to a heading or a target in the same file
+                        its anchor
+    an http, https, mailto, ftp, ipfs or ipns link
+                        itself
+    a file: link to any other file
+                        its description, or its path, in code type
+    any other link      its description, or the link, as text
+
+A heading's anchor is its CUSTOM_ID, else its title in lower case
+with a hyphen for each run of other characters than letters and
+digits; a second heading with the same title has -2 added, a third
+-3. A heading with an ID has the ID as a second anchor.
+
+
+4. The document
+
+The document is a JSON array, with one object for each FILE, in
+their order:
+
+    file   the FILE as given
+    title  the file's #+TITLE, or null
+    html   the HTML of the file's body: no table of contents, no
+           section numbers, and scheduled and deadline dates shown
+
+A file that cannot be read or exported has error, its message, in
+place of title and html.
+
+
+5. In the container
+
+bin/pos-org-html gives its arguments to bin/clankos-run. The files are
+the host's, at their own paths. The document is on stdout, as UTF-8,
+with a newline. Emacs's own messages are on stderr.
+
+
+6. Exit status
+
+    0     printed, including a file with an error
+    2     usage: no FILE
+    255   an Emacs error; the message is on stderr
+    125   Docker failed to run the container
+    126   the workspace is not visible in the container
+    127   docker, or the command in the image, was not found

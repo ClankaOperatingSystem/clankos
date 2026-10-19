@@ -1,0 +1,4 @@
+#!/bin/sh
+# pos-org-html [--file-url FORMAT] [--id-url FORMAT] FILE ...
+# The protocol is docs/pos-org-html.txt.
+exec "$(dirname -- "$0")/pos-emacs" -l pos-org-html -f pos-org-html-batch "$@"

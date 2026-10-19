@@ -81,6 +81,9 @@ a source checkout's bin/ are available for development.
     pos-tree-data         print the tree as one line of JSON, for a
                           viewer: the scopes, the repositories, the
                           IDs and the start-up views
+    pos-org-html          print Org files as HTML, as one line of
+                          JSON, for a viewer that gives each file a
+                          page: links lead to the viewer's pages
     capture               the capture slot: keep an item for later;
                           here, pos-capture
     start-up              the start-up slot: what a session opens
