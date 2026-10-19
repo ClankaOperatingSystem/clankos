@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-org-html [--file-url FORMAT] [--id-url FORMAT] FILE ...
+       pos-org-html --help
+
+Print Org files as HTML, as one line of JSON, in the ClankOS
+container, for a viewer that gives each Org file a page: each file's
+title and the HTML of its body. A link to another Org file under the
+working directory leads to that file's page, and an id: link to the
+ID's address. "clankos-run help pos-org-html" prints the protocol.
+
+Each FILE is a path from the working directory. --file-url FORMAT is
+the address of a file's page, a format of its path, /file/%s by
+default; --id-url FORMAT the address of an ID, /id/%s by default.
+
+Reads; writes nothing; evaluates nothing; uses no network.
+
+Exit: 0 printed, 2 usage, 255 Emacs error, its message on stderr; 125,
+126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-org-html "$@"
