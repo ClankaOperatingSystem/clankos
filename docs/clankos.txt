@@ -23,7 +23,8 @@ repository.
                      comes to mind, under "Unsorted", to be placed
                      later.
     archive          sealed records that never change, with a ledger
-                     beside them by which a change is noticed.
+                     beside them by which a change is noticed, both
+                     in the scope's configuration directory.
     review           a scheduled item tagged :review: in a scope's
                      file, of that scope: a project's, a
                      responsibility's, or the root's of the whole.

@@ -51,13 +51,15 @@ Then the whole tree, for:
     dependency rule forbids, as "RULE: ...".
 
 The dependency rule: a scope's canon refers to its own canon and its
-own archive, archives/, and to its children's canon. A reference is an
-Org link by file or by ID, also in a property's value, an Org #+INCLUDE
-or #+SETUPFILE, a Markdown link, or a path into a home directory in any
-file. In a file that is neither Org nor Markdown, a relative path that
-climbs, ../, and Python's Path.parents[N] are references too. Every
-file of the corpus's directories is read for them, not only the Org
-files; a hidden file and a hidden directory are not.
+own archive, archives/ in its configuration directory or, in a scope
+not yet moved, beside its other files, and to its children's canon. A
+reference is an Org link by file or by ID, also in a property's value,
+an Org #+INCLUDE or #+SETUPFILE, a Markdown link, or a path into a home
+directory in any file. In a file that is neither Org nor Markdown, a
+relative path that climbs, ../, and Python's Path.parents[N] are
+references too. Every file of the corpus's directories is read for
+them, not only the Org files; a hidden file and a hidden directory
+are not.
 Each finding names the rule it breaks:
 
   D-canon-links          the target is in the tree, outside the scope

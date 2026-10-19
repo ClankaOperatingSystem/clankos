@@ -16,8 +16,8 @@ items link to one another and to other files by path.
 
 Migration rebuilds such an archive once, so that it is as a new one:
 
-  - the ledger and checkpoints are beside the archive, in
-    archive-integrity/;
+  - the ledger and checkpoints are outside the archive, in the
+    archive-integrity/ beside it;
   - every link in an item is an ipfs:// link to content in the archive,
     or cites a rumour, a record made in rumours/ that names by path
     what the archive cannot cite by content;
@@ -31,9 +31,10 @@ It is the only time sealed bytes are rewritten.
 2. Plan, review, apply
 
   - Plan. "plan ARCHIVE [ROOT [DIR ... +DIR ...]]" prints the plan as
-    JSON, and builds the result in _migrate/ beside the archive, where
-    it can be read. The archive is not changed. ROOT is the directory
-    whose own files' links into the archive are to be repaired. The
+    JSON, and builds the result in _migrate/ in the archive's scope,
+    where it can be read. The archive is not changed. ROOT is the
+    directory whose own files' links into the archive are to be
+    repaired. The
     plan names the directories it takes for collections by their
     shape: DIR excludes one of them, and +DIR includes one their shape
     does not show.
@@ -45,14 +46,21 @@ It is the only time sealed bytes are rewritten.
   - Apply. "apply PLAN HASH" applies the plan in the file PLAN if its
     SHA-256 is HASH. It rebuilds the archive again, refuses any
     difference from the plan, swaps the rebuilt archive in, moves the
-    ledger and checkpoints beside it, writes the conversion event,
-    removes write bits, repairs the links in ROOT's files and records a
-    checkpoint. The archive as it was is kept in _migrate/.
+    ledger and checkpoints to the archive-integrity/ beside it, writes
+    the conversion event, removes write bits, repairs the links in
+    ROOT's files and records a checkpoint. The archive as it was is
+    kept in _migrate/.
 
 Applied a second time, it finds its work done. A scope within another
 is migrated before its container.
 
 Afterwards "archive-integrity check ARCHIVE" is clean.
+
+Migration works on the archive where it lies. An archive beside the
+scope's other files is migrated first and then moved into the scope's
+configuration directory by "archive-integrity relocate-apply"
+("clankos-run help archive-integrity", 6), which refuses an archive
+whose ledger is still inside it.
 
 
 3. In the container

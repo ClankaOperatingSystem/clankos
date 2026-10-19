@@ -41,13 +41,16 @@ cannot keep, with the reason on stderr.
 
 Two things are written:
 
-  - The record. BODY is sealed, as it is, in the archive at the
-    working directory's archives/ as journal/DATE-SLUG.org, through
-    the archive's ledger, on disk or at its keeper, as
-    archive-integrity seals. SLUG is TITLE in lower case with each
-    run of characters that are not letters or digits made one hyphen.
-    A working directory with no archives/ gets one, with a new ledger
-    beside it.
+  - The record. BODY is sealed, as it is, in the working directory's
+    archive as journal/DATE-SLUG.org, through the archive's ledger, on
+    disk or at its keeper, as archive-integrity seals. The archive is
+    archives/ in the working directory's configuration directory,
+    .clanka/, .clankos/ or .pos/
+    ("clankos-run help archive-integrity", 1). SLUG is TITLE in lower
+    case with each run of characters that are not letters or digits
+    made one hyphen. A working directory with no archive gets one,
+    with a new ledger in archive-integrity/ beside it; one with no
+    configuration directory gets .clankos/ for them.
   - The index. A heading for the handover is added to the working
     directory's journal.org before its first heading, so the file
     reads newest first, tagged handover and latest, with the
@@ -66,8 +69,10 @@ startup-prompt's handover view lists the heading tagged latest, and
 Besides the signature's refusals, this filling refuses when journal.org
 is a symlink or an editor holds a lock on it, and when the archive
 refuses the seal: a record already sealed at that path, a ledger that
-does not check, a keeper that cannot be reached. Nothing is written
-then.
+does not check, a keeper that cannot be reached, an archive or a
+ledger that still lies beside the working directory's other files and
+must first be moved ("clankos-run help archive-integrity", 6). Nothing
+is written then.
 
 
 4. In the container
