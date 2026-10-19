@@ -72,7 +72,7 @@ in that directory.
 A name is one part of a path: letters, digits, dot, dash and
 underscore, not beginning with a dot. Existing configuration and
 content are kept, and an entry already made is kept. Nothing is committed.
-Afterwards poslib updates the owning repository's managed archive
+Afterwards poslib updates exclusions for mounted repositories and archive
 rules in Git's info/exclude, using each scope's own archive policy.
 This includes newly created responsibilities, whose archives default
 to uncommitted. Other ignore rules and already tracked files stay as
