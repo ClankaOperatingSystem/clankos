@@ -53,7 +53,7 @@ mkdir -p projects/inner
     git add . && git commit -qm 'Begin inner'
     printf 'Inner.\n' | "$bin/wrap-up" -- 'The inner session' > /dev/null 2>&1
 )
-check "the inner repository sealed a record of its own" test -d projects/inner/archive-integrity/ledger
+check "the inner repository sealed a record of its own" test -d projects/inner/.pos/archive-integrity/ledger
 "$bin/session-facts" "$since" > ../mounted 2>/dev/null
 check "a repository within the tree keeps its own events" \
     sh -c "! grep -q 'projects/inner event' ../mounted"

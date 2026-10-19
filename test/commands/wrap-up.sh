@@ -15,9 +15,9 @@ check "wrap-up exits 0" test "$status" -eq 0
 check "it prints the citation, the title and the date" \
     grep -Eq "^ipfs://bafk[a-z2-7]+: The roof mended, $today\$" out
 citation=$(sed 's/: .*//' out)
-check "the record is sealed in the archive, as given" \
-    test "$(cat "archives/journal/$today-the-roof-mended.org")" = "What happened."
-check "with a ledger beside the archive" test -d archive-integrity/ledger
+check "the record is sealed in the configuration directory's archive, as given" \
+    test "$(cat ".pos/archives/journal/$today-the-roof-mended.org")" = "What happened."
+check "with a ledger beside the archive" test -d .pos/archive-integrity/ledger
 check "the citation reads the record back" \
     test "$("$bin/archive-integrity" fetch "$citation" 2>/dev/null)" = "What happened."
 check "the archive checks clean" "$bin/archive-integrity" check . > /dev/null 2>&1
@@ -34,7 +34,7 @@ check "nothing is left staged" test ! -e _seal
 
 printf 'Second.\n' | "$bin/wrap-up" --date 2030-03-04 -- 'The gutter cleared' > out2 2>/dev/null
 check "--date dates the handover" grep -q '^ipfs://.*: The gutter cleared, 2030-03-04$' out2
-check "and names its record" test -f archives/journal/2030-03-04-the-gutter-cleared.org
+check "and names its record" test -f .pos/archives/journal/2030-03-04-the-gutter-cleared.org
 check "the new handover leads the journal as the latest" \
     sh -c "grep '^\* ' journal.org | head -n 1 | grep -Eq '^\* The gutter cleared +:handover:latest:\$'"
 check "the earlier one keeps its handover tag alone" \
@@ -57,6 +57,17 @@ check "--help prints the usage" sh -c "'$bin/wrap-up' --help | grep -q '^Usage: 
 rm -f before out out2 err
 # _index is the CID index fetch keeps, not wrap-up's.
 check "no lock, backup or other file is left" \
-    test "$(ls -A | sort | tr '\n' ' ')" = ".pos _index archive-integrity archives journal.org "
+    test "$(ls -A | sort | tr '\n' ' ')" = ".pos _index journal.org "
+check "the archive and its ledger are in .pos" \
+    test "$(ls -A .pos | sort | tr '\n' ' ')" = "archive-integrity archives config.yaml "
+
+# A directory with no configuration directory keeps its archive in a
+# .clankos/ that has no configuration file.
+mkdir shed
+(cd shed && printf 'In the shed.\n' | "$bin/wrap-up" -- 'The shed swept' > /dev/null 2>&1)
+check "a directory without a configuration directory seals into .clankos" \
+    test -f "shed/.clankos/archives/journal/$today-the-shed-swept.org"
+check "with its ledger there" test -d shed/.clankos/archive-integrity/ledger
+check "and no configuration file is made" sh -c '! ls shed/.clankos/config.* 2>/dev/null'
 
 [ "$failures" -eq 0 ]

@@ -50,7 +50,7 @@ check "the wrap-up skill's script keeps a handover and prints its citation" \
     grep -q "^ipfs://[a-z0-9]*: The first session, $(date +%Y-%m-%d)\$" ../out
 check "which the start-up skill's script then names" \
     sh -c ".agents/skills/start-up/scripts/clankos start-up --view handover 2>/dev/null | grep -q '^  journal  *$(date +%Y-%m-%d) The first session ipfs://'"
-echo "A sealed sentence." | .agents/skills/clankos-seal/scripts/clankos archive-integrity write-new archives/2026-01-01-sentence.txt --apply > ../out 2>&1
+echo "A sealed sentence." | .agents/skills/clankos-seal/scripts/clankos archive-integrity write-new .clanka/archives/2026-01-01-sentence.txt --apply > ../out 2>&1
 check "the search skill's script finds a sealed line and cites it" \
     sh -c ".agents/skills/clankos-search-evidence/scripts/clankos archive-integrity search . sealed | grep -q '^ipfs://[a-z0-9]*:1:A sealed sentence\.$'"
 check "the search skill says never to grep an archive" grep -q 'never with grep' "$repo/skills/clankos-search-evidence/SKILL.md"

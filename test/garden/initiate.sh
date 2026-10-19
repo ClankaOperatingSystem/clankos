@@ -20,7 +20,9 @@ exclude:
   - node_modules
   - \"_*\"
   - \".*\""
-check "an uncommitted archive is ignored by Git" git check-ignore -q archives/evidence
+check "an uncommitted archive in .clanka is ignored by Git" git check-ignore -q .clanka/archives/evidence
+check "its ledger is not" sh -c '! git check-ignore -q .clanka/archive-integrity/ledger/event'
+check "no archive is made beside the garden's files" sh -c '! ls -d archives archive-integrity 2>/dev/null'
 check "underscore directories are ignored by Git" grep -qxF '_*/' .gitignore
 check "the intray has Unsorted" grep -qx '\* Unsorted' intray.org
 check "and a file ID" grep -qxE ':ID: +[0-9a-f-]{36}' intray.org
@@ -57,7 +59,7 @@ check "run again, a file that has a script's name is kept" test "$(cat bin/pos-c
 check "and is reported" grep -q 'kept      bin/pos-capture (it is not ClankOS' out
 check "as a name taken" grep -qx 'clankos: name-taken bin/pos-capture (untracked)' out
 rm bin/pos-capture
-check "existing configuration wins over the archive option" git check-ignore -q archives/evidence
+check "existing configuration wins over the archive option" git check-ignore -q .clanka/archives/evidence
 check "run again, AGENTS.md is kept" grep -qx 'kept      AGENTS.md' out
 check "the block keeps a search within the repository" \
     grep -qx 'Search for files within this repository. Do not search the user.s' AGENTS.md
@@ -70,18 +72,23 @@ check "and is reported" grep -qx 'updated   the ClankOS block in AGENTS.md' out
 check "there is still one block" test "$(grep -c '^<!-- clankos: ' AGENTS.md)" = 2
 check "what is outside the block is kept" \
     test "$(head -n 1 AGENTS.md)$(tail -n 1 AGENTS.md)" = '# MineAfter.'
-mkdir -p work/.clanka work/archives work/archive-integrity
+# work keeps its archive in .clanka; older keeps its beside its files,
+# as earlier gardens did.
+mkdir -p work/.clanka/archives work/.clanka/archive-integrity older/.clanka older/archives
 printf 'pos: 2\nprojects: projects/\n' > work/.clanka/config.yml
-printf '\nchildren:\n  - path: work\n' >> .clanka/config.yml
-printf 'evidence\n' > work/archives/evidence
-printf 'ledger\n' > work/archive-integrity/ledger
+printf 'pos: 2\nprojects: projects/\n' > older/.clanka/config.yml
+printf '\nchildren:\n  - path: work\n  - path: older\n' >> .clanka/config.yml
+printf 'evidence\n' > work/.clanka/archives/evidence
+printf 'ledger\n' > work/.clanka/archive-integrity/ledger
+printf 'evidence\n' > older/archives/evidence
 "$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "rerunning initiate ignores existing child archives" git check-ignore -q work/archives/evidence
-check "the ledger stays available to Git" sh -c '! git check-ignore -q work/archive-integrity/ledger'
+check "rerunning initiate ignores existing child archives" git check-ignore -q work/.clanka/archives/evidence
+check "the ledger stays available to Git" sh -c '! git check-ignore -q work/.clanka/archive-integrity/ledger'
+check "an archive beside a child's files is ignored too" git check-ignore -q older/archives/evidence
 printf 'pos: 2\nprojects: projects/\narchives:\n  - scope: .\n    kept: committed\n' > work/.clanka/config.yml
 "$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "a changed child policy removes its generated exclusion" sh -c '! git check-ignore -q work/archives/evidence'
-check "the evidence is kept" grep -qx evidence work/archives/evidence
+check "a changed child policy removes its generated exclusion" sh -c '! git check-ignore -q work/.clanka/archives/evidence'
+check "the evidence is kept" grep -qx evidence work/.clanka/archives/evidence
 cd ..
 
 mkdir held && cd held && git init -q . && mkdir .clankos
@@ -110,7 +117,7 @@ archives:
     kept: remote
     url: https://keeper.example/ledgers/a
     sweep: sealed"
-check "a remote archive is not ignored" sh -c '! git check-ignore -q archives/evidence'
+check "a remote archive is not ignored" sh -c '! git check-ignore -q .clanka/archives/evidence'
 check "a line is added to .gitignore on a line of its own" grep -qx 'node_modules/' .gitignore
 check "an AGENTS.md that is there keeps its content" \
     test "$(sed -n 1,3p AGENTS.md | tr '\n' '|')" = '# Rules of this repository||Never commit to master.|'
