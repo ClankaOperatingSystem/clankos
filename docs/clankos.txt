@@ -78,6 +78,9 @@ a source checkout's bin/ are available for development.
                           reviewed, stuck, and captured and not yet
                           placed; the projects; the views of a weekly
                           review
+    pos-tree-data         print the tree as one line of JSON, for a
+                          viewer: the scopes, the repositories, the
+                          IDs and the start-up views
     capture               the capture slot: keep an item for later;
                           here, pos-capture
     start-up              the start-up slot: what a session opens

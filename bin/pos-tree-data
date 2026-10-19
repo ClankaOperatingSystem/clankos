@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'HELP'
+Usage: pos-tree-data [--view NAME] ...
+       pos-tree-data --help
+
+Print the tree under the working directory as one line of JSON, in the
+ClankOS container: each scope, with its place in the tree, its main
+file, its configuration, its image, its installed skills and its
+findings; each repository, with its remote, its branch and what auto/
+holds; where each Org ID is; and the start-up views.
+"clankos-run help pos-tree-data" prints the protocol.
+
+With no --view, every start-up view is given. --view NAME, repeated,
+gives those views only; the names are startup-prompt's.
+
+Reads; writes nothing; uses no network.
+
+Exit: 0 printed, 2 usage, 255 Emacs error, its message on stderr; 125,
+126 and 127 are clankos-run's.
+HELP
+}
+
+case "${1:-}" in
+    help|-h|--help) usage; exit 0 ;;
+esac
+exec "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/clankos-run" pos-tree-data "$@"

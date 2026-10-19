@@ -1,0 +1,4 @@
+#!/bin/sh
+# pos-tree-data [--view NAME] ...
+# The protocol is docs/pos-tree-data.txt.
+exec "$(dirname -- "$0")/pos-emacs" -l pos-tree-data -f pos-tree-data-batch "$@"

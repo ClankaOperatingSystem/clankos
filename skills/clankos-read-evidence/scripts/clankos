@@ -105,7 +105,7 @@ if [ -z "$show$pair" ]; then
     esac
     # BEGIN runtime commands
     case $1 in
-        apply-v1|archive-integrity|archive-migrate|help|initiate|install|install-sources|installation-edit|installation-plan|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
+        apply-v1|archive-integrity|archive-migrate|help|initiate|install|install-sources|installation-edit|installation-plan|methodology|pos-capture|pos-dedupe|pos-emacs|pos-item|pos-lint|pos-person|pos-place|pos-project|pos-refile|pos-state|pos-sweep|pos-tree-data|refresh|responsibility-tree|session-facts|startup-prompt|wild-caught|wrap-up) ;;
         *) echo "clankos: no such command: $1" >&2; exit 127 ;;
     esac
     # END runtime commands
