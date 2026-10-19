@@ -5,7 +5,7 @@
 # its absence here means the workspace was not shared with the container.
 # Before most commands, refresh brings installed files to this image's
 # version and reports names it cannot take.  Help, installation-plan,
-# installation-edit, wild-caught and refresh skip this step.
+# installation-edit, apply-v1, wild-caught and refresh skip this step.
 # Initiate runs refresh itself.
 # Exit: the command's own, 126 workspace not visible, 127 no such command.
 if [ -n "${CLANKOS_PROBE:-}" ] && [ ! -e "$CLANKOS_PROBE" ]; then
@@ -22,7 +22,7 @@ if [ -z "$command" ] || [ ! -x "$command" ]; then
     exit 127
 fi
 case $1 in
-    help|initiate|refresh|wild-caught|installation-plan|installation-edit) ;;
+    help|initiate|refresh|wild-caught|installation-plan|installation-edit|apply-v1) ;;
     *) "$(dirname -- "$0")/refresh" --if-changed || true ;;
 esac
 shift

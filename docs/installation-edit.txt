@@ -13,11 +13,11 @@ the revisions recorded in skills-lock.json. These edits use the same
 configuration rules as methodology.
 
 Before changing configuration, save ownership and removal choices in
-installation-state.json beside the root configuration. Seed ownership
-from installed skills of currently declared sources and implicit method
-zero. Add and adopt also record installed skills selected by the new
-declaration. Unrelated wild-caught entries remain unowned. Versions and
-hashes remain in skills-lock.json.
+installation-state.json beside the root configuration. When no state exists,
+seed ownership from installed skills of currently declared sources and
+implicit method zero. Later edits claim their explicit targets; unrelated
+edits leave released ownership alone. Versions and hashes remain in
+skills-lock.json.
 
 Remove saves "remove" by default, or "keep" with --keep. This includes
 previously managed identities whose files or lock entries are missing.

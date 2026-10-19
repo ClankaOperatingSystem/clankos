@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# The install and methodology commands of clankos-run, which reads this
+# The install, methodology and apply-v1 commands of clankos-run. It reads this
 # file once it has found the workspace and the image and defined
 # clankos, the function that runs a command in the ClankOS container.
-# "clankos-run help install" and "clankos-run help methodology" print
-# their protocols. Run on its own, this file does nothing but say so.
+# "clankos-run help COMMAND" prints each protocol. Run on its own, this file does nothing but say so.
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-    echo "clankos-install: run clankos-run install, or clankos-run methodology" >&2
+    echo "clankos-install: run clankos-run install, methodology or apply-v1" >&2
     exit 2
 fi
 
+# run_skills SCRIPT INPUT runs the skills image with INPUT as JSON.
 # install_skills [SKILL ...]: the ClankOS container reads the
 # configuration, the clankos-skills container runs the skills CLI on it,
 # and the ClankOS container runs the lint. Only the skills container is
@@ -17,8 +17,8 @@ fi
 # installed set once the skills CLI has done its part; 4 install-sources
 # refused the configuration.
 installed=
-install_skills() {
-    local skills sources named agent token status
+run_skills() {
+    local script=$1 sources=$2 skills named agent token status
     skills=${CLANKOS_SKILLS_IMAGE:-}
     if [ -z "$skills" ]; then
         named=${image%%@*}
@@ -28,7 +28,6 @@ install_skills() {
         esac
     fi
     terminal=()
-    sources=$(clankos install-sources "$@") || return 4
     agent=()
     if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
         agent=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock" -e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
@@ -51,15 +50,30 @@ install_skills() {
         -v "$workspace:$workspace" \
         -w "$here" \
         ${git_mounts[@]+"${git_mounts[@]}"} \
+        ${exclude_mounts[@]+"${exclude_mounts[@]}"} \
         ${agent[@]+"${agent[@]}"} \
         ${token[@]+"${token[@]}"} \
         ${network[@]+"${network[@]}"} \
         "$skills" \
-        node /usr/local/libexec/clankos-skills/install.mjs || status=$?
-    [ $status -eq 0 ] || return $status
+        node "/usr/local/libexec/clankos-skills/$script" || status=$?
+    return "$status"
+}
+
+install_skills() {
+    local sources
+    sources=$(clankos install-sources "$@") || return 4
+    run_skills install.mjs "$sources" || return
     installed=1
     clankos pos-lint
 }
+
+if [ "$1" = apply-v1 ]; then
+    [ $# -eq 1 ] || { echo "Usage: clankos-run apply-v1" >&2; exit 2; }
+    terminal=()
+    sources=$(clankos apply-v1) || exit
+    run_skills apply.mjs "$sources"
+    exit $?
+fi
 
 if [ "$1" = install ]; then
     [ $# -eq 1 ] || { echo "Usage: clankos-run install" >&2; exit 2; }

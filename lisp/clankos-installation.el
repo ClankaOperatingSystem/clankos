@@ -226,13 +226,21 @@ Save ownership and removal intent before replacing the configuration."
              (after (and (vectorp declared) (append declared nil))))
         (unless (eq (alist-get 'image node) :null)
           (push (alist-get 'image node) sources))
-        ;; Seed from the sources declared before the edit.  Add and adopt
-        ;; also claim installed skills that the new declaration selects.
+        ;; Seed only without history.  Later edits claim their explicit
+        ;; targets; unrelated edits must not reclaim a released skill.
         (dolist (pair entries)
           (let* ((name (car pair))
                  (source (pos-sources--url (cdr pair)))
-                 (before (pos-sources--find sources source))
-                 (added (and (member action '("add" "adopt"))
+                 (before (and (or (not (file-exists-p state-file))
+                                  (and (equal action "remove")
+                                       (equal (pos-node-source-key (car words))
+                                              (pos-node-source-key source))
+                                       (or (not (cdr words)) (member name (cdr words)))))
+                              (pos-sources--find sources source)))
+                 (added (and (or (and (equal action "add")
+                                      (equal (pos-node-source-key (car words))
+                                             (pos-node-source-key source)))
+                                 (and (equal action "adopt") (member name words)))
                              (pos-sources--find after source)))
                  (names (and added (alist-get 'skills added)))
                  (entry (list (cons 'node path)
@@ -289,6 +297,34 @@ Save ownership and removal intent before replacing the configuration."
     (condition-case err
         (pos-bytes-print (clankos-installation-edit default-directory path action words keep kind))
       (error (message "installation-edit: %s" (error-message-string err)) (kill-emacs 1)))))
+
+(defun clankos-installation-apply-batch ()
+  "Print the bounded input to the apply-v1 installer."
+  (condition-case err
+      (let* ((root default-directory)
+             (plan (clankos-installation-plan root))
+             (file (expand-file-name "installation-state.json"
+                                     (file-name-directory (clankos-installation--config root))))
+             (nodes
+              (mapcar
+               (lambda (node)
+                 (when (equal (alist-get 'status node) "blocked")
+                   (error "Managed node became a separate repository: %s" (alist-get 'path node)))
+                 (unless (eq (alist-get 'legacy node) :null)
+                   (error "Legacy path methodologies need refresh; apply-v1 supports source declarations"))
+                 (let* ((file (alist-get 'config node))
+                        (text (unless (eq file :null)
+                                (clankos-installation--read (expand-file-name file root))))
+                        (config (and text (pos-node-read-config text))))
+                   (append (list (cons 'text (or text :null))
+                                 (cons 'harnesses (or (alist-get 'harnesses config) :null))
+                                 (cons 'bin (or (alist-get 'bin config) :null))) node)))
+               (append (alist-get 'nodes plan) nil))))
+        (pos-bytes-print
+         `((schema . 1) (nodes . ,(vconcat nodes))
+           (state . ,(file-relative-name file root))
+           (before . ,(if (file-exists-p file) (clankos-installation--read file) :null)))))
+    (error (message "apply-v1: %s" (error-message-string err)) (kill-emacs 1))))
 
 (provide 'clankos-installation)
 ;;; clankos-installation.el ends here
