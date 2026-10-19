@@ -71,7 +71,7 @@ line and says where it is defined.
     Each requirement is the name of a check in test/model/, one script
     for each group, and scripts/render-model writes this section from
     them. A requirement poslib holds runs poslib's test in the image.
-    One marked "not tested" names what holds it instead.
+    One marked "not tested here" names what holds it instead.
 
     The tree, test/model/tree.sh
       - A tree is a root, the responsibilities beneath it, and each
@@ -104,14 +104,14 @@ line and says where it is defined.
 
     A skill, test/model/skill.sh
       - A skill is a folder that holds SKILL.md.
-      - A skill's references/ holds what the agent reads. Not tested:
+      - A skill's references/ holds what the agent reads. Not tested
+        here: held by agentskills.io's format.
+      - A skill's scripts/ holds what the agent runs. Not tested here:
         held by agentskills.io's format.
-      - A skill's scripts/ holds what the agent runs. Not tested: held
-        by agentskills.io's format.
-      - A skill folder follows agentskills.io's format. Not tested: held
-        by the skills CLI.
-      - ClankOS reads only the skill folder's name. Not tested: nothing
-        holds it.
+      - A skill folder follows agentskills.io's format. Not tested here:
+        held by the skills CLI.
+      - ClankOS reads only the skill folder's name. Not tested here:
+        nothing holds it.
 
     A check, test/model/check.sh
       - A check is a file scripts/check-NAME in a skill of a
@@ -149,7 +149,7 @@ line and says where it is defined.
       - A slot is a skill a repository may fill with a skill of its own:
         capture, start-up or wrap-up.
       - poslib's doc/pos-slots.txt gives each slot's signature. Not
-        tested: held by poslib's doc/pos-slots.txt.
+        tested here: held by poslib's doc/pos-slots.txt.
       - Install leaves a slot that the garden fills alone.
 
     The harness, test/model/harness.sh
@@ -158,9 +158,26 @@ line and says where it is defined.
 
     A gnome, test/model/gnome.sh
       - To ClankOS, a gnome is a methodology and nothing more. Not
-        tested: nothing holds it.
+        tested here: nothing holds it.
       - ClankOS never reads a gnome's doctrine, policies or cases. Not
-        tested: nothing holds it.
+        tested here: nothing holds it.
       - A gnome's own tests keep the copies in a skill's references/
-        equal to their originals. Not tested: held by each gnome's own
-        tests.
+        equal to their originals. Not tested here: held by each gnome's
+        own tests.
+
+    The words documents, test/model/words.sh
+      - clankos's words document is docs/words.txt.
+      - bugflow's words document is docs/words.md. Not tested here: held
+        by bugflow's tests.
+      - A words document gives each word one line.
+      - A word's line names the document, and the section where there is
+        one, that defines the word.
+      - The document and section that a word's line names exist.
+
+    Words coverage, test/model/words-coverage.sh
+      - Each thing that clankos's model names has a line in clankos's
+        words document.
+      - Each thing that bugflow's model names has a line in bugflow's
+        words document. Not tested here: held by bugflow's tests.
+      - A word that both models name has its line in one words document.
+      - The other words document links to that line for that word.
