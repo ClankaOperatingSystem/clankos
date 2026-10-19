@@ -1,134 +1,49 @@
-initiate: making a Git repository a garden
+initiate: bootstrap one repository
 
-bin/initiate runs this protocol in the ClankOS container. poslib's
-doc/pos-directory.txt defines the configuration it writes:
-https://github.com/ClankaOperatingSystem/poslib
+1. Run
 
+Use the standalone clankos-bootstrap skill's scripts/bootstrap, or bin/initiate
+from a ClankOS checkout:
 
-1. What a garden is
+    scripts/bootstrap --image vX.Y.Z
 
-A garden is a tree of responsibilities kept in Org files, in a Git
-repository. What makes a repository a garden is small:
+Run at the Git repository root with Git, Bash and Docker available. The version
+must be a published fixed release. No host software is installed. Without
+--image, an existing garden's configured fixed release is used. A new garden
+must select a release; there is no fallback to latest.
 
-    .clanka/config.yml   the configuration: that this is a
-                         responsibility, whose projects belong in
-                         projects/; the image its commands run in; the
-                         directories no command reads, archives and
-                         attics among them; how its archive is kept;
-                         and, as the tree grows, what is declared
-                         beneath it
-    intray.org           where tasks are captured, under "Unsorted",
-                         with a file ID
-    bin/                 links to the scripts that start the
-                         commands, which ClankOS installs in
-                         .clanka/auto/ and Git does not keep
-    .gitignore           directories beginning with an underscore are
-                         working material and are never committed
-    AGENTS.md            a block that tells an agent this is a garden
-                         and to run "clankos-run help"
+2. Writes
 
-The archive and its ledger are made by the first seal, in
-.clanka/archives/ and .clanka/archive-integrity/
-(docs/archive-integrity.txt), and responsibilities and projects as
-they are needed (docs/responsibility-tree.txt).
+The launcher verifies the runtime and companion skills image before any garden
+writes. Both must name the same release, source commit and apply-v1 protocol.
+It writes a new .clanka/config.yml with the selected image, projects directory,
+archive policy and exclusions; an intray with a file ID; _*/ in .gitignore;
+and a marked ClankOS block in AGENTS.md. Existing configuration and content
+outside that block are preserved. Git's managed archive exclusions are updated
+from the saved configuration, including local child scopes.
 
+It then runs explicit apply-v1 at the root. Method zero comes from the runtime's
+source commit. Optional methods are installed only when the configuration
+selects them. Ownership is recorded beside the configuration; skills and their
+lock are committed material. No auto/bin, command links or approval rules are
+created. Existing legacy wrappers are left for the user to inspect and remove.
+A fresh clone runs its committed skill bundles directly.
 
-2. The questions
+3. Options
 
-Initiation asks two things, each of which an option answers instead.
+--archive uncommitted|committed|remote selects archive storage for a new garden.
+Uncommitted is the default; remote requires --keeper URL. --ask asks about the
+archive and then the responsibility tree; --no-tree skips that tree dialogue.
+--project creates a leaf configuration with no projects directory or tree.
+Existing configuration takes precedence over these options.
 
-  - The image. "latest" follows each new version of ClankOS as it is
-    published. A version, such as v0.0.1, is pinned: the garden's
-    commands run in that image until the line is changed. The default
-    is latest.
-  - The archive. "uncommitted" keeps it on disk and has Git ignore it,
-    so that evidence is kept without growing the repository; this is
-    the default. "committed" keeps it on disk and in the repository.
-    "remote" has a keeper hold it, at an address the keeper's owners
-    give; signing in to the keeper is done afterwards, with
-    "archive-integrity sign-in". With either of these the week's
-    swept done items are sealed into the archive once the week
-    closes (docs/pos-sweep.txt); with "uncommitted" they are kept as
-    Org archive files under archive/orgmode.
+4. Completion and retry
 
-At a terminal it asks. Without one it takes the defaults for what no
-option answers. "--ask" makes it ask all the same, one answer to a
-line of standard input, an empty line taking the default.
+Nothing is staged, committed or pushed. Review configuration, ownership, skills
+and skills-lock.json together. Separate repositories are not applied. If apply
+fails, configuration and saved ownership remain for retry. Run the bundled
+clankos apply-v1 after correcting the reported problem.
 
-"--project" makes the repository a project instead of a garden: a
-repository of its own, to be mounted where a responsibility keeps its
-projects (docs/responsibility-tree.txt). Its configuration says
-nowhere that projects belong, since a project is a leaf and poslib
-refuses one that does, and initiate does not go on to
-responsibility-tree.
-
-
-3. What it writes
-
-Run at the root of a Git repository, it writes, in this order:
-
-  - .clanka/config.yml, with the answers. An archive kept uncommitted
-    has no entry, since that is what a configuration means by default;
-  - in .gitignore, the line "_*/";
-  - intray.org;
-  - .clanka/auto/, and in bin/, or the directory --bin names, a link
-    to each script the image has for starting its commands, and
-    .codex/rules/clankos.rules, which lets Codex run them without
-    asking (docs/refresh.txt). The configuration says where the links
-    go, on its line "bin: bin";
-  - in AGENTS.md, one block between the lines
-    "<!-- clankos: begin -->" and "<!-- clankos: end -->". The file is
-    made if it is missing. In a file that is there, the block is added
-    at the end, or, if it has the block already, the block alone is
-    brought to what this image writes. Nothing outside the block is
-    changed;
-  - in Git's info/exclude, poslib's managed archive block: each scope's
-    archive, archives/ in its configuration directory, is ignored when
-    its own configuration says uncommitted, including that default when
-    no entry says otherwise. The ledger, in archive-integrity/, is not
-    ignored.
-
-It updates the managed archive block from the saved configuration,
-including in an existing garden. Other ignore rules and already
-tracked files stay as they are. Existing files are kept and reported,
-among them a file in bin/ that has the name of one of the image's
-scripts and is not its link; of an existing AGENTS.md, all but the
-block is kept. It commits nothing: the diff is
-read, and the commit made, by whoever ran it.
-
-It then has poslib read the configuration, and is refused if poslib
-refuses it. At a terminal, and with --ask, it goes on to
-responsibility-tree unless --no-tree is given.
-
-Last, the initiate script in bin/ runs install (docs/install.txt),
-which installs in .agents/skills/ the image's skills and those of the
-sources the configuration declares, and records them in
-skills-lock.json. It needs the network. The skills are committed with
-the garden, by whoever ran it.
-
-
-4. Run again
-
-In a repository that already has a configuration, of any of its names,
-initiation keeps it and asks nothing, adding only the line that says
-where the links to the scripts go if it has none. It adds the intray,
-installs the image's scripts and makes each link that is missing, and
-writes the block in AGENTS.md. So it is how a new clone of a garden,
-which has no links, is given them.
-
-
-5. In the container
-
-bin/initiate gives its arguments to bin/clankos-run. Before a garden
-has bin/, the same command is started from the image by the web site's
-initiate.sh. The files are the host's, written as the invoking user.
-
-
-6. Exit status
-
-    0     done
-    2     refused, or usage: not the root of a Git repository, two
-          configurations, an answer that is not one of those offered
-    125   Docker failed to run the container
-    126   the workspace is not visible in the container
-    127   docker, or the command in the image, was not found
+Exit 0 means complete. Usage and root errors exit 2. Pair checks exit 1 when
+refused; Docker and apply failures retain their exit status. Missing host
+commands exit 127.

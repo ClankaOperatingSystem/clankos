@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Sourced by clankos-run before bootstrap or apply.
+check_pair() {
+    local named runtime installer release commit protocol
+    case ${image##*/} in
+        *:latest|*[!a-zA-Z0-9._:@-]*)
+            echo "clankos: select a fixed release image" >&2; return 1 ;;
+        *:*) ;;
+        *) echo "clankos: select a fixed release image" >&2; return 1 ;;
+    esac
+    named=${image%%@*}
+    case ${named##*/} in
+        *:*) skills_image=${named%:*}-skills:${named##*:} ;;
+        *) skills_image=$named-skills ;;
+    esac
+    skills_image=${CLANKOS_SKILLS_IMAGE:-$skills_image}
+    local format='{{index .Config.Labels "org.clankos.release"}} {{index .Config.Labels "org.opencontainers.image.revision"}} {{index .Config.Labels "org.clankos.apply"}}'
+    local name
+    for name in "$image" "$skills_image"; do
+        if ! docker image inspect "$name" >/dev/null 2>&1; then
+            docker pull "$name" >&2 || {
+                echo "clankos: image unavailable: $name; retry when both release images are available" >&2
+                return 1
+            }
+        fi
+    done
+    if [ "$(docker image inspect --format '{{index .Config.Labels "org.clankos.role"}}' "$image")" != runtime ] ||
+       [ "$(docker image inspect --format '{{index .Config.Labels "org.clankos.role"}}' "$skills_image")" != skills ]; then
+        echo "clankos: expected runtime and skills images; select the release pair and retry" >&2
+        return 1
+    fi
+    runtime=$(docker image inspect --format "$format" "$image") || return 1
+    installer=$(docker image inspect --format "$format" "$skills_image") || return 1
+    read -r release commit protocol <<< "$runtime"
+    if [ "$runtime" != "$installer" ] || [[ ! $commit =~ ^[0-9a-f]{40}$ ]] || [ "$protocol" != apply-v1 ]; then
+        echo "clankos: incompatible image pair; select matching release images and retry" >&2
+        return 1
+    fi
+    if [[ ! $release =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && ! { [ "$release" = dev ] && [ -n "${CLANKOS_IMAGE:-}" ]; }; then
+        echo "clankos: select a fixed release; development images require CLANKOS_IMAGE" >&2
+        return 1
+    fi
+    if [ "$release" != dev ] && { [ "$image" != "${image%:*}:$release" ] ||
+        [ "$skills_image" != "${skills_image%:*}:$release" ] ||
+        [ "${CLANKOS_TARGET_RELEASE:-$release}" != "$release" ]; }; then
+        echo "clankos: image tag differs from its release metadata; select $release and retry" >&2
+        return 1
+    fi
+}

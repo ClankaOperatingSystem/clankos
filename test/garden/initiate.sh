@@ -1,200 +1,65 @@
 #!/usr/bin/env bash
-# Run bin/initiate, from this repository, against new Git repositories.
-# Exit: 0 every check passed, 1 otherwise.
+# Bootstrap using only an external copy of the bootstrap skill.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
-
-registry=ghcr.io/clankaoperatingsystem/clankos
-
-mkdir defaults && cd defaults && git init -q .
-"$bin/initiate" < /dev/null > out 2>&1
-check "with no terminal it takes the defaults" \
-    test "$(cat .clanka/config.yml)" = "pos: 2
-projects: projects/
-image: $registry:latest
-bin: bin
-exclude:
-  - archives
-  - attic
-  - node_modules
-  - \"_*\"
-  - \".*\""
-check "an uncommitted archive in .clanka is ignored by Git" git check-ignore -q .clanka/archives/evidence
-check "its ledger is not" sh -c '! git check-ignore -q .clanka/archive-integrity/ledger/event'
-check "no archive is made beside the garden's files" sh -c '! ls -d archives archive-integrity 2>/dev/null'
-check "underscore directories are ignored by Git" grep -qxF '_*/' .gitignore
-check "the intray has Unsorted" grep -qx '\* Unsorted' intray.org
-check "and a file ID" grep -qxE ':ID: +[0-9a-f-]{36}' intray.org
-check "it gives the garden the image's scripts" \
-    sh -c 'for s in archive-integrity clankos-run initiate pos-capture responsibility-tree startup-prompt; do [ -x "bin/$s" ] || exit 1; done'
-check "the scripts are those of this repository" cmp -s bin/clankos-run "$bin/clankos-run"
-check "each is a link to what is installed beside the configuration" \
-    test "$(readlink bin/clankos-run)" = ../.clanka/auto/bin/clankos-run
-check "what is installed names its version" test -s .clanka/auto/version
-check "Git keeps neither the links nor what is installed" \
-    sh -c '! git status --porcelain --untracked-files=all | grep -q "bin/\|\.clanka/auto"'
-check "and reports the links" grep -qx 'linked    bin/pos-capture' out
-check "it makes AGENTS.md, which sends an agent to the skills" \
-    grep -qF 'Use the' AGENTS.md
-check "and to help for what a garden is" \
-    grep -qF 'run `bin/clankos-run help`' AGENTS.md
-check "and does not ask for every command's help to be read first" \
-    sh -c '! grep -q "Before working in the garden" AGENTS.md'
-check "and reports it" grep -qx 'wrote     AGENTS.md' out
-check "it commits nothing" test -z "$(git log --oneline 2>/dev/null)"
-check "what it wrote is the invoking user's" test "$(owner .clanka/config.yml)" = "$(id -u)"
-rm out
-
-# The garden's own scripts work, in the image it was made with.
-check "the garden's own capture works" sh -c "bin/pos-capture -- 'First task' >/dev/null 2>&1 && grep -q 'First task' intray.org"
-check "the garden's archive check is clean" status 0 bin/archive-integrity check .
-
-rm bin/pos-capture bin/startup-prompt
-echo "mine" > bin/pos-capture
-"$bin/initiate" --image v9 --archive committed < /dev/null > out 2>&1
-check "run again, the configuration is kept" grep -qxF "image: $registry:latest" .clanka/config.yml
-check "run again, a link that is missing is made" test -L bin/startup-prompt
-check "run again, a file that has a script's name is kept" test "$(cat bin/pos-capture)" = mine
-check "and is reported" grep -q 'kept      bin/pos-capture (it is not ClankOS' out
-check "as a name taken" grep -qx 'clankos: name-taken bin/pos-capture (untracked)' out
-rm bin/pos-capture
-check "existing configuration wins over the archive option" git check-ignore -q .clanka/archives/evidence
-check "run again, AGENTS.md is kept" grep -qx 'kept      AGENTS.md' out
-check "the block keeps a search within the repository" \
-    grep -qx 'Search for files within this repository. Do not search the user.s' AGENTS.md
-sed 's/^## ClankOS$/## An older block/' AGENTS.md > edited
-{ echo '# Mine'; echo; cat edited; echo; echo 'After.'; } > AGENTS.md
-rm edited
-"$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "a block that differs is brought to the image's" grep -qx '## ClankOS' AGENTS.md
-check "and is reported" grep -qx 'updated   the ClankOS block in AGENTS.md' out
-check "there is still one block" test "$(grep -c '^<!-- clankos: ' AGENTS.md)" = 2
-check "what is outside the block is kept" \
-    test "$(head -n 1 AGENTS.md)$(tail -n 1 AGENTS.md)" = '# MineAfter.'
-# work keeps its archive in .clanka; older keeps its beside its files,
-# as earlier gardens did.
-mkdir -p work/.clanka/archives work/.clanka/archive-integrity older/.clanka older/archives
-printf 'pos: 2\nprojects: projects/\n' > work/.clanka/config.yml
-printf 'pos: 2\nprojects: projects/\n' > older/.clanka/config.yml
-printf '\nchildren:\n  - path: work\n  - path: older\n' >> .clanka/config.yml
-printf 'evidence\n' > work/.clanka/archives/evidence
-printf 'ledger\n' > work/.clanka/archive-integrity/ledger
-printf 'evidence\n' > older/archives/evidence
-"$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "rerunning initiate ignores existing child archives" git check-ignore -q work/.clanka/archives/evidence
-check "the ledger stays available to Git" sh -c '! git check-ignore -q work/.clanka/archive-integrity/ledger'
-check "an archive beside a child's files is ignored too" git check-ignore -q older/archives/evidence
-printf 'pos: 2\nprojects: projects/\narchives:\n  - scope: .\n    kept: committed\n' > work/.clanka/config.yml
-"$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "a changed child policy removes its generated exclusion" sh -c '! git check-ignore -q work/.clanka/archives/evidence'
-check "the evidence is kept" grep -qx evidence work/.clanka/archives/evidence
+export GH_TOKEN=unused
+cp -R "$repo/skills/clankos-bootstrap" 'bootstrap bundle'
+bootstrap="$work/bootstrap bundle/scripts/bootstrap"
+mkdir garden && cd garden && git init -q
+"$bootstrap" --image v0.0.5 --no-tree > ../out 2> ../err
+check 'standalone bootstrap succeeds' test $? -eq 0
+check 'bootstrap records a fixed release' grep -qx 'image: ghcr.io/clankaoperatingsystem/clankos:v0.0.5' .clanka/config.yml
+check 'bootstrap creates no wrappers' test ! -e bin -a ! -e .clanka/auto
+check 'bootstrap installs method zero' test -x .agents/skills/clankos-lint/scripts/clankos
+check 'bootstrap records ownership' test -s .clanka/installation-state.json
+check 'bootstrap leaves optional methods unselected' sh -c '! grep -q "^methodologies:" .clanka/config.yml'
+check 'bootstrap stages nothing' test -z "$(git ls-files)"
+check 'bootstrap commits nothing' test -z "$(git log --oneline 2>/dev/null)"
+check 'intray has its file ID' grep -qxE ':ID: +[0-9a-f-]{36}' intray.org
+check 'uncommitted archives are ignored' git check-ignore -q .clanka/archives/evidence
+check 'ledger is not ignored' sh -c '! git check-ignore -q .clanka/archive-integrity/ledger/event'
+check 'files belong to the invoking user' test "$(owner .clanka/config.yml)" = "$(id -u)"
+check 'installed capture works' sh -c '.agents/skills/capture/scripts/clankos capture -- "First task" >/dev/null 2>&1 && grep -q "First task" intray.org'
+printf '# My instructions\n\n' > ../before
+cat AGENTS.md >> ../before
+printf '\nAfter the block.\n' >> ../before
+cp ../before AGENTS.md
+git add -A && git -c user.name=Test -c user.email=test@example.org commit -qm 'Bootstrap garden'
+"$bootstrap" --no-tree > ../out 2> ../err
+check 'repeat bootstrap succeeds' test $? -eq 0
+check 'repeat bootstrap preserves committed content' test -z "$(git status --porcelain)"
+git clone -q . ../clone
+(cd ../clone && .agents/skills/capture/scripts/clankos capture -- 'From clone' >/dev/null 2>&1)
+check 'fresh clone uses its committed bundle' grep -q 'From clone' ../clone/intray.org
+check 'fresh clone has no auto/bin' test ! -e ../clone/.clanka/auto
 cd ..
-
-mkdir held && cd held && git init -q . && mkdir .clankos
-printf 'pos: 2\nprojects: projects/\n' > .clankos/config.yml
-"$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "a configuration in .clankos makes this a garden already" grep -q '^kept      .clankos/config.yml' out
-check "and no second one is written" test ! -e .clanka
+mkdir project && cd project && git init -q
+"$bin/initiate" --image v0.0.5 --project --archive remote --keeper https://keeper.example/a > ../out 2> ../err
+check 'source bootstrap entry succeeds' test $? -eq 0
+check 'project has no projects directory declaration' sh -c '! grep -q "^projects:" .clanka/config.yml'
+check 'remote archive policy is retained' grep -qx '    url: https://keeper.example/a' .clanka/config.yml
 cd ..
-
-mkdir pinned && cd pinned && git init -q . && printf 'node_modules/' > .gitignore
-printf '# Rules of this repository\n\nNever commit to master.' > AGENTS.md
-"$bin/initiate" --image v0.0.1 --archive remote --keeper https://keeper.example/ledgers/a < /dev/null > out 2>&1
-check "options answer the questions" \
-    test "$(cat .clanka/config.yml)" = "pos: 2
-projects: projects/
-image: $registry:v0.0.1
-bin: bin
-exclude:
-  - archives
-  - attic
-  - node_modules
-  - \"_*\"
-  - \".*\"
-archives:
-  - scope: \".\"
-    kept: remote
-    url: https://keeper.example/ledgers/a
-    sweep: sealed"
-check "a remote archive is not ignored" sh -c '! git check-ignore -q .clanka/archives/evidence'
-check "a line is added to .gitignore on a line of its own" grep -qx 'node_modules/' .gitignore
-check "an AGENTS.md that is there keeps its content" \
-    test "$(sed -n 1,3p AGENTS.md | tr '\n' '|')" = '# Rules of this repository||Never commit to master.|'
-check "and gains the block, after a blank line" \
-    test "$(sed -n 4,5p AGENTS.md | tr '\n' '|')" = '|<!-- clankos: begin -->|'
-check "which is reported" grep -qx 'added     the ClankOS block to AGENTS.md' out
-check "the pinned image is the one the garden runs" \
-    sh -c "[ \"\$(env -u CLANKOS_IMAGE bin/clankos-run --show | tail -n 1)\" = 'image $registry:v0.0.1' ]"
+mkdir held && cd held && git init -q && mkdir .pos
+printf 'pos: 2\nprojects: projects/\nimage: ghcr.io/clankaoperatingsystem/clankos:v0.0.5\n' > .pos/config.yaml
+cp .pos/config.yaml ../config-before
+"$bootstrap" --archive committed --no-tree > ../out 2> ../err
+check 'existing configuration is preserved' cmp -s .pos/config.yaml ../config-before
+check 'no second configuration is made' test ! -e .clanka
+mkdir -p child/.pos
+printf 'pos: 2\nprojects: projects/\n' > child/.pos/config.yaml
+printf 'children:\n  - path: child\n' >> .pos/config.yaml
+"$bootstrap" --no-tree > ../out 2> ../err
+check 'local child is applied' test -s child/skills-lock.json
+check 'child archive exclusions are maintained' git check-ignore -q child/.pos/archives/evidence
 cd ..
-
-mkdir asked && cd asked && git init -q .
-printf 'v0.0.1\ncommitted\nhealth\n\n\n\n' | "$bin/initiate" --ask >/dev/null 2>&1
-check "--ask reads the answers from standard input" \
-    test "$(sed -n '3p;11,13p' .clanka/config.yml | tr '\n' '|')" = "image: $registry:v0.0.1|archives:|  - scope: \".\"|    kept: committed|"
-check "--ask goes on to the tree" test -f health/.clanka/config.yml
-cd ..
-
-mkdir elsewhere && cd elsewhere && git init -q . && mkdir tools
-"$bin/initiate" --bin tools < /dev/null >/dev/null 2>&1
-check "--bin names where the scripts go" test -x tools/clankos-run -a ! -e bin
-check "and the configuration says so" grep -qx 'bin: tools' .clanka/config.yml
-check "AGENTS.md names that directory" grep -qF 'run `tools/clankos-run help`' AGENTS.md
-cd ..
-
-# A garden made before the commands were links has no line that says
-# where they go, and copies of the scripts. A new clone has no links.
-mkdir older && cd older && git init -q . && mkdir -p .clanka bin
-printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
-cp "$bin/pos-capture" bin/pos-capture
-git add . && git -c user.name=Test -c user.email=test@example.org commit -qm 'An older garden'
-"$bin/initiate" --no-tree < /dev/null > out 2>&1
-check "an older garden is told where its links go" grep -qx 'bin: bin' .clanka/config.yml
-check "its copy of a script is kept and reported, with its commit" \
-    grep -q '^clankos: name-taken bin/pos-capture (tracked, added in [0-9a-f]*)$' out
-check "its other scripts are linked" test -L bin/clankos-run
-git rm -q bin/pos-capture
-git add . && git -c user.name=Test -c user.email=test@example.org commit -qm 'Take the links'
-git clone -q . ../cloned
-cd ../cloned
-check "a new clone has no links" test ! -e bin/clankos-run
-"$bin/initiate" --no-tree < /dev/null > ../out 2>&1
-check "initiate, run in a clone, makes them" test -L bin/clankos-run -a -L bin/pos-capture
-check "and changes nothing Git keeps" test -z "$(git status --porcelain)"
-cd ..
-
-# A project made with --project is read as a project where its parent
-# keeps projects; one made without it is refused there.
-for kind in project garden; do
-    mkdir "$kind-repo" && (cd "$kind-repo" && git init -q -b master .)
-    if [ "$kind" = project ]; then
-        (cd "$kind-repo" && "$bin/initiate" --project < /dev/null > ../out 2>&1)
-    else
-        (cd "$kind-repo" && "$bin/initiate" --no-tree < /dev/null > ../out 2>&1)
-    fi
-    [ "$kind" = garden ] || cp out project-out
-    git -C "$kind-repo" add -A
-    git -C "$kind-repo" -c user.name=Test -c user.email=test@example.org commit -qm "A $kind"
-done
-check "--project says nowhere that projects belong" sh -c '! grep -q "^projects:" project-repo/.clanka/config.yml'
-check "and says it made a project" grep -qx 'This repository is a project. Nothing is committed: read git status, and commit.' project-out
-check "and does not go on to the tree" sh -c '! grep -q "^This repository is a garden" project-out'
-mkdir -p mounting/.clanka && cd mounting && git init -q -b master .
-printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
-"$bin/responsibility-tree" --product projects/shed="$work/project-repo" \
-    --product projects/barn="$work/garden-repo" > /dev/null 2>&1
-"$bin/startup-prompt" > out 2>&1
-check "both are cloned" test -d projects/shed/.git -a -d projects/barn/.git
-check "a project made with --project is read as a project" sh -c '! grep -q "projects/shed.*project-holds-projects" out'
-check "a garden mounted as a project is refused" grep -q 'projects/barn (project-holds-projects' out
-cd ..
-
-mkdir plain
-check "a directory that is no repository is refused" sh -c "cd plain && '$bin/initiate' </dev/null >/dev/null 2>&1; [ \$? -eq 2 ]"
-check "a refusal writes nothing" test -z "$(ls -A plain)"
-mkdir bad && (cd bad && git init -q .)
-check "an archive kept some other way is refused" sh -c "cd bad && '$bin/initiate' --archive elsewhere </dev/null >/dev/null 2>&1; [ \$? -eq 2 ]"
-check "a remote archive without a keeper is refused" sh -c "cd bad && '$bin/initiate' --archive remote </dev/null >/dev/null 2>&1; [ \$? -eq 2 ]"
-check "a refused answer writes no configuration" test ! -e bad/.clanka
-
+mkdir bad && cd bad && git init -q
+check 'floating release is refused before writes' status 2 "$bootstrap" --image latest
+check 'refused release writes nothing' test ! -e .clanka
+check 'mismatched image roles refuse bootstrap' status 1 env CLANKOS_SKILLS_IMAGE="$CLANKOS_IMAGE" "$bootstrap" --image v0.0.5
+check 'pair refusal writes no configuration' test ! -e .clanka
+check 'invalid archive is refused' status 2 "$bootstrap" --image v0.0.5 --archive wrong
+check 'invalid archive writes no configuration' test ! -e .clanka
+mkdir nested && cd nested
+check 'bootstrap below root is refused' status 2 "$bootstrap" --image v0.0.5
 [ "$failures" -eq 0 ]

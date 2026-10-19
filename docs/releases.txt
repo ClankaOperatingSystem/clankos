@@ -1,0 +1,31 @@
+releases: fixed runtime and installer pairs
+
+Build both images from the same full source commit, with CLANKOS_COMMIT and
+CLANKOS_RELEASE=vX.Y.Z. The runtime and clankos-skills labels declare release,
+source revision and apply-v1 protocol. The runtime installs method zero from
+that source revision. Development builds use release dev; tests select them
+with CLANKOS_IMAGE and CLANKOS_SKILLS_IMAGE.
+
+A release tag is fixed. Never move, overwrite or rebuild it in place. The tag
+workflow rejects a tag outside master and refuses publication if either image
+tag exists. If publication stops after one image, do not advertise that pair;
+prepare a new version. Master's latest images are development builds and are
+not bootstrap or upgrade targets.
+
+Before tagging, merge the implementation and run the full fixture suite using
+both images from that commit. Create a new vX.Y.Z tag through the normal release
+workflow. CI builds and tests both images, publishes both platforms, pulls both
+published images, runs bin/clankos-run --check-pair and keeps release-pair.json
+as an artifact. Advertise the release only after this check succeeds.
+
+Bootstrap requires a published fixed version. No default version is advertised
+in the bundle until a compatible pair has completed publication. Install the
+clankos-bootstrap skill from a pinned source revision for standalone recovery;
+it carries its own launcher and can invoke apply-v1 on a newer pair without
+using the old installation's ordinary dispatcher.
+
+Upgrade runs scripts/upgrade --image vX.Y.Z from the clankos-upgrade bundle. It
+checks the pair, changes only the root image field, then applies local nodes.
+It leaves Git's index and history unchanged. Run it separately in the working
+copy of each mounted repository that needs the new release. A failed apply
+retains the selected image and ownership state for retry.

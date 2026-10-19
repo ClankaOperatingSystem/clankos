@@ -1,23 +1,18 @@
 ---
 name: clankos-upgrade
-description: Bring a garden and each repository mounted in it to a newly published ClankOS image, installing the image's skills in each and committing them there. Use when a new image is published, or when refresh reports lock-differs for the image's skills. Not for adding or removing a source of skills, which the methodology skill does.
+description: Select a fixed ClankOS release and apply its skills within one repository. Use to upgrade a garden or a mounted repository in its own working copy.
 ---
 
-Each ClankOS image installs its skills at the commit it was built
-from. After a new image is published, every configured repository of
-the garden, the root's and each mounted one's, records the old commit,
-and refresh reports lock-differs there until the skills are installed
-again and committed.
+Run `scripts/upgrade --image vX.Y.Z` by its path from the repository to
+upgrade. Select a published fixed release. The script checks the runtime
+and skills image pair, records the target in the root configuration, then
+runs apply-v1. It covers local configured nodes and skips separate repositories.
+Run it separately in each repository that is to be upgraded.
 
-## Run
-
-    scripts/upgrade
-
-Run the script by its path in this skill's directory, from anywhere in
-the garden's root repository. It pulls the image and its skills image,
-installs the skills in each node whose skills-lock.json differs, and
-commits there only the skill folders and skills-lock.json, as
-"Install the skills of ClankOS COMMIT". It pushes nothing.
+The script does not stage, commit or push. Review configuration, ownership,
+skills and lock changes together, then commit through the repository's normal
+workflow. An apply failure leaves the target configuration in place for retry;
+report the error and correct it before repeating the command.
 
 ## Move archives that lie beside the work
 
@@ -48,23 +43,15 @@ garden's root:
    again. It commits nothing.
 3. Read `git status` in each: it should show renames only. Commit the
    moves as "Move archives into the configuration directory": in the
-   garden's own repository where the upgrade's commit went, and in a
+   garden's own repository, and in a
    mounted repository's clone on its branch, pushed for a pull
    request. The mount takes the move by a pull once the pull request
    is merged.
 4. Run `relocate-plan .` again in each repository. It should exit 0,
    save in a mounted repository whose pull request is still open.
 
-## What to get right
-
-- Run it on the host, not in a sandbox that denies Docker or the
-  network.
-- A node whose install is refused is left as it was. Report what
-  install said, and do not commit there by hand.
-- Push each repository only as that repository's own practice says.
-
 ## Afterwards
 
-Say which repositories were committed, which archives were moved and
-which wait on a pull request, and repeat what refresh still reports,
-if anything.
+Report which repository was applied and any incomplete operation. Inspect
+`git diff` and `git status`; existing staged work must remain staged and
+uncommitted.

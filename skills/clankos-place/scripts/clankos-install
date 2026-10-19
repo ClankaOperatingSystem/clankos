@@ -19,7 +19,7 @@ fi
 installed=
 run_skills() {
     local script=$1 sources=$2 skills named agent token status
-    skills=${CLANKOS_SKILLS_IMAGE:-}
+    skills=${skills_image:-${CLANKOS_SKILLS_IMAGE:-}}
     if [ -z "$skills" ]; then
         named=${image%%@*}
         case ${named##*/} in

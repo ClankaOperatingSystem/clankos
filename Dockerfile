@@ -96,3 +96,13 @@ RUN cd /usr/local/share/clankos \
         | sha256sum | cut -c1-16) > source/version
 
 CMD ["emacs", "--version"]
+
+# Both images of a release must identify the same source and apply protocol.
+ARG CLANKOS_RELEASE=dev
+ARG CLANKOS_COMMIT
+LABEL org.clankos.role=runtime \
+      org.clankos.release=$CLANKOS_RELEASE \
+      org.opencontainers.image.revision=$CLANKOS_COMMIT \
+      org.clankos.apply=apply-v1
+RUN printf '%s' "$CLANKOS_COMMIT" | grep -Eq '^[0-9a-f]{40}$' \
+    && printf '%s\n' "$CLANKOS_RELEASE" > /usr/local/share/clankos-release

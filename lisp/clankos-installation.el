@@ -271,11 +271,32 @@ Save ownership and removal intent before replacing the configuration."
         (unless (equal text new) (clankos-installation--write file new))
         `((config . ,(alist-get 'config node)) (state . ,(file-relative-name state-file root)))))))
 
+(defun clankos-installation-image (root image)
+  "Set ROOT's runtime IMAGE without installing or changing Git's index."
+  (unless (string-match-p "\\`[A-Za-z0-9./_-]+:v[0-9]+\\.[0-9]+\\.[0-9]+\\'" image)
+    (error "Image needs a fixed release tag: %s" image))
+  (clankos-installation-plan root)
+  (let* ((file (clankos-installation--config root))
+         (text (clankos-installation--read file))
+         (line (concat "image: " image))
+         (new (if (string-match "^image:.*$" text)
+                  (replace-match line t t text)
+                (concat text (unless (string-suffix-p "\n" text) "\n") line "\n"))))
+    (pos-node-read-config new)
+    (unless (equal text new) (clankos-installation--write file new))))
+
 (defun clankos-installation-edit-batch ()
   "Edit configuration and saved intent without installing skills."
   (let* ((args command-line-args-left) (path (pop args)) (action (pop args))
          keep kind words)
     (setq command-line-args-left nil)
+    (when (equal action "image")
+      (unless (and (equal path ".") (= (length args) 1))
+        (message "Usage: installation-edit . image IMAGE:vX.Y.Z")
+        (kill-emacs 2))
+      (condition-case err
+          (progn (clankos-installation-image default-directory (car args)) (kill-emacs 0))
+        (error (message "installation-edit: %s" (error-message-string err)) (kill-emacs 1))))
     (cl-flet ((usage ()
                 (message "Usage: installation-edit NODE add SOURCE REF [SKILL ...] [--kind KIND]")
                 (message "       installation-edit NODE remove SOURCE [SKILL ...] [--keep]")

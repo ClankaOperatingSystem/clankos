@@ -9,6 +9,8 @@ on:
 jobs:
   image:
     runs-on: ubuntu-latest
+    env:
+      CLANKOS_RELEASE: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
     permissions:
       contents: read
       packages: write
@@ -39,7 +41,9 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
-          build-args: CLANKOS_COMMIT=${{ github.sha }}
+          build-args: |
+            CLANKOS_COMMIT=${{ github.sha }}
+            CLANKOS_RELEASE=dev
           load: true
           tags: clankos:test
           cache-from: |
@@ -49,6 +53,9 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: clankos-skills
+          build-args: |
+            CLANKOS_COMMIT=${{ github.sha }}
+            CLANKOS_RELEASE=dev
           load: true
           tags: clankos-skills:test
           cache-from: |
@@ -76,6 +83,17 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Refuse an existing release tag
+        if: github.ref_type == 'tag'
+        run: |
+          [[ "$CLANKOS_RELEASE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          for image in clankos clankos-skills; do
+            if docker manifest inspect "ghcr.io/clankaoperatingsystem/$image:$CLANKOS_RELEASE" > /dev/null 2> "$RUNNER_TEMP/manifest-error"; then
+              echo "Release tag already exists: $image:$CLANKOS_RELEASE" >&2
+              exit 1
+            fi
+            grep -Eq 'manifest unknown|no such manifest|not found' "$RUNNER_TEMP/manifest-error"
+          done
       # master is published as latest; a tag is published under its own
       # name and does not move latest.
       - id: meta
@@ -90,7 +108,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          build-args: CLANKOS_COMMIT=${{ github.sha }}
+          build-args: |
+            CLANKOS_COMMIT=${{ github.sha }}
+            CLANKOS_RELEASE=${{ env.CLANKOS_RELEASE }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -109,9 +129,27 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: clankos-skills
+          build-args: |
+            CLANKOS_COMMIT=${{ github.sha }}
+            CLANKOS_RELEASE=${{ env.CLANKOS_RELEASE }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.skills-meta.outputs.tags }}
           labels: ${{ steps.skills-meta.outputs.labels }}
           cache-from: type=gha,scope=clankos-skills
           cache-to: type=gha,mode=max,scope=clankos-skills
+      - name: Check the published release pair
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          CLANKOS_IMAGE: ghcr.io/clankaoperatingsystem/clankos:${{ github.ref_name }}
+          CLANKOS_SKILLS_IMAGE: ghcr.io/clankaoperatingsystem/clankos-skills:${{ github.ref_name }}
+        run: |
+          docker pull "$CLANKOS_IMAGE"
+          docker pull "$CLANKOS_SKILLS_IMAGE"
+          bin/clankos-run --check-pair
+          docker image inspect "$CLANKOS_IMAGE" "$CLANKOS_SKILLS_IMAGE" > release-pair.json
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        with:
+          name: release-pair
+          path: release-pair.json

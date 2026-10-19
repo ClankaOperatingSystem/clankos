@@ -49,13 +49,10 @@ how the things fit together and which code enforces each.
 
 2. The commands
 
-Each is a script in the garden's bin/, run from the directory it is to
-work on. Run from a responsibility's directory, a command works on
-that responsibility: there the script is ../bin/NAME, a task is
-captured to that responsibility's intray, and a report names projects
-from that directory. The scripts are links to what ClankOS installs in
-.clanka/auto/, which Git does not keep and each command brings to the
-image's own before it runs.
+Each installed skill carries its command launcher and required scripts. Run
+those scripts from the directory to work on. A fresh clone uses the committed
+bundles; ordinary commands do not install or refresh anything. The scripts in
+a source checkout's bin/ are available for development.
 
     initiate              make a Git repository a garden; run again,
                           add what a newer image has
@@ -107,6 +104,8 @@ image's own before it runs.
     clankos-run wild-caught
                           list the skills each repository has
                           installed and does not configure
+    clankos-pair          check release metadata before bootstrap or apply
+    clankos-bootstrap     bootstrap with a standalone bundle and fixed release
     clankos-install       install, methodology and apply-v1, which
                           clankos-run reads from it
     install.sh            pull the image
@@ -177,12 +176,11 @@ that it runs them without asking ("clankos-run help refresh", 1).
     clankos-migrate-archive rebuild an archive that has a legacy
                             ledger
     clankos-methodology     add, remove or adopt a source of skills
-    clankos-upgrade         install a new image's skills in each
-                            repository of the garden, and commit them
+    clankos-upgrade         select a fixed release and apply one repository
 
-install puts them in .agents/skills/ from this repository at the
+apply-v1 puts them in .agents/skills/ from this repository at the
 commit the image was built from, and records them in skills-lock.json,
-and they are committed with the garden ("clankos-run help install").
+and they are committed with the garden ("clankos-run help apply-v1").
 A skill of the repository's own that is not ClankOS's is left alone.
 
 

@@ -31,7 +31,7 @@ check "the skills and skills-lock.json are there to commit, and auto/ is not" \
     sh -c 'git status --porcelain | grep -qx "?? .agents/" && git status --porcelain | grep -qx "?? skills-lock.json" && ! git status --porcelain --untracked-files=all | grep -q "\.clanka/auto"'
 "$bin/clankos-run" refresh > ../out 2> ../err
 check "refresh finds them as installed" test $? -eq 0 -a ! -s ../err
-check "AGENTS.md says where the skills are" grep -q 'clankos-NAME' AGENTS.md
+check "AGENTS.md says where the skills are" grep -q '.agents/skills/' AGENTS.md
 
 .agents/skills/capture/scripts/clankos capture -- 'From the root' > ../out 2>&1
 check "a skill's script runs a command where the session is" grep -q 'From the root' intray.org
