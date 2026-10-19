@@ -19,7 +19,7 @@ RUN apt-get update \
 # since the others want servers the image has not. org-roam's manual
 # and tests are not kept. The fetch is its own layer, before lisp/ is
 # copied, so that a change to lisp/ recompiles and does not refetch.
-ARG POSLIB_COMMIT=371683c837c180a326591b84492667535d474565
+ARG POSLIB_COMMIT=f2b05df1c923403d3696187a3a88668f251c3460
 ARG MARKDOWN_MODE_COMMIT=f5d520b3ee7722dd2231ab586ba51d8eb166e49b
 ARG YAML_COMMIT=5546f36bde24a9a8c1934e0f6ce205cd41d72537
 ARG COMPAT_COMMIT=90880f81419577e1d3f68424d2a3adf31e6d663e
