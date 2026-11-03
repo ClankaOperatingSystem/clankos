@@ -33,7 +33,7 @@ line and says where it is defined.
     image            the ClankOS container image: Emacs, poslib and
                      the commands, and method zero, the image's own
                      skills, named clankos-NAME, with the slots it
-                     fills.
+                     fills, which the root declares as a source.
     harness          the program the coding agent runs in, which reads
                      .agents/skills/ and offers the agent what it
                      finds there.
@@ -48,13 +48,15 @@ line and says where it is defined.
 
     tree
      └─ node ──────── configuration
-                        ├─ image ──────── method zero: commands and skills
+                        ├─ image ──────── commands
                         └─ source (at a ref) ──┬─ methodology ── skill ── check
                                                └─ skills-repository ── skill
+                                                    (method zero: the image's
+                                                     repository, at its commit)
                                          │
-                      install copies each source's skills, and the
-                      image's, into .agents/skills/ and records them
-                      in the lock.
+                      install copies each source's skills, method
+                      zero's among them, into .agents/skills/ and
+                      records them in the lock.
                                          │
                       lint runs each methodology's checks;
                       a harness offers every skill to the agent.
@@ -137,19 +139,27 @@ line and says where it is defined.
       - The image holds Emacs, poslib, the commands and method zero.
       - Method zero's skills are named clankos-NAME, apart from the
         slots it fills.
-      - The image installs method zero at the commit the image was built
-        from.
-      - Method zero's skills are installed in .agents/skills/ as
-        folders.
-      - No configuration names method zero's skills.
-      - A declared source's skill of a slot's name is installed in place
-        of method zero's.
+      - A garden declares method zero as a source: the image's
+        repository, at the commit the image was built from.
+      - By default it declares capture, start-up, wrap-up and clankos-
+        bootstrap.
+      - Method zero's declared skills are installed in .agents/skills/
+        as folders, and no others.
+      - They are installed at the commit the image was built from.
+      - Another of the image's skills is added to the declaration, and
+        installed.
+      - Apply refuses method zero declared at a ref other than the
+        image's commit.
+      - Only the image's repository may supply a skill named clankos-
+        NAME.
 
     The slots, test/model/slots.sh
       - A slot is a skill a repository may fill with a skill of its own:
         capture, start-up or wrap-up.
       - poslib's doc/pos-slots.txt gives each slot's signature. Not
         tested here: held by poslib's doc/pos-slots.txt.
+      - Method zero's default declaration leaves out a slot that the
+        garden fills.
       - Install leaves a slot that the garden fills alone.
 
     The harness, test/model/harness.sh

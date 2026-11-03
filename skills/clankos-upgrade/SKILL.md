@@ -5,8 +5,10 @@ description: Select a fixed ClankOS release and apply its skills within one repo
 
 Run `scripts/upgrade --image vX.Y.Z` by its path from the repository to
 upgrade. Select a published fixed release. The script checks the runtime
-and skills image pair, records the target in the root configuration, then
-runs apply-v1. It covers local configured nodes and skips separate repositories.
+and skills image pair, records the target in the root configuration, moves
+method zero's declared ref to the target's commit, then runs apply-v1. A
+garden that does not yet declare method zero has it declared with the
+ClankOS skills it already has installed, so none is removed. It covers local configured nodes and skips separate repositories.
 Run it separately in each repository that is to be upgraded.
 
 The script does not stage, commit or push. Review configuration, ownership,

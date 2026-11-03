@@ -3,12 +3,12 @@
 // is docs/install.txt. bin/clankos-run starts this in the clankos-skills
 // image, with what the ClankOS image read of the configuration on
 // standard input: {"sources": [...], "harnesses": [...] or null,
-// "bin": a path or null, "image": a source or null, "uninstall": [...]},
+// "bin": a path or null, "clankos": a git URL or null, "uninstall": [...]},
 // each source as poslib's reader gives it. uninstall names skills to
 // remove that are left otherwise: those of a source the methodology
-// command has just removed. image is the ClankOS image's skills, from
-// the repository and at the commit it was built from, which the
-// ClankOS image gives at a repository's root.
+// command has just removed. clankos is the repository the ClankOS image
+// was built from: a source of that repository is method zero, declared
+// as any other source is, and alone may supply skills named clankos-NAME.
 //
 // Nothing is changed until every source has been fetched into a scratch
 // directory and every refusal checked. Then the skills of a declared
@@ -112,8 +112,8 @@ try {
   fail(2, ['the configuration was not given on standard input']);
 }
 const explicit = plan.mode === 'apply-v1';
-const declared = plan.sources || [];
-const sources = plan.image ? [...declared, { ...plan.image, kind: 'image' }] : declared;
+const sources = plan.sources || [];
+const clankos = plan.clankos ? key(plan.clankos) : null;
 const uninstall = new Set(plan.uninstall || []);
 let initial;
 try { if (explicit) initial = locks(node); }
@@ -215,12 +215,7 @@ try {
         return;
       }
     }
-    let names = run.results.map((result) => result.name).sort();
-    if (source.kind === 'image') {
-      // A skill a declared source supplies takes the place of the image's.
-      const others = new Set(supplied.flatMap((each) => each.names));
-      names = names.filter((name) => !others.has(name));
-    }
+    const names = run.results.map((result) => result.name).sort();
     if (names.length) supplied.push({ source, names, links: links(dir), staged: explicit ? locks(dir) : {} });
   });
 } finally {
@@ -256,14 +251,10 @@ for (const { source, names, staged } of supplied) {
       try { ours = hash(path) === staged[name].computedHash; }
       catch (error) { refused.push(error.message); }
     }
-    if (source.kind === 'image') {
-      if (explicit && present && !ours) refused.push(`${name}: files have no recorded ownership`);
-      continue;
-    }
     if (source.kind === 'methodology' && !name.startsWith(`${source.name}-`)) {
       refused.push(`${name}: a skill of ${source.source} not named ${source.name}-NAME`);
     }
-    if (name.startsWith('clankos-')) {
+    if (name.startsWith('clankos-') && key(source.source) !== clankos) {
       refused.push(`${name}: the name clankos is reserved, and ${source.source} supplies it`);
     }
     if (by.has(name)) {

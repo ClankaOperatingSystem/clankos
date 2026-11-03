@@ -130,8 +130,11 @@ machine, unless asked.
 
 To apply configured skill sources, run
 .agents/skills/clankos-bootstrap/scripts/clankos apply-v1 at the repository
-root. Apply installs method zero and optional configured sources, and keeps
-ownership in installation-state.json beside the root configuration.
+root. Apply installs the declared sources, ClankOS's own among them,
+and keeps ownership in installation-state.json beside the root
+configuration. To add one of ClankOS's other skills, run
+.agents/skills/clankos-bootstrap/scripts/clankos installation-edit .
+method-zero SKILL, then apply.
 Review and commit configuration, ownership, skills and skills-lock.json
 together. Apply never stages or commits. Separate repositories need their
 own apply. A fresh clone uses its committed bundles directly.
@@ -175,12 +178,38 @@ emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     --eval '(pos-node-read-config (with-temp-buffer (insert-file-contents (car command-line-args-left)) (setq command-line-args-left nil) (buffer-string)))' \
     "$config" 2>/dev/null || refuse "poslib refuses $config"
 
+# Method zero, ClankOS's own skills, declared as any source is: at this
+# image's commit, with what is installed from it already, or else the
+# defaults. apply-v1 installs what is declared.
+emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
+    -l /usr/local/share/clankos/lisp/clankos-packages.el \
+    -l /usr/local/share/clankos/lisp/clankos-installation.el \
+    --eval '(condition-case err
+                (progn
+                  (clankos-installation-method-zero default-directory)
+                  (let* ((config (pos-node-read-config
+                                  (with-temp-buffer
+                                    (insert-file-contents
+                                     (clankos-installation--config default-directory))
+                                    (buffer-string))))
+                         (entry (clankos-installation--declared
+                                 config (alist-get (quote source)
+                                                   (clankos-installation--clankos
+                                                    default-directory)))))
+                    (princ (format "declared  method zero: %s\n"
+                                   (mapconcat (function identity)
+                                              (alist-get (quote skills) entry) ", ")))))
+              (error (message "initiate: %s" (error-message-string err))
+                     (kill-emacs 2)))' \
+    || exit 2
+
 # Read the saved configuration, including each existing child's policy.
 emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-tree \
     --eval '(let ((plan (pos-tree-ignore-archives default-directory)))
               (seq-doseq (f (alist-get (quote findings) plan))
-                (let-alist f (princ (format "finding   %s %s\n" .finding .path)))))' \
+                (let-alist f (princ (format "finding   %s %s%s\n" .finding .path
+                                            (if .detail (concat " (" .detail ")") ""))))))' \
     || refuse "could not configure archive exclusions"
 
 if [ -n "$tree" ] && [ -n "$ask" ]; then

@@ -2,8 +2,8 @@ releases: fixed runtime and installer pairs
 
 Build both images from the same full source commit, with CLANKOS_COMMIT and
 CLANKOS_RELEASE=vX.Y.Z. The runtime and clankos-skills labels declare release,
-source revision and apply-v1 protocol. The runtime installs method zero from
-that source revision. Development builds use release dev; tests select them
+source revision and apply-v1 protocol. Method zero is declared at
+that source revision, and apply-v1 refuses it at any other. Development builds use release dev; tests select them
 with CLANKOS_IMAGE and CLANKOS_SKILLS_IMAGE.
 
 A release tag is fixed. Never move, overwrite or rebuild it in place. The tag

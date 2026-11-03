@@ -1,8 +1,9 @@
 #!/bin/sh
 # install-sources [SKILL ...]
 # Print, as JSON, what the configuration of the node in the working
-# directory declares for install: its sources, harnesses and bin; and,
-# at a repository's root, the image's skills as one source more. Each
+# directory declares for install: its sources, harnesses and bin; and
+# the repository the image was built from, whose source alone may supply
+# skills named clankos-NAME. Method zero is declared as any source is. Each
 # SKILL is one to uninstall that install would leave, a skill of a
 # source the methodology command has just removed. The
 # install command, which bin/clankos-run runs, gives it to the
@@ -15,7 +16,6 @@ root=$(git rev-parse --show-toplevel 2>/dev/null) || root=
 [ -n "$root" ] && [ "$root" -ef . ] || root=
 exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
     -l /usr/local/share/clankos/lisp/clankos-packages.el -l pos-node -l pos-bytes \
-    -l pos-lock \
     --eval '
 (let ((root (pop command-line-args-left))
       (uninstall (prog1 (vconcat command-line-args-left)
@@ -43,8 +43,11 @@ exec emacs -Q --batch --eval '(setq backtrace-on-error-noninteractive nil)' \
            (cons (quote harnesses) (alist-get (quote harnesses) config))
            (cons (quote bin) (alist-get (quote bin) config))
            (cons (quote uninstall) uninstall)
-           (cons (quote image)
-                 (or (and (not (string-empty-p root))
-                          (pos-lock-image "/usr/local/share/clankos/source" root))
-                     :null))))))' \
+           (cons (quote clankos)
+                 (let ((file "/usr/local/share/clankos/source/repository"))
+                   (if (file-exists-p file)
+                       (with-temp-buffer
+                         (insert-file-contents file)
+                         (string-trim (buffer-string)))
+                     :null)))))))' \
     "$root" "$@"

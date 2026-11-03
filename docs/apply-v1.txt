@@ -23,7 +23,7 @@ precedence over an old removal choice.
 A saved keep choice preserves the files and lock entry of an undesired
 skill. Successful apply releases its ownership. Later applies preserve it,
 including when the source still supplies other selected skills. When no
-ownership file exists, current declared sources and method zero seed it;
+ownership file exists, current declared sources seed it;
 once the file exists, absence from it does not imply ownership.
 
 All desired skills are checked against their source, revision and content
@@ -36,8 +36,13 @@ attempted. An unchanged second apply changes no managed files.
 Apply does not refresh, lint, stage, commit or push. Ordinary commands do
 not refresh installation. Legacy path methodologies are refused before any
 writes. Migrate them as described below. Apply covers all skill sources,
-including the runtime's method-zero skills. It does not change the configured
-image or provide source-selection switches.
+method zero among them. It does not change the configured image or provide
+source-selection switches.
+
+Method zero is a source the root declares: the repository the runtime was
+built from, at its commit. Apply refuses a root that does not declare it, and
+any node that declares it at another ref, before any writes; run
+"installation-edit . method-zero", or upgrade, and apply again.
 
 Both images must declare the same release, full source commit and apply-v1
 protocol. The launcher checks the pair before managed writes and calls the

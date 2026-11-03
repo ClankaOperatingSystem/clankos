@@ -81,10 +81,10 @@ A skill folder is the agentskills.io format: https://agentskills.io.
                       repository's name and a hyphen ("clankos-run
                       help install", 1)
     method zero       the image's own commands and skills, the ones
-                      named clankos-NAME and the slots it fills;
-                      installed at the commit the image was built
-                      from, and declared by no configuration
-                      ("clankos-run help", 3)
+                      named clankos-NAME and the slots it fills; the
+                      root declares the skills it wants, as a source
+                      of the repository the image was built from, at
+                      its commit ("clankos-run help install", 1)
     gnome             bugflow's word, in its docs/words.md; to a
                       garden, a methodology that also holds a doctrine,
                       its policies and its cases

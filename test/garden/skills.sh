@@ -17,6 +17,12 @@ done
 
 mkdir garden && cd garden && git init -q .
 "$bin/initiate" --no-tree < /dev/null > ../out 2>&1
+check "initiate installs method zero's default skills alone" \
+    test "$(ls .agents/skills | tr '\n' ' ')" = 'capture clankos-bootstrap start-up wrap-up '
+# shellcheck disable=SC2046
+"$bin/clankos-run" installation-edit . method-zero $(ls "$repo/skills") > ../out 2>&1
+"$bin/clankos-run" apply-v1 > ../out 2>&1
+check "and installs the rest once they are declared" test $? -eq 0
 for skill in "$repo"/skills/*/; do
     name=$(basename -- "$skill")
     check "$name is installed as the image has it" cmp -s ".agents/skills/$name/SKILL.md" "$skill/SKILL.md"

@@ -1,6 +1,7 @@
 installation-edit NODE add SOURCE REF [SKILL ...] [--kind KIND]
 installation-edit NODE remove SOURCE [SKILL ...] [--keep]
 installation-edit NODE adopt SKILL ...
+installation-edit . method-zero [SKILL ...]
 
 Run at the Git worktree root. NODE is . or a configured local node's
 path from that root. Discovery follows installation-plan: separate
@@ -14,8 +15,7 @@ configuration rules as methodology.
 
 Before changing configuration, save ownership and removal choices in
 installation-state.json beside the root configuration. When no state exists,
-seed ownership from installed skills of currently declared sources and
-implicit method zero. Later edits claim their explicit targets; unrelated
+seed ownership from installed skills of currently declared sources. Later edits claim their explicit targets; unrelated
 edits leave released ownership alone. Versions and hashes remain in
 skills-lock.json.
 
@@ -40,9 +40,20 @@ it does not consume these saved choices.
 Success prints JSON naming the configuration and state files. Exit 0:
 saved; 1: refused or a write failed; 2: usage or not at the repository root.
 
+Method-zero declares ClankOS's own skills at the root, as a source of
+the repository the runtime was built from, at the runtime's commit, of
+kind skills-repository. Where the root declares that repository, its
+ref becomes the runtime's commit and each SKILL is added. Where it does
+not, the skills declared are those already installed from it, as
+skills-lock.json records them, or else capture, start-up, wrap-up and
+clankos-bootstrap, less a slot the repository fills itself; and each
+SKILL. A SKILL the image does not hold is refused. Ownership is saved
+as for add. Remove takes ClankOS's skills out as it takes any source's.
+
 To select a fixed runtime without installing, run:
 
     clankos-run installation-edit . image IMAGE:vX.Y.Z
 
-Only the root image field changes. Upgrade checks the target pair before this
+The root image field changes, and method zero is declared at the
+runtime's commit, as method-zero does. Upgrade checks the target pair before this
 edit and runs apply afterwards. The editor does not stage or commit.

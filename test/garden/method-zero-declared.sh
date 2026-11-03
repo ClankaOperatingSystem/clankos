@@ -8,7 +8,7 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GH_TOKEN=unused
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.org
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.org
 mkdir -p garden/.clanka && cd garden && git init -q -b master
-printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+{ printf 'pos: 2\nprojects: projects/\nmethodologies:\n'; method_zero; } > .clanka/config.yml
 git add . && git commit -qm 'Add a garden'
 
 "$bin/clankos-run" apply-v1 > ../out 2>&1

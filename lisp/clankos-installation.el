@@ -3,6 +3,8 @@
 ;;; Commentary:
 ;; Read configuration with poslib and keep discovery inside one repository.
 ;; Save edit intent before configuration.  These commands perform no installation.
+;; Method zero, ClankOS's own skills, is declared as any other source is: the
+;; root declares ClankOS's repository at the image's commit.
 
 ;;; Code:
 (require 'cl-lib)
@@ -11,6 +13,13 @@
 (require 'pos-lock)
 (require 'pos-sources)
 (require 'pos-bytes)
+
+(defconst clankos-installation-source "/usr/local/share/clankos/source"
+  "The directory that holds the image's skills and its repository and commit.")
+
+(defconst clankos-installation-defaults
+  '("capture" "start-up" "wrap-up" "clankos-bootstrap")
+  "The skills of method zero that a garden declares by default.")
 
 (defun clankos-installation--read (file)
   "Read FILE as text without visiting it."
@@ -115,10 +124,7 @@ Read only local configured nodes and previously managed identities."
                       (push `((path . ,path) (status . "configured")
                               (config . ,(file-relative-name config-file root))
                               (sources . ,(if (vectorp sources) sources []))
-                              (legacy . ,(if (stringp sources) sources :null))
-                              (image . ,(if (equal path ".")
-                                            (or (pos-lock-image "/usr/local/share/clankos/source" root) :null)
-                                          :null))) nodes)
+                              (legacy . ,(if (stringp sources) sources :null))) nodes)
                       (seq-doseq (child (alist-get 'children config))
                         (let ((relative (file-relative-name
                                          (expand-file-name (alist-get 'path child) dir) root)))
@@ -149,7 +155,7 @@ Read only local configured nodes and previously managed identities."
                                  (error "Managed node is not a directory: %s" path))
                                 (t "cleanup"))))
               (setq node `((path . ,path) (status . ,status) (config . :null)
-                           (sources . []) (legacy . :null) (image . :null)))
+                           (sources . []) (legacy . :null)))
               (push node nodes)))))
       (setq nodes
             (mapcar (lambda (node)
@@ -224,8 +230,6 @@ Save ownership and removal intent before replacing the configuration."
              (sources (append (alist-get 'sources node) nil))
              (declared (alist-get 'methodologies (pos-node-read-config new)))
              (after (and (vectorp declared) (append declared nil))))
-        (unless (eq (alist-get 'image node) :null)
-          (push (alist-get 'image node) sources))
         ;; Seed only without history.  Later edits claim their explicit
         ;; targets; unrelated edits must not reclaim a released skill.
         (dolist (pair entries)
@@ -271,6 +275,97 @@ Save ownership and removal intent before replacing the configuration."
         (unless (equal text new) (clankos-installation--write file new))
         `((config . ,(alist-get 'config node)) (state . ,(file-relative-name state-file root)))))))
 
+(defun clankos-installation--clankos (root)
+  "Return the image's skills at ROOT as a source: source, ref and skills.
+Its skills leave out a slot's that the repository at ROOT fills itself."
+  (or (pos-lock-image clankos-installation-source root)
+      (error "This image names no repository and commit of its own skills")))
+
+(defun clankos-installation--declared (config source)
+  "Return the entry of CONFIG's sources that is SOURCE's repository, or nil."
+  (let ((declared (alist-get 'methodologies config))
+        (key (pos-node-source-key source)))
+    (and (vectorp declared)
+         (seq-find (lambda (entry)
+                     (equal (pos-node-source-key (alist-get 'source entry)) key))
+                   declared))))
+
+(defun clankos-installation--fills (root config name)
+  "Return non-nil if the repository at ROOT fills slot NAME with a command.
+It does where CONFIG names a bin directory in which Git tracks NAME."
+  (let ((bin (alist-get 'bin config)))
+    (and (member name pos-lock-slots)
+         (stringp bin)
+         (let ((default-directory root))
+           (eq 0 (call-process "git" nil nil nil "ls-files" "--error-unmatch" "--"
+                               (concat (file-name-as-directory bin) name)))))))
+
+(defun clankos-installation-method-zero (root &optional skills)
+  "Declare ClankOS's skills at ROOT at the image's commit, with SKILLS more.
+Where the root declares ClankOS's repository, its entry takes the
+image's commit and SKILLS are added to it.  Where it does not, the
+skills declared are those already installed from that repository, as
+skills-lock.json records them, or else `clankos-installation-defaults'
+less a slot the repository fills itself, and SKILLS.  Each of SKILLS
+must be one of the image's.  Ownership is saved as
+`clankos-installation-edit' saves it for an added source."
+  (let* ((image (clankos-installation--clankos root))
+         (source (alist-get 'source image))
+         (offered (append (alist-get 'skills image) nil))
+         (file (or (clankos-installation--config root)
+                   (error "No configuration at the repository root")))
+         (config (pos-node-read-config (clankos-installation--read file)))
+         (lock (expand-file-name pos-lock-file root))
+         (entries (and (file-exists-p lock) (pos-lock--entries lock)))
+         (key (pos-node-source-key source)))
+    (dolist (skill skills)
+      (unless (member skill offered)
+        (error "Not one of the image's skills: %s" skill)))
+    (let ((names
+           (if (clankos-installation--declared config source)
+               skills
+             (let ((installed (and (listp entries)
+                                   (seq-filter
+                                    (lambda (name) (member name offered))
+                                    (mapcar #'car
+                                            (seq-filter (lambda (pair)
+                                                          (equal (pos-lock--key (cdr pair)) key))
+                                                        entries))))))
+               (delete-dups
+                (append (or installed
+                            (seq-filter (lambda (name)
+                                          (and (member name offered)
+                                               (not (clankos-installation--fills
+                                                     root config name))))
+                                        clankos-installation-defaults))
+                        skills))))))
+      (clankos-installation-edit root "." "add"
+                                 (append (list source (alist-get 'ref image)) names)
+                                 nil "skills-repository"))))
+
+(defun clankos-installation--pinned (root nodes)
+  "Refuse NODES of ROOT's plan unless method zero is declared, and pinned.
+The root must declare ClankOS's repository, and every node that
+declares it must declare it at the image's commit.  Return the
+repository's URL."
+  (let* ((image (clankos-installation--clankos root))
+         (source (alist-get 'source image))
+         (commit (alist-get 'ref image))
+         (root-node (seq-find (lambda (node) (equal (alist-get 'path node) ".")) nodes)))
+    (unless (seq-find (lambda (entry)
+                        (equal (pos-node-source-key (alist-get 'source entry))
+                               (pos-node-source-key source)))
+                      (alist-get 'sources root-node))
+      (error "Method zero is not declared: run installation-edit . method-zero, then apply-v1"))
+    (dolist (node nodes)
+      (seq-doseq (entry (alist-get 'sources node))
+        (when (and (equal (pos-node-source-key (alist-get 'source entry))
+                          (pos-node-source-key source))
+                   (not (equal (alist-get 'ref entry) commit)))
+          (error "%s declares ClankOS's skills at %s, and this image is at %s: run installation-edit . method-zero, or upgrade"
+                 (alist-get 'config node) (alist-get 'ref entry) commit))))
+    source))
+
 (defun clankos-installation-image (root image)
   "Set ROOT's runtime IMAGE without installing or changing Git's index."
   (unless (string-match-p "\\`[A-Za-z0-9./_-]+:v[0-9]+\\.[0-9]+\\.[0-9]+\\'" image)
@@ -283,7 +378,8 @@ Save ownership and removal intent before replacing the configuration."
                   (replace-match line t t text)
                 (concat text (unless (string-suffix-p "\n" text) "\n") line "\n"))))
     (pos-node-read-config new)
-    (unless (equal text new) (clankos-installation--write file new))))
+    (unless (equal text new) (clankos-installation--write file new))
+    (clankos-installation-method-zero root)))
 
 (defun clankos-installation-edit-batch ()
   "Edit configuration and saved intent without installing skills."
@@ -297,10 +393,21 @@ Save ownership and removal intent before replacing the configuration."
       (condition-case err
           (progn (clankos-installation-image default-directory (car args)) (kill-emacs 0))
         (error (message "installation-edit: %s" (error-message-string err)) (kill-emacs 1))))
+    (when (equal action "method-zero")
+      (unless (and (equal path ".")
+                   (seq-every-p (lambda (arg) (not (string-prefix-p "-" arg))) args))
+        (message "Usage: installation-edit . method-zero [SKILL ...]")
+        (kill-emacs 2))
+      (condition-case err
+          (progn (pos-bytes-print (clankos-installation-method-zero default-directory args))
+                 (kill-emacs 0))
+        (error (message "installation-edit: %s" (error-message-string err)) (kill-emacs 1))))
     (cl-flet ((usage ()
                 (message "Usage: installation-edit NODE add SOURCE REF [SKILL ...] [--kind KIND]")
                 (message "       installation-edit NODE remove SOURCE [SKILL ...] [--keep]")
                 (message "       installation-edit NODE adopt SKILL ...")
+                (message "       installation-edit . method-zero [SKILL ...]")
+                (message "       installation-edit . image IMAGE:vX.Y.Z")
                 (kill-emacs 2)))
       (while args
         (let ((arg (pop args)))
@@ -340,9 +447,12 @@ Save ownership and removal intent before replacing the configuration."
                    (append (list (cons 'text (or text :null))
                                  (cons 'harnesses (or (alist-get 'harnesses config) :null))
                                  (cons 'bin (or (alist-get 'bin config) :null))) node)))
-               (append (alist-get 'nodes plan) nil))))
+               (append (alist-get 'nodes plan) nil)))
+             (clankos (clankos-installation--pinned root nodes)))
         (pos-bytes-print
-         `((schema . 1) (nodes . ,(vconcat nodes))
+         `((schema . 1)
+           (nodes . ,(vconcat (mapcar (lambda (node) (cons (cons 'clankos clankos) node))
+                                      nodes)))
            (state . ,(file-relative-name file root))
            (before . ,(if (file-exists-p file) (clankos-installation--read file) :null)))))
     (error (message "apply-v1: %s" (error-message-string err)) (kill-emacs 1))))
