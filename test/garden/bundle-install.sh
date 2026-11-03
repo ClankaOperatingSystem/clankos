@@ -11,7 +11,9 @@ cp -R "$repo/skills/clankos-lint" 'bundle store/lint'
 bundle="$work/bundle store/lint/scripts/clankos"
 cd garden || exit 1
 git init -qb master
-printf 'pos: 2\nprojects: projects/\nbin: bin\n' > .clankos/config.yml
+# The garden fills the slots itself, and declares only clankos-lint of
+# method zero.
+{ printf 'pos: 2\nprojects: projects/\nbin: bin\nmethodologies:\n'; method_zero clankos-lint; } > .clankos/config.yml
 printf ':PROPERTIES:\n:ID: intray\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 for slot in capture start-up wrap-up; do
     mkdir -p ".agents/skills/$slot"

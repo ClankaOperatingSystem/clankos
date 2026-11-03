@@ -22,9 +22,13 @@ mkdir garden && cd garden && git init -q
 check 'standalone bootstrap succeeds' test $? -eq 0
 check 'bootstrap records a fixed release' grep -qx 'image: ghcr.io/clankaoperatingsystem/clankos:v0.0.5' .clanka/config.yml
 check 'bootstrap creates no wrappers' test ! -e bin -a ! -e .clanka/auto
-check 'bootstrap installs method zero' test -x .agents/skills/clankos-lint/scripts/clankos
+check 'bootstrap installs method zero' test -x .agents/skills/clankos-bootstrap/scripts/clankos
+check 'and only its default skills' \
+    test "$(ls .agents/skills | tr '\n' ' ')" = 'capture clankos-bootstrap start-up wrap-up '
 check 'bootstrap records ownership' test -s .clanka/installation-state.json
-check 'bootstrap leaves optional methods unselected' sh -c '! grep -q "^methodologies:" .clanka/config.yml'
+check 'bootstrap declares method zero as a source' \
+    grep -qx '  - source: https://github.com/ClankaOperatingSystem/clankos.git' .clanka/config.yml
+check 'bootstrap leaves optional methods unselected' test "$(grep -c '^  - source:' .clanka/config.yml)" -eq 1
 check 'bootstrap stages nothing' test -z "$(git ls-files)"
 check 'bootstrap commits nothing' test -z "$(git log --oneline 2>/dev/null)"
 check 'intray has its file ID' grep -qxE ':ID: +[0-9a-f-]{36}' intray.org
@@ -55,7 +59,8 @@ mkdir held && cd held && git init -q && mkdir .pos
 printf 'pos: 2\nprojects: projects/\nimage: ghcr.io/clankaoperatingsystem/clankos:v0.0.5\n' > .pos/config.yaml
 cp .pos/config.yaml ../config-before
 "$bootstrap" --archive committed --no-tree > ../out 2> ../err
-check 'existing configuration is preserved' cmp -s .pos/config.yaml ../config-before
+check 'existing configuration is preserved' sh -c "! diff ../config-before .pos/config.yaml | grep -q '^<'"
+check 'and method zero is declared in it' grep -q 'ClankaOperatingSystem/clankos.git' .pos/config.yaml
 check 'no second configuration is made' test ! -e .clanka
 mkdir -p child/.pos
 printf 'pos: 2\nprojects: projects/\nmethodologies:\n  - source: https://example.test/hello.git\n    ref: v1\n    skills: [hello-greet]\n' > child/.pos/config.yaml

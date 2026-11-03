@@ -19,20 +19,22 @@ git -C adr add . && git -C adr commit -qm 'Add a methodology' && git -C adr tag 
 git clone -q --bare adr "$work/remotes/adr.git"
 printf '[url "file://%s/remotes/adr.git"]\n\tinsteadOf = https://git.example/adr.git\n' "$work" >> "$XDG_CONFIG_HOME/git/config"
 git -C grand init -q -b master
-printf 'pos: 2\nbin: bin\nmethodologies:\n  - source: https://git.example/adr.git\n    ref: v1\n    skills: [adr-record]\n' > grand/.pos/config.yaml
+# Each repository declares method zero, every skill of it.
+zero=$(method_zero_all)
+printf 'pos: 2\nbin: bin\nmethodologies:\n  - source: https://git.example/adr.git\n    ref: v1\n    skills: [adr-record]\n%s\n' "$zero" > grand/.pos/config.yaml
 printf ':PROPERTIES:\n:ID: grand\n:END:\n* NEXT In the project\n' > grand/project.org
 git -C grand add . && git -C grand commit -qm 'Add a project'
 
 mkdir -p child/.clanka && git -C child init -q -b master
-printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: projects/grand\n    remote: %s\n' \
-    "$work/grand" > child/.clanka/config.yml
+printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: projects/grand\n    remote: %s\nmethodologies:\n%s\n' \
+    "$work/grand" "$zero" > child/.clanka/config.yml
 printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' child-intray > child/intray.org
 git -C child add . && git -C child commit -qm 'Add a responsibility'
 
 mkdir -p garden/.clankos garden/home/.pos garden/home/study/.pos
 cd garden && git init -q -b master
-printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    remote: %s\n  - path: home\n' \
-    "$work/child" > .clankos/config.yml
+printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    remote: %s\n  - path: home\nmethodologies:\n%s\n' \
+    "$work/child" "$zero" > .clankos/config.yml
 printf 'pos: 2\nprojects: projects/\nchildren:\n  - path: study\n' > home/.pos/config.yaml
 printf 'pos: 2\nprojects: projects/\n' > home/study/.pos/config.yaml
 for dir in . home home/study; do

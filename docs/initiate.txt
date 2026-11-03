@@ -23,9 +23,13 @@ image setting, including in an existing garden. Other configuration and content
 outside that block are preserved. Git's managed archive exclusions are updated
 from the saved configuration, including local child scopes.
 
-It then runs explicit apply-v1 at the root. Method zero comes from the runtime's
-source commit. Optional methods are installed only when the configuration
-selects them. Ownership is recorded beside the configuration; skills and their
+It declares method zero at the root, as a source of the repository the
+runtime was built from, at its commit: the ClankOS skills already installed
+from that repository, where there are any, or else capture, start-up,
+wrap-up and clankos-bootstrap, less a slot the repository fills itself. It
+then runs explicit apply-v1 at the root, which installs what is declared.
+ClankOS's other skills, and other methods, are installed only when the
+configuration selects them. Ownership is recorded beside the configuration; skills and their
 lock are committed material. No auto/bin, command links or approval rules are
 created. Existing legacy wrappers are left for the user to inspect and remove.
 A fresh clone runs its committed skill bundles directly.

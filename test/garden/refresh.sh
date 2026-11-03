@@ -13,12 +13,13 @@ mkdir -p product && git -C product init -q -b master
 printf 'A product.\n' > product/README
 git -C product add . && git -C product commit -qm 'Add a product'
 mkdir -p child/.clanka && git -C child init -q -b master
-printf 'pos: 2\nprojects: projects/\n' > child/.clanka/config.yml
+zero=$(method_zero_all)
+printf 'pos: 2\nprojects: projects/\nmethodologies:\n%s\n' "$zero" > child/.clanka/config.yml
 git -C child add . && git -C child commit -qm 'Add a responsibility'
 
 mkdir -p garden/.clanka && cd garden && git init -q -b master
-printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    remote: %s\n  - path: product\n    remote: %s\n' \
-    "$work/child" "$work/product" > .clanka/config.yml
+printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    remote: %s\n  - path: product\n    remote: %s\nmethodologies:\n%s\n' \
+    "$work/child" "$work/product" "$zero" > .clanka/config.yml
 printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' intray > intray.org
 git clone -q "$work/child" child
 git clone -q "$work/product" product

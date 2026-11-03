@@ -30,8 +30,14 @@ printf 'pos: 2\nprojects: projects/\n' > local/.clanka/config.yml
 commit=$(docker run --rm "$CLANKOS_IMAGE" cat /usr/local/share/clankos/source/commit)
 printf 'methodologies:\n  - source: https://example.test/hello.git\n    ref: v1\n    skills: [hello-greet]\n' >> local/.clanka/config.yml
 older=0000000000000000000000000000000000000000
+# The repositories are as an earlier release left them: method zero's
+# skills installed, at an older commit, and declared by no configuration.
+zero=$(method_zero_all)
 for dir in child local .; do
-    (cd "$dir" && "$bin/clankos-run" install >/dev/null 2>&1 &&
+    (cd "$dir" && cp .clanka/config.yml ../config.saved &&
+      { [ "$dir" = local ] || printf 'methodologies:\n%s\n' "$zero" >> .clanka/config.yml; } &&
+      "$bin/clankos-run" install >/dev/null 2>&1 &&
+      cp ../config.saved .clanka/config.yml && rm ../config.saved &&
       sed -i.bak "s/$commit/$older/" skills-lock.json && rm skills-lock.json.bak)
 done
 git -C child add -A && git -C child commit -qm 'Install skills'
@@ -51,6 +57,11 @@ check 'upgrade succeeds' test $? -eq 0
 [ ! -s ../err ] || cat ../err
 check 'root image records the selected release' grep -qx 'image: ghcr.io/clankaoperatingsystem/clankos:v0.0.5' .clanka/config.yml
 check 'root skills record the image commit' grep -q "$commit" skills-lock.json
+check 'upgrade declares method zero at the image commit' \
+    grep -A1 '^  - source: https://github.com/ClankaOperatingSystem/clankos.git$' .clanka/config.yml \
+    | grep -qx "    ref: $commit"
+check 'with every skill that was installed, so none is removed' \
+    test "$(ls .agents/skills | tr '\n' ' ')" = "$(ls "$repo/skills" | tr '\n' ' ')"
 check 'local configured node is applied' grep -qx v2 local/.agents/skills/hello-greet/SKILL.md
 check 'mounted repository lock is unchanged' test "$(sha256 child/skills-lock.json)" = "$child_lock"
 check 'neither repository is committed' test "$(git rev-parse HEAD):$(git -C child rev-parse HEAD)" = "$root_head:$child_head"

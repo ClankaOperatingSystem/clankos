@@ -46,6 +46,23 @@ owner() {
     stat -c %u "$1" 2>/dev/null || stat -f %u "$1"
 }
 
+# method_zero [SKILL ...]: the lines under methodologies that declare
+# method zero, ClankOS's own skills, at the image's commit: SKILLs, or
+# capture, start-up, wrap-up and clankos-bootstrap when none is given.
+method_zero() {
+    local commit skills
+    commit=$(docker run --rm --entrypoint cat "$CLANKOS_IMAGE" /usr/local/share/clankos/source/commit)
+    skills=$(IFS=,; echo "${*:-capture,start-up,wrap-up,clankos-bootstrap}" | sed 's/,/, /g')
+    printf '  - source: https://github.com/ClankaOperatingSystem/clankos.git\n'
+    printf '    ref: %s\n    kind: skills-repository\n    skills: [%s]\n' "$commit" "$skills"
+}
+
+# method_zero_all: method_zero with every skill the image holds.
+method_zero_all() {
+    # shellcheck disable=SC2046
+    method_zero $(docker run --rm --entrypoint ls "$CLANKOS_IMAGE" /usr/local/share/clankos/source/skills)
+}
+
 # image_remote: install fetches the image's skills from the repository
 # the image was built from, at its commit. Serve that repository from a
 # bare clone of this one in remotes/: git in the containers reads the

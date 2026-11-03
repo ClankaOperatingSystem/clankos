@@ -100,9 +100,10 @@ poslib's plan of the tree is read, and printed from it:
               does not say what it is
     to clone  a declared repository that is not there yet
 
-The plan counts the image's own skills, method zero, as declared, so
-a skill is reported wild-caught only when its source is neither one a
-configuration declares nor the image's.
+Method zero is declared at the root as a source of the repository the
+image was built from, so a skill of it is not wild-caught. The plan is
+given the image's source too, so that a garden that has not yet
+declared method zero is not told its skills are wild-caught.
 
 
 5. Cloning

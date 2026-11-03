@@ -32,8 +32,8 @@ clone has none of it until refresh or initiate has run there. A
 command of a slot's name, capture, start-up or wrap-up, is linked only
 where the repository holds none of its own (section 3).
 
-The image's skills are not linked. install installs them, as a source
-of the repository's skills-lock.json: from the repository the image
+The image's skills are not linked. They are method zero, a source the
+root declares, and apply-v1 installs them from the repository the image
 was built from, at its commit ("clankos-run help install"). Each
 skill's scripts/clankos starts the configured runtime directly.
 
@@ -112,7 +112,8 @@ A node that declares methodologies as sources, and a repository's
 root, which has the image's skills, has the skills in .agents/skills/
 and a record of them in skills-lock.json, which "clankos-run install"
 writes ("clankos-run help install"). refresh compares the
-configuration, the image's skills counted as declared, with
+configuration, with the image's skills counted as declared where the
+configuration does not declare their repository itself, with
 skills-lock.json, and each entry with its skill's directory, with no
 network, in each node of the repository it runs in, and says where
 they differ:

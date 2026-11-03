@@ -37,15 +37,15 @@ are named as its owners choose. The skills are always written to
 reads only its own directory is named in harnesses, and the skills CLI
 makes a link there to each skill.
 
-At a repository's root, the node has one source more, which no
-configuration names: the image's skills, from the repository the
-ClankOS image was built from, at that commit. A slot's skill is left
-out where the repository fills the slot itself, and so is a skill that
-a declared source supplies under the same name. The image's skills are
-not refused for their names. A new image is at another commit, and
-install moves its skills to it. A node beneath the root in the same
-repository has no such source: a coding agent shows a session there
-the skills of the root.
+Method zero, ClankOS's own skills, is declared as any other source is:
+the repository the ClankOS image was built from, at that commit, of
+kind skills-repository, naming the skills the garden wants. initiate
+declares capture, start-up, wrap-up and clankos-bootstrap, less a slot
+the repository fills itself, and "installation-edit . method-zero
+SKILL" adds another ("clankos-run help installation-edit"). Only that
+repository's source may supply a skill named clankos-NAME. Its ref is
+the image's commit: apply-v1 refuses another, and upgrade moves both
+together.
 
 
 2. What install does
@@ -96,7 +96,7 @@ configuration, with no network
 
 Methodologies declared as a path, the earlier form, are not
 installed: refresh links them where they lie (docs/refresh.txt), and
-install installs the image's skills alone in such a node.
+install installs no source in such a node.
 
 
 3. The container

@@ -29,7 +29,7 @@ cd garden || exit 1
 git init -qb master
 git -C vendor init -q
 printf 'malformed YAML [' > vendor/.pos/config.yaml
-cat > .clankos/config.yaml <<'YAML'
+cat > .clankos/config.yaml <<YAML
 pos: 2
 children:
   - path: area
@@ -38,6 +38,7 @@ methodologies:
   - source: https://git.example/hello.git
     ref: v1
     skills: [hello-greet, hello-part]
+$(method_zero)
 YAML
 cat > area/.pos/config.yaml <<'YAML'
 pos: 2
@@ -84,7 +85,8 @@ rm area/.agents/skills/hello-greet
 check 'apply installs local nodes without entering a nested repository' apply
 check 'root source is installed' grep -qx v1 .agents/skills/hello-part/SKILL.md
 check 'child source is installed' grep -qx v1 area/.agents/skills/hello-greet/SKILL.md
-check 'method zero is installed at the root' test -f .agents/skills/clankos-lint/SKILL.md
+check 'method zero is installed at the root' test -f .agents/skills/clankos-bootstrap/SKILL.md
+check 'and only the skills of it declared' test ! -e .agents/skills/clankos-lint
 check 'nested repository remains untouched' test ! -e vendor/.agents
 check 'apply does not refresh wrappers' test ! -e .clankos/auto
 check 'apply does not stage files' test "$(git write-tree)" = "$(cat "$work/index")"

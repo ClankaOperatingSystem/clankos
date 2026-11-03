@@ -48,7 +48,7 @@ check 'keep selected skills without installing' edit . remove example/method met
 check 'save selected keep and seed declared ownership only' python3 - <<'PY'
 import json
 s=json.load(open('.clankos/installation-state.json'))['managed']
-assert {e['skill']:e['disposition'] for e in s}=={'method-one':'keep','method-two':None,'clankos-lint':None},s
+assert {e['skill']:e['disposition'] for e in s}=={'method-one':'keep','method-two':None},s
 assert all(e['node']=='.' for e in s)
 assert all(not e['source'].startswith('https:') for e in s)
 t=open('.clankos/config.yaml').read()
@@ -128,8 +128,20 @@ import json
 s=json.load(open('.clankos/installation-state.json'))['managed']
 assert next(e for e in s if e['node']=='.' and e['skill']=='method-one')['disposition']=='keep'
 assert next(e for e in s if e['node']=='.' and e['skill']=='method-two')['disposition']=='remove'
+assert not any(e['skill']=='clankos-lint' for e in s)
+PYTEST
+check 'method zero declares what is installed from ClankOS' edit . method-zero
+check 'at the image commit, and claims its ownership' python3 - "$(docker run --rm --entrypoint cat "$CLANKOS_IMAGE" /usr/local/share/clankos/source/commit)" <<'PYTEST'
+import json,sys
+t=open('.clankos/config.yaml').read()
+assert 'source: https://github.com/ClankaOperatingSystem/clankos.git' in t, t
+assert 'ref: '+sys.argv[1] in t and 'skills: [clankos-lint]' in t and 'kind: skills-repository' in t, t
+s=json.load(open('.clankos/installation-state.json'))['managed']
 assert next(e for e in s if e['skill']=='clankos-lint')['disposition'] is None
 PYTEST
+check 'method zero adds a skill the image holds' edit . method-zero clankos-seal
+check 'to the same declaration' grep -q 'skills: \[clankos-lint, clankos-seal\]' .clankos/config.yaml
+check 'and refuses one it does not' status 1 edit . method-zero no-such-skill
 check 'planner reads the edited state' status 0 "$bin/clankos-run" installation-plan
 # The state write must succeed before any child configuration changes.
 printf 'pos: 2\n' > area/.pos/config.yaml

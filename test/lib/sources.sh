@@ -41,12 +41,21 @@ origin() {
     publish "$name" "$tag"
 }
 
+# The declaration of method zero, every skill the image holds, which
+# configure writes unless METHOD_ZERO is set, to the empty string for
+# none or to other lines.
+method_zero_lines=$(method_zero_all)
+
 # configure LINE ...: write the configuration of the repository in the
-# working directory, declaring the methodologies LINEs give.
+# working directory, declaring the methodologies LINEs give, and method
+# zero.
 configure() {
+    local zero=${METHOD_ZERO-$method_zero_lines}
     {
         printf 'pos: 2\nbin: bin\n'
-        [ $# -eq 0 ] || { printf 'methodologies:\n'; printf '%s\n' "$@"; }
+        [ $# -eq 0 ] && [ -z "$zero" ] || printf 'methodologies:\n'
+        [ -z "$zero" ] || printf '%s\n' "$zero"
+        [ $# -eq 0 ] || printf '%s\n' "$@"
     } > .clanka/config.yml
 }
 

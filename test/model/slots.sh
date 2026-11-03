@@ -15,11 +15,17 @@ slots() {
 check "A slot is a skill a repository may fill with a skill of its own: capture, start-up or wrap-up." slots
 held_by "poslib's doc/pos-slots.txt" "poslib's doc/pos-slots.txt gives each slot's signature."
 
-# A garden that fills the wrap-up slot with a skill of its own.
+# A garden that fills the wrap-up slot with a skill of its own, and
+# so leaves it out of method zero's declaration.
 origin slot v1 wrap-up
-garden
+METHOD_ZERO= garden
 mkdir -p .agents/skills/wrap-up && printf '%s\n' '---' 'name: wrap-up' 'description: Ours.' '---' > .agents/skills/wrap-up/SKILL.md
 git add .agents && git commit -qm 'Fill the wrap-up slot'
+"$bin/clankos-run" installation-edit . method-zero > ../out 2> ../err
+check "Method zero's default declaration leaves out a slot that the garden fills." \
+    grep -qx '    skills: \[capture, start-up, clankos-bootstrap\]' .clanka/config.yml
+git add -A && git commit -qm 'Declare method zero'
+zero=$(method_zero capture start-up clankos-bootstrap)
 "$bin/clankos-run" install > ../out 2> ../err
 "$bin/clankos-run" refresh > ../out 2> ../err
 refresh=$?
@@ -28,7 +34,7 @@ left() {
         && [ "$(sed -n '3p' .agents/skills/wrap-up/SKILL.md)" = 'description: Ours.' ] \
         && ! grep -q '"wrap-up"' skills-lock.json \
         && [ -f .agents/skills/capture/SKILL.md ] \
-        && configure "$(declared slot v1 skills-repository)" \
+        && METHOD_ZERO=$zero configure "$(declared slot v1 skills-repository)" \
         && ! "$bin/clankos-run" install > ../out 2> ../err \
         && grep -q 'wrap-up: the repository fills this slot itself' ../err
 }
