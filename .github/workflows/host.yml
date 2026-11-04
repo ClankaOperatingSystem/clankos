@@ -13,4 +13,7 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: 30.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - run: make check

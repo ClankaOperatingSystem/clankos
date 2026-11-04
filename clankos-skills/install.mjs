@@ -24,6 +24,9 @@
 // Exit: 0 done, 1 refused and nothing changed, 2 usage, 3 the skills CLI
 // failed while changing the node.
 import { locks, hash, paths } from './installation.mjs';
+import {
+  changing, key, nameRefusals, owners, preparation, refRefusal, wanted as wantedBy,
+} from './rules.mjs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   existsSync, lstatSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync,
@@ -32,18 +35,12 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const SLOTS = ['capture', 'start-up', 'wrap-up'];
 const LOCK = 'skills-lock.json';
 const node = process.cwd();
 
 function fail(status, lines) {
   for (const line of lines) console.error(`install: ${line}`);
   process.exit(status);
-}
-
-// The text two sources are compared by, as poslib's source key.
-function key(source) {
-  return source.replace(/\/$/, '').replace(/\.git$/, '').replace(/^https:\/\/github\.com\//, '');
 }
 
 function lockEntries() {
@@ -55,10 +52,6 @@ function lockEntries() {
   } catch {
     return {};
   }
-}
-
-function entryKey(entry) {
-  return key(typeof entry.sourceUrl === 'string' ? entry.sourceUrl : String(entry.source));
 }
 
 // The skills CLI, with its JSON on standard output; its other output is
@@ -114,16 +107,10 @@ try {
 const explicit = plan.mode === 'apply-v1';
 const sources = plan.sources || [];
 const clankos = plan.clankos ? key(plan.clankos) : null;
-const uninstall = new Set(plan.uninstall || []);
 let initial;
 try { if (explicit) initial = locks(node); }
 catch (error) { fail(1, [error.message]); }
 const managed = plan.managed || [];
-const owned = (name, entry) => managed.find((each) => each.skill === name && key(each.source) === entryKey(entry));
-const keep = (name, entry) => explicit && owned(name, entry)?.disposition === 'keep';
-if (explicit) for (const [name, entry] of Object.entries(initial)) {
-  if (owned(name, entry) && !keep(name, entry)) uninstall.add(name);
-}
 const agents = [...new Set(['universal', ...(plan.harnesses || [])])];
 const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
 
@@ -157,12 +144,8 @@ for (const source of sources) {
     continue;
   }
   const refs = listed.stdout.split('\n').map((line) => line.split('\t')[1]).filter(Boolean);
-  if (/^[0-9a-f]{40}$/.test(source.ref) || refs.includes(`refs/tags/${source.ref}`)) continue;
-  if (refs.includes(`refs/heads/${source.ref}`)) {
-    refused.push(`${source.source}: ${source.ref} is a branch; give a tag or a commit`);
-  } else {
-    refused.push(`${source.source}: ${source.ref} is no tag; a commit is given by its forty-digit id`);
-  }
+  const refusal = refRefusal(source, refs);
+  if (refusal) refused.push(refusal);
 }
 if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
@@ -225,13 +208,12 @@ if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
 // 3. The refusals of a name.
 const locked = explicit ? initial : lockEntries();
-const declaredKeys = new Set(sources.map((source) => key(source.source)));
-const wild = (name) => name in locked && (explicit
-  ? !owned(name, locked[name]) && !(plan.seed && declaredKeys.has(entryKey(locked[name])))
-  : !declaredKeys.has(entryKey(locked[name])) && !uninstall.has(name));
-const by = new Map();
-for (const { source, names, staged } of supplied) {
-  for (const name of names) {
+const { declared: declaredKeys, owned, keep, wild } = owners({
+  explicit, sources, locked, managed, uninstall: plan.uninstall || [], seed: plan.seed,
+});
+refused.push(...nameRefusals(supplied, {
+  explicit, clankos, locked, managed, wild,
+  inspect: (name) => {
     const path = join(node, '.agents/skills', name);
     let present = false;
     try {
@@ -240,70 +222,36 @@ for (const { source, names, staged } of supplied) {
     } catch {
       present = false;
     }
-    if (wild(name) && !(explicit && entryKey(locked[name]) === key(source.source))) {
-      refused.push(`${name}: installed from ${locked[name].source}, which the configuration`
-        + ` does not declare, and supplied by ${source.source}; remove one`);
-      continue;
-    }
-    let ours = name in locked || imageLink(path);
-    if (explicit && present && !ours && managed.some((entry) => entry.skill === name
-        && key(entry.source) === key(source.source))) {
-      try { ours = hash(path) === staged[name].computedHash; }
-      catch (error) { refused.push(error.message); }
-    }
-    if (source.kind === 'methodology' && !name.startsWith(`${source.name}-`)) {
-      refused.push(`${name}: a skill of ${source.source} not named ${source.name}-NAME`);
-    }
-    if (name.startsWith('clankos-') && key(source.source) !== clankos) {
-      refused.push(`${name}: the name clankos is reserved, and ${source.source} supplies it`);
-    }
-    if (by.has(name)) {
-      refused.push(`${name}: supplied by ${by.get(name)} and by ${source.source}`);
-    }
-    by.set(name, source.source);
-    if (SLOTS.includes(name)
-        && ((present && !ours) || (plan.bin && tracked(join(plan.bin, name))))) {
-      refused.push(`${name}: the repository fills this slot itself`);
-    } else if (present && !ours) {
-      refused.push(`${name}: the repository has a skill of its own of this name`);
-    }
-  }
-}
+    return {
+      present,
+      linked: imageLink(path),
+      filled: () => Boolean(plan.bin && tracked(join(plan.bin, name))),
+      hash: () => hash(path),
+    };
+  },
+}));
 if (refused.length) fail(1, [...refused, 'nothing was changed']);
 
 // 4. Of the declared sources' skills, remove what is no longer declared,
 // is declared at another ref, or is linked for other harnesses; add what
 // is missing. A wild-caught skill is left, and one uninstall names is
 // removed.
-const wanted = new Map();
-const wantedLinks = new Map();
-const wantedHashes = new Map();
-for (const { source, names, links: linked, staged } of supplied) {
-  for (const name of names) {
-    wanted.set(name, source);
-    wantedLinks.set(name, linked.get(name));
-    if (explicit) wantedHashes.set(name, staged[name].computedHash);
-  }
-}
+const want = wantedBy(supplied, explicit);
+const wanted = want.sources;
 const installedLinks = links(node);
-const changing = (name, entry) => {
-  const source = wanted.get(name);
-  if (explicit && !source && keep(name, entry)) return false;
-  if (!source && wild(name)) return false;
-  return !(source && entryKey(entry) === key(source.source) && entry.ref === source.ref
-    && installedLinks.get(name) === wantedLinks.get(name)
-    && (!explicit || (existsSync(join(node, '.agents/skills', name, 'SKILL.md'))
-      && wantedHashes.get(name) === entry.computedHash)));
-};
+const isChanging = (name, entry) => changing(name, entry, {
+  explicit, want, keep, wild, installedLinks,
+  complete: (name) => existsSync(join(node, '.agents/skills', name, 'SKILL.md')),
+});
 let prepared;
 if (explicit) {
   try {
     paths(node, [...new Set([...Object.entries(locked).filter(([name, entry]) => wanted.has(name)
-      || changing(name, entry)).map(([name]) => name), ...wanted.keys(),
+      || isChanging(name, entry)).map(([name]) => name), ...wanted.keys(),
     ...managed.filter((each) => each.disposition !== 'keep' && !(each.skill in locked)).map((each) => each.skill)])]);
     const actual = {};
     for (const [name, entry] of Object.entries(locked)) {
-      if (!wanted.has(name) && !changing(name, entry)) continue;
+      if (!wanted.has(name) && !isChanging(name, entry)) continue;
       actual[name] = hash(join(node, '.agents/skills', name));
       if (actual[name] !== null && actual[name] !== entry.computedHash) {
         throw Error(`${name}: local changes or no recorded hash; restore or keep the skill before applying`);
@@ -315,13 +263,9 @@ if (explicit) {
         throw Error(`${entry.skill}: managed files have no lock entry; removal cannot be verified`);
       }
     }
-    prepared = {
-      wanted: [...wanted].map(([skill, source]) => ({ skill, source: key(source.source), ref: source.ref, hash: wantedHashes.get(skill) })),
-      remove: Object.entries(locked).filter(([name, entry]) => changing(name, entry)).map(([name]) => name),
-      locked, actual,
-      owned: Object.entries(locked).filter(([name, entry]) => owned(name, entry) || (plan.seed && declaredKeys.has(entryKey(entry))))
-        .map(([skill, entry]) => ({ skill, source: entryKey(entry) })),
-    };
+    prepared = preparation({
+      locked, want, isChanging, owned, seed: plan.seed, declared: declaredKeys, actual,
+    });
     if (plan.prepare) { console.log(JSON.stringify(prepared)); process.exit(0); }
     if (JSON.stringify(prepared) !== JSON.stringify(plan.expected)) {
       throw Error('installation changed after preflight; repeat apply-v1');
@@ -330,7 +274,7 @@ if (explicit) {
 }
 const said = [];
 for (const [name, entry] of Object.entries(locked).sort()) {
-  if (!changing(name, entry)) continue;
+  if (!isChanging(name, entry)) continue;
   const run = skills(['remove', name, '--yes'], node);
   if (run.status !== 0) fail(3, [...said, `removing ${name}: ${run.errors.trim()}`]);
   said.push(`removed ${name}`);

@@ -24,7 +24,11 @@ Every change reaches master through a pull request.
 Tests
 
 - make check runs the tests that need no container: the Lisp of lisp/,
-  with ERT, against poslib at the commit the Dockerfile pins. It takes
-  seconds; run it on every change.
+  with ERT, against poslib at the commit the Dockerfile pins, and the
+  rules of clankos-skills/ with node's test runner. It takes seconds;
+  run it on every change.
+- install.mjs and apply.mjs read and change the node; the rules they
+  follow are in clankos-skills/rules.mjs, as functions of what they
+  read, so that the tests can give them a node's state.
 - test/run runs the tests in the images, which CLANKOS_IMAGE names. Build
   clankos:test and clankos-skills:test from the same commit first.
