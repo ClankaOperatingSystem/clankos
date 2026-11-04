@@ -63,6 +63,12 @@ method_zero_all() {
     method_zero $(docker run --rm --entrypoint ls "$CLANKOS_IMAGE" /usr/local/share/clankos/source/skills)
 }
 
+# settle: wait until a container reads what the host has just written
+# to a file a container has just read or written. Docker Desktop on a
+# Mac keeps such a file's size for about a second, and a container
+# reading it within that time reads it cut short at its old size.
+settle() { sleep 1; }
+
 # image_remote: install fetches the image's skills from the repository
 # the image was built from, at its commit. Serve that repository from a
 # bare clone of this one in remotes/: git in the containers reads the

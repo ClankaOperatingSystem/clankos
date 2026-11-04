@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Run methodology add, remove and adopt against a garden whose sources
-# are repositories beside it, as test/install.sh does. The skills image
-# is the one named as CLANKOS_IMAGE is, with -skills after the name.
+# Opt in to skills: run methodology add, remove and adopt, and install,
+# against a garden whose sources are repositories beside it. The skills
+# image is the one named as CLANKOS_IMAGE is, with -skills after the
+# name. The rules install follows are clankos-skills/test's; this test
+# is of what only the skills CLI in its container shows.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
@@ -45,8 +47,20 @@ printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' intray > 
 git add .clanka intray.org && git commit -qm 'Add a garden'
 run() { "$bin/clankos-run" methodology "$@" > ../out 2> ../err < /dev/null; }
 
+# A link an earlier refresh made to a skill of the image's, which Git
+# was told to ignore.
+mkdir -p .agents/skills
+ln -s ../../.clanka/auto/skills/hello-greet .agents/skills/hello-greet
+printf '/.agents/skills/hello-greet\n' >> .git/info/exclude
+
 run add https://git.example/hello.git v1
 check "add succeeds" test $? -eq 0
+check "the installed skill replaces the earlier link" \
+    test ! -L .agents/skills/hello-greet -a -f .agents/skills/hello-greet/SKILL.md
+check "and Git no longer ignores it" \
+    sh -c '! git check-ignore -q .agents/skills/hello-greet/SKILL.md'
+check "skills-lock.json records the ref" grep -q '"ref": "v1"' skills-lock.json
+check "nothing is committed" test "$(git rev-list --count HEAD)" -eq 1
 check "and declares the source" grep -qx '  - source: https://git.example/hello.git' .clanka/config.yml
 check "and keeps the rest" grep -qx '# The skills.' .clanka/config.yml
 check "and installs its skills" \
@@ -56,6 +70,30 @@ check "and says so" grep -qx 'installed hello-greet from https://git.example/hel
 run add https://git.example/hello.git v2
 check "add of a declared source changes its ref" grep -q 'v2' .agents/skills/hello-greet/SKILL.md
 check "and has one entry for it" test "$(grep -c 'hello.git' .clanka/config.yml)" -eq 1
+check "and the lock records it" test "$(grep -c '"ref": "v2"' skills-lock.json)" -eq 2
+
+# A harness that reads a directory of its own, declared after the skills
+# are installed, is given a link to each, and loses them when taken away.
+cp .clanka/config.yml ../config.saved
+printf 'harnesses: [claude-code]\n' >> .clanka/config.yml
+settle
+"$bin/clankos-run" install > ../out 2> ../err
+check "a harness declared later leaves each skill a folder in .agents/skills/" \
+    test -d .agents/skills/hello-greet -a ! -L .agents/skills/hello-greet
+check "and gives the harness a link to it" test -e .claude/skills/hello-greet
+cp ../config.saved .clanka/config.yml
+settle
+"$bin/clankos-run" install > ../out 2> ../err
+check "a harness taken away loses its links" test ! -e .claude/skills/hello-greet
+check "and the skills stay" test -f .agents/skills/hello-greet/SKILL.md
+
+# A harness's directory that is a link to .agents/skills/ shows each
+# skill to that harness: install again changes nothing.
+rm -rf .claude && mkdir .claude && ln -s ../.agents/skills .claude/skills
+"$bin/clankos-run" install > ../out 2> ../err
+check "with a harness's directory linked to .agents/skills/, install changes nothing" \
+    sh -c '! grep -q "^removed\|^installed" ../out'
+rm -rf .claude
 
 run add https://git.example/shared.git v1 share-skill --kind skills-repository
 check "add installs the skills named" \
@@ -106,5 +144,39 @@ check "where install refuses, so does add" test $? -eq 1
 check "and the configuration is put back" unchanged
 check "and says so" grep -qx 'methodology: install refused, and .clanka/config.yml is as it was' ../err
 cd ..
+
+# install gives the skills container GH_TOKEN, or failing it the token
+# the GitHub CLI prints. Record the token each container is given.
+cd "$work" || exit 1
+mkdir -p token/.clanka token-bin
+git -C token init -q .
+printf 'pos: 2\nprojects: projects/\n' > token/.clanka/config.yml
+cat > token-bin/docker <<'MOCK'
+#!/bin/sh
+[ -t 0 ] || cat > /dev/null
+case " $* " in
+    *" -e GH_TOKEN "*) printf '%s\n' "$GH_TOKEN" >> "$DOCKER_TOKENS" ;;
+    *) printf 'none\n' >> "$DOCKER_TOKENS" ;;
+esac
+MOCK
+cat > token-bin/gh <<'MOCK'
+#!/bin/sh
+[ "$*" = "auth token" ] && [ -n "$GH_SIGNED_IN" ] && echo from-gh
+MOCK
+chmod +x token-bin/docker token-bin/gh
+# tokens [VAR=VALUE ...]: the token each container of an install is
+# given, one a line, with the VARs set.
+tokens() {
+    rm -f "$work/tokens"
+    (cd token && env -u GH_TOKEN PATH="$work/token-bin:$PATH" DOCKER_TOKENS="$work/tokens" \
+        GH_SIGNED_IN= "$@" "$bin/clankos-run" install > /dev/null 2>&1)
+    tr '\n' ' ' < "$work/tokens"
+}
+check "install gives the skills container GH_TOKEN" \
+    [ "$(tokens GH_TOKEN=set GH_SIGNED_IN=1)" = "none set none " ]
+check "and failing it, the GitHub CLI's token" \
+    [ "$(tokens GH_SIGNED_IN=1)" = "none from-gh none " ]
+check "and no token where the GitHub CLI is signed out" \
+    [ "$(tokens)" = "none none none " ]
 
 [ "$failures" -eq 0 ]
