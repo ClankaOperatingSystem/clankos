@@ -74,7 +74,6 @@ else
     mkdir -p .clanka
     {
         # A project is a leaf, and says nowhere that projects belong.
-        printf 'pos: 2\n'
         [ -n "$project" ] || printf 'projects: projects/\n'
         printf 'image: %s:%s\n' "$registry" "$tag"
         # The directories no command reads, written out so that a reader
