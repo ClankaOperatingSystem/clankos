@@ -7,7 +7,8 @@
 # selects the tests that name it or name one of its callers. The
 # tests in test/garden and test/model install skills, from this
 # repository at the image's commit, through the skills image; those in
-# test/docs read docs/, the scripts and test/model. A path no rule knows selects every test.
+# test/docs read docs/, the scripts and test/model. The host's tests,
+# make check's, select none. A path no rule knows selects every test.
 # Exit: 0, or 2 for a usage error.
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
@@ -41,6 +42,7 @@ changed() { commands=$(printf '%s\n%s\n' "$commands" "$1"); }
 while IFS= read -r path; do
     case $path in
         Dockerfile|lisp/*|libexec/run|libexec/refresh|libexec/pos-emacs|bin/clankos-run) all ;;
+        Makefile|test/lisp/*|.github/workflows/host.yml|.gitignore) ;;
         test/lib/*|test/run|test/select|.github/*) all ;;
         README|LICENSE|AGENTS.md|bin/install.sh) ;;
         test/fixtures/*) name=${path#test/fixtures/}; want $(named "${name%%/*}") ;;
