@@ -3,11 +3,12 @@
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
-image_remote
 
 git init -q .
-"$bin/initiate" --no-tree < /dev/null > out 2>&1
-"$bin/responsibility-tree" --responsibility health > out 2>&1
+mkdir .clanka
+printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
+printf ':PROPERTIES:\n:ID: intray\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+"$bin/responsibility-tree" --no-clone --responsibility health > out 2>&1
 
 "$bin/pos-project" create . mend-roof 'Mend the roof' 'The roof does not leak.' \
     2030-03-01 'Call the roofer' > out 2> err
