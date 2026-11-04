@@ -1,14 +1,11 @@
-// Files and identities used by explicit repository application.
+// The files install and apply-v1 read and write, and the checks that
+// keep them within the node.
 import { createHash, randomUUID } from 'node:crypto';
 import { lstatSync, readFileSync, readdirSync, readlinkSync, renameSync,
   rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const key = (source) => source.replace(/\/$/, '').replace(/\.git$/, '')
-  .replace(/^https:\/\/github\.com\//, '');
-export const entryKey = (entry) => key(entry.sourceUrl || entry.source);
-export const identity = (entry) => JSON.stringify([entry.node, key(entry.source), entry.skill]);
 export const stat = (path) => {
   try { return lstatSync(path); } catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return null; throw error; }
 };
@@ -62,12 +59,13 @@ export function hash(dir) {
   return digest.digest('hex');
 }
 
-// The pinned skills CLI supplies this list when its image is built.
-const agentPaths = JSON.parse(readFileSync(new URL('./agent-paths.json', import.meta.url), 'utf8'));
-export function paths(node, names) {
+// The harnesses' skills directories. The pinned skills CLI supplies
+// this list when its image is built; a test gives its own.
+const agentPaths = () => JSON.parse(readFileSync(new URL('./agent-paths.json', import.meta.url), 'utf8'));
+export function paths(node, names, dirs = agentPaths()) {
   if (names.some((name) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name))) throw Error('invalid skill name');
   boundary(node, '.agents/skills');
-  for (const dir of agentPaths) {
+  for (const dir of dirs) {
     const parent = dirname(dir);
     boundary(node, parent);
     const folder = join(node, dir);

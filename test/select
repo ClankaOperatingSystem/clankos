@@ -42,7 +42,7 @@ changed() { commands=$(printf '%s\n%s\n' "$commands" "$1"); }
 while IFS= read -r path; do
     case $path in
         Dockerfile|lisp/*|libexec/run|libexec/refresh|libexec/pos-emacs|bin/clankos-run) all ;;
-        Makefile|test/lisp/*|.github/workflows/host.yml|.gitignore) ;;
+        Makefile|test/lisp/*|clankos-skills/test/*|.github/workflows/host.yml|.gitignore) ;;
         test/lib/*|test/run|test/select|.github/*) all ;;
         README|LICENSE|AGENTS.md|bin/install.sh) ;;
         test/fixtures/*) name=${path#test/fixtures/}; want $(named "${name%%/*}") ;;

@@ -2,7 +2,8 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { atomic, boundary, entryKey, hash, identity, installer, key, locks, read, stat } from './installation.mjs';
+import { atomic, boundary, hash, installer, locks, read, stat } from './installation.mjs';
+import { ownership, serialize, unfinished } from './rules.mjs';
 
 const root = process.cwd();
 let started = false;
@@ -29,30 +30,16 @@ try {
     }
   };
   current();
-  const managed = new Map();
-  const wanted = new Map();
   const work = [];
   for (const node of plan.nodes) {
-    for (const entry of node.managed) managed.set(identity(entry), entry);
     const dir = boundary(root, node.path);
     if (!stat(dir)) continue;
     const request = { ...node, mode: 'apply-v1', prepare: true, seed: plan.before === null };
-    const prepared = JSON.parse(run(request, dir));
-    for (const entry of [...prepared.owned, ...prepared.wanted]) {
-      const own = { node: node.path, source: key(entry.source), skill: entry.skill, disposition: null };
-      if (!managed.has(identity(own))) managed.set(identity(own), own);
-    }
-    for (const entry of prepared.wanted) {
-      const own = { node: node.path, source: key(entry.source), skill: entry.skill, disposition: null };
-      wanted.set(identity(own), own);
-    }
-    work.push({ node, dir, request, prepared });
+    work.push({ node, path: node.path, dir, request, prepared: JSON.parse(run(request, dir)) });
   }
+  const { pending: managed, done } = ownership(plan.nodes, work);
   current();
-  const serialize = (entries) => JSON.stringify({ schema: 1,
-    managed: [...entries].sort((a, b) => identity(a).localeCompare(identity(b))),
-  }) + '\n';
-  const pending = serialize(managed.values());
+  const pending = serialize(managed);
   atomic(state, pending);
   started = true;
   plan.before = pending;
@@ -60,23 +47,18 @@ try {
     current();
     process.stdout.write(run({ ...item.request, prepare: false, expected: item.prepared }, item.dir));
     const installed = locks(item.dir);
-    for (const entry of item.prepared.wanted) {
-      const actual = installed[entry.skill];
-      if (!actual || entryKey(actual) !== entry.source || actual.ref !== entry.ref || actual.computedHash !== entry.hash
-          || !stat(join(item.dir, '.agents/skills', entry.skill, 'SKILL.md'))
-          || hash(join(item.dir, '.agents/skills', entry.skill)) !== actual.computedHash) {
-        throw Error(`${item.node.path}/${entry.skill}: installation incomplete; repeat apply-v1`);
-      }
-    }
-    for (const name of item.prepared.remove) {
-      if (!item.prepared.wanted.some((entry) => entry.skill === name)
-          && (installed[name] || stat(join(item.dir, '.agents/skills', name)))) {
-        throw Error(`${item.node.path}/${name}: removal incomplete; repeat apply-v1`);
-      }
-    }
+    const why = unfinished(item.node.path, item.prepared, installed, (name) => {
+      const folder = join(item.dir, '.agents/skills', name);
+      return {
+        present: Boolean(stat(folder)),
+        complete: Boolean(stat(join(folder, 'SKILL.md'))),
+        hash: () => hash(folder),
+      };
+    });
+    if (why) throw Error(why);
   }
   current();
-  atomic(state, serialize(wanted.values()));
+  atomic(state, serialize(done));
 } catch (error) {
   console.error(`apply-v1: ${error.message.trim()}`);
   if (started) console.error('apply-v1: configuration and pending ownership retained; correct the error and repeat apply-v1');

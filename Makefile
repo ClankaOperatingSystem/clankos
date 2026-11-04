@@ -1,16 +1,18 @@
 # make check: the tests that need no container, on the host. The Lisp
 # of lisp/ is tested with ERT against poslib at the commit the
-# Dockerfile pins, fetched into _deps/poslib with what it requires.
-# The tests that need Docker are test/run's.
+# Dockerfile pins, fetched into _deps/poslib with what it requires, and
+# the rules of clankos-skills/ with node's test runner. The tests that
+# need Docker are test/run's.
 
 EMACS ?= emacs
+NODE ?= node
 POSLIB_URL = https://github.com/ClankaOperatingSystem/poslib.git
 POSLIB_COMMIT := $(shell sed -n 's/^ARG POSLIB_COMMIT=//p' Dockerfile)
 POSLIB = _deps/poslib
 
-.PHONY: check lisp deps clean
+.PHONY: check lisp node deps clean
 
-check: lisp
+check: lisp node
 
 # poslib at POSLIB_COMMIT, fetched again if it is at another; then the
 # packages poslib requires, by its own make deps.
@@ -28,6 +30,9 @@ lisp: deps
 	  -L $(POSLIB)/lisp -L lisp -L test/lisp -l ert \
 	  $(foreach file,$(wildcard test/lisp/*-test.el),-l $(file)) \
 	  -f ert-run-tests-batch-and-exit
+
+node:
+	$(NODE) --test 'clankos-skills/test/*.test.mjs'
 
 clean:
 	rm -rf _deps
