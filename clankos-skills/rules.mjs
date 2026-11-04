@@ -121,6 +121,30 @@ export function changing(name, entry, { explicit, want, keep, wild, installedLin
     && (!explicit || (complete(name) && want.hashes.get(name) === entry.computedHash)));
 }
 
+// In apply-v1, the hash of each installed skill that is wanted or
+// changes, as it is now. A skill whose hash is not the one the lock
+// recorded has local changes, and a managed skill with files and no lock
+// entry cannot be shown to be removed: either is refused, and the node
+// is not changed. inspect(name) says of .agents/skills/NAME whether it
+// is present, and hash(), its hash.
+export function untouched({ locked, wanted, isChanging, managed, inspect }) {
+  const actual = {};
+  for (const [name, entry] of Object.entries(locked)) {
+    if (!wanted.has(name) && !isChanging(name, entry)) continue;
+    actual[name] = inspect(name).hash();
+    if (actual[name] !== null && actual[name] !== entry.computedHash) {
+      throw Error(`${name}: local changes or no recorded hash; restore or keep the skill before applying`);
+    }
+  }
+  for (const entry of managed) {
+    if (!(entry.skill in locked) && !wanted.has(entry.skill)
+        && entry.disposition !== 'keep' && inspect(entry.skill).present) {
+      throw Error(`${entry.skill}: managed files have no lock entry; removal cannot be verified`);
+    }
+  }
+  return actual;
+}
+
 // The preparation apply-v1's preflight records for a node, and checks
 // again before the node is changed.
 export function preparation({ locked, want, isChanging, owned, seed, declared, actual }) {

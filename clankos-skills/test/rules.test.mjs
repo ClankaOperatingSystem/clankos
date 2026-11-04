@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   changing, identity, key, nameRefusals, owners, ownership, preparation, refRefusal,
-  serialize, unfinished, wanted,
+  serialize, unfinished, untouched, wanted,
 } from '../rules.mjs';
 
 const CLANKOS = 'https://github.com/ClankaOperatingSystem/clankos.git';
@@ -162,6 +162,28 @@ test('in apply-v1 a skill with no SKILL.md or another hash changes', () => {
   assert.equal(changes('lint', entry(TOOLS), declared, { explicit: true, complete: () => false }), true);
   assert.equal(changes('lint', entry(TOOLS, { computedHash: 'h0' }), declared, { explicit: true }), true);
   assert.equal(changes('lint', entry(TOOLS, { computedHash: 'h0' }), declared), false);
+});
+
+test('apply-v1 refuses a skill with local changes, and records the hashes it found', () => {
+  const locked = { lint: entry(TOOLS), other: entry(TOOLS) };
+  const args = (hashes, managed = []) => ({
+    locked, wanted: new Map([['lint', source(TOOLS)]]), isChanging: () => false, managed,
+    inspect: (name) => ({ present: name in hashes, hash: () => hashes[name] ?? null }),
+  });
+  assert.deepEqual(untouched(args({ lint: 'h1', other: 'h9' })), { lint: 'h1' });
+  assert.deepEqual(untouched(args({})), { lint: null });
+  assert.throws(() => untouched(args({ lint: 'h2' })), /^Error: lint: local changes/);
+});
+
+test('apply-v1 refuses to remove a managed skill that has files and no lock entry', () => {
+  const managed = (disposition) => [{ node: '.', source: 'acme/tools', skill: 'gone', disposition }];
+  const args = (present, disposition) => ({
+    locked: {}, wanted: new Map(), isChanging: () => false, managed: managed(disposition),
+    inspect: () => ({ present, hash: () => null }),
+  });
+  assert.throws(() => untouched(args(true, null)), /gone: managed files have no lock entry/);
+  assert.deepEqual(untouched(args(false, null)), {});
+  assert.deepEqual(untouched(args(true, 'keep')), {});
 });
 
 test('the preparation names what is wanted, removed and owned', () => {
