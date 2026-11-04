@@ -1,19 +1,33 @@
 #!/usr/bin/env bash
-# Install from an external bundle, retain owned slots, then run a fresh clone.
+# Install from an external bundle, retain owned slots, then run a fresh
+# clone: its committed bundle runs, it clones the responsibility the
+# garden mounts from a remote, and the responsibility's own committed
+# bundle runs there.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=Fixture GIT_AUTHOR_EMAIL=fixture@example.invalid
 export GIT_COMMITTER_NAME=Fixture GIT_COMMITTER_EMAIL=fixture@example.invalid
-mkdir -p 'bundle store' garden/.clankos garden/bin
+mkdir -p 'bundle store' garden/.clankos garden/bin child/.clanka
 cp -R "$repo/skills/clankos-lint" 'bundle store/lint'
 bundle="$work/bundle store/lint/scripts/clankos"
-cd garden || exit 1
+# A responsibility, a repository of its own, with method zero's lint
+# installed and committed.
+cd child || exit 1
 git init -qb master
-# The garden fills the slots itself, and declares only clankos-lint of
-# method zero.
-{ printf 'pos: 2\nprojects: projects/\nbin: bin\nmethodologies:\n'; method_zero clankos-lint; } > .clankos/config.yml
+{ printf 'pos: 2\nprojects: projects/\nmethodologies:\n'; method_zero clankos-lint; } > .clanka/config.yml
+printf ':PROPERTIES:\n:ID: child-intray\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' > intray.org
+git add . && git commit -qm 'Create a responsibility'
+"$bundle" clankos-run install > "$work/out" 2> "$work/err"
+check 'the responsibility installs from the bundle' test $? -eq 0
+git add -A && git commit -qm 'Install bundles'
+cd ../garden || exit 1
+git init -qb master
+# The garden fills the slots itself, declares only clankos-lint of
+# method zero, and mounts the responsibility from its remote.
+{ printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    remote: %s\nmethodologies:\n' "$work/child"
+  method_zero clankos-lint; } > .clankos/config.yml
 printf ':PROPERTIES:\n:ID: intray\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' > intray.org
 for slot in capture start-up wrap-up; do
     mkdir -p ".agents/skills/$slot"
@@ -43,6 +57,18 @@ check 'installed bundle runs from fresh clone' test $? -eq 0
 cat "$work/err"
 check 'explicit bundle bypasses owned slot command' grep -q 'Fresh clone task' intray.org
 check 'capture leaves wrappers absent in a fresh clone' test ! -e .clankos/auto
+# The bundle's commands run in the container, and the clone of a
+# declared repository is made on the host, by bin/responsibility-tree,
+# which a fresh clone has once initiate.sh has made its bin/.
+"$bin/responsibility-tree" > "$work/out" 2> "$work/err"
+check 'the fresh clone clones the responsibility from its remote' \
+    test "$(git -C child config --get remote.origin.url)" = "$work/child"
+(cd child && .agents/skills/clankos-lint/scripts/clankos capture -- 'Responsibility task' > "$work/out" 2> "$work/err")
+check "the responsibility's committed bundle runs in the cloned responsibility" \
+    grep -q 'Responsibility task' child/intray.org
+check 'and works on the responsibility alone' sh -c "! grep -q 'Responsibility task' intray.org"
+check 'the garden does not see the cloned responsibility' \
+    test -z "$(git status --porcelain --untracked-files=all -- child)"
 mkdir -p "$work/mock-bin" "$work/calls"
 cp "$repo/test/lib/fake-docker" "$work/mock-bin/docker"
 chmod +x "$work/mock-bin/docker"
