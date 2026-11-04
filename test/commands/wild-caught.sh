@@ -49,7 +49,7 @@ check "from a mounted repository, its own" \
     test "$(cat ../out)" = '.
   tools-lint: from https://example.org/tools.git, which is not declared'
 
-printf 'pos: 9\n' > child/.clanka/config.yml && git -C child commit -qam 'Refuse'
+printf 'projects: [a]\n' > child/.clanka/config.yml && git -C child commit -qam 'Refuse'
 "$bin/clankos-run" wild-caught > ../out 2> ../err
 check "a refused configuration exits 1" test $? -eq 1
 check "and is reported" grep -q '^wild-caught: config-refused ' ../err
