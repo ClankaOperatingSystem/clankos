@@ -23,6 +23,8 @@ printf 'pos: 2\nprojects: projects/\nbin: bin\nchildren:\n  - path: child\n    r
 printf ':PROPERTIES:\n:ID: %s\n:END:\n#+TITLE: Intray\n\n* Unsorted\n' intray > intray.org
 git clone -q "$work/child" child
 git clone -q "$work/product" product
+# As the tree command does, each child's path is excluded where it is cloned.
+printf '/child\n/product\n' >> .git/info/exclude
 git add .clanka intray.org && git commit -qm 'Add a garden'
 # Each configured repository has the image's skills installed.
 for dir in child .; do

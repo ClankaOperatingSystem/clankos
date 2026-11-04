@@ -42,6 +42,9 @@ for dir in . home home/study; do
 done
 git clone -q "$work/child" child
 git clone -q "$work/grand" child/projects/grand
+# As the tree command does, each child's path is excluded where it is cloned.
+printf '/child\n' >> .git/info/exclude
+printf '/projects/grand\n' >> child/.git/info/exclude
 git add .clankos home intray.org && git commit -qm 'Add a garden'
 
 for dir in . child child/projects/grand; do
