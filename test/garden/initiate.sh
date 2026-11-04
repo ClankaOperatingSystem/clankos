@@ -20,6 +20,7 @@ bootstrap="$work/bootstrap bundle/scripts/bootstrap"
 mkdir garden && cd garden && git init -q
 "$bootstrap" --image v0.0.5 --no-tree > ../out 2> ../err
 check 'standalone bootstrap succeeds' test $? -eq 0
+check 'bootstrap writes no pos key' sh -c '! grep -q "^pos:" .clanka/config.yml'
 check 'bootstrap records a fixed release' grep -qx 'image: ghcr.io/clankaoperatingsystem/clankos:v0.0.5' .clanka/config.yml
 check 'bootstrap creates no wrappers' test ! -e bin -a ! -e .clanka/auto
 check 'bootstrap installs method zero' test -x .agents/skills/clankos-bootstrap/scripts/clankos

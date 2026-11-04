@@ -14,8 +14,7 @@ check "it succeeds" test $? -eq 0
 check "tree editing does not create installation wrappers" test ! -e .clanka/auto
 check "tree editing does not install skills" test ! -e .agents
 check "a responsibility has a configuration that says so" \
-    test "$(cat health/.clanka/config.yml)" = "pos: 2
-projects: projects/"
+    test "$(cat health/.clanka/config.yml)" = "projects: projects/"
 check "a responsibility has an intray" grep -qx '\* Unsorted' health/intray.org
 check "a responsibility is declared, with no remote" \
     sh -c "grep -A1 '^  - path: health\$' .clanka/config.yml | tail -n 1 | grep -qv remote"
@@ -32,8 +31,7 @@ check "a project is not declared" sh -c '! grep -q kitchen .clanka/config.yml'
 check "a product is declared with its remote" \
     sh -c "grep -A1 '^  - path: vendor/lib\$' .clanka/config.yml | grep -qx '    remote: https://example.org/lib.git'"
 check "a product beneath a responsibility is declared by it" \
-    test "$(cat work/.clanka/config.yml)" = "pos: 2
-projects: projects/
+    test "$(cat work/.clanka/config.yml)" = "projects: projects/
 children:
   - path: widget
     remote: https://example.org/widget.git"

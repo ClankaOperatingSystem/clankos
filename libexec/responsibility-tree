@@ -104,7 +104,7 @@ add_responsibility() {
     else
         mkdir -p "$1/.clanka"
         {
-            printf 'pos: 2\nprojects: projects/\n'
+            printf 'projects: projects/\n'
             [ -z "$image" ] || printf 'image: %s\n' "$image"
         } > "$1/.clanka/config.yml"
         echo "wrote     $1/.clanka/config.yml"
