@@ -208,6 +208,44 @@ The skill of another source is not."
       (should (equal clankos-installation-test-repository
                      (clankos-installation--pinned root (funcall nodes)))))))
 
+;;;; The installer's input
+
+(ert-deftest clankos-installation/apply-input-refuses-path-methodologies ()
+  "A node whose methodologies are a path, the legacy form, refuses apply."
+  (clankos-installation-test-with-garden
+      '((".pos/config.yaml" . "projects: projects/\nchildren:\n  - path: area\n")
+        ("area/.pos/config.yaml" . "projects: projects/\nmethodologies: methodologies/\n"))
+    (clankos-installation-method-zero root)
+    (should (string-match-p
+             "Legacy path methodologies"
+             (cadr (should-error (clankos-installation-apply-input root)))))))
+
+(ert-deftest clankos-installation/apply-input-refuses-a-node-that-became-a-repository ()
+  "A managed node that has become a repository of its own refuses apply.
+Once it is a directory again, it is in the input for cleanup."
+  (clankos-installation-test-with-garden
+      `((".pos/config.yaml" . "projects: projects/\n")
+        ("area/notes.org" . "")
+        (".pos/installation-state.json"
+         . ,(json-serialize
+             '((schema . 1)
+               (managed . [((node . "area") (source . "acme/tools")
+                            (skill . "tools-lint") (disposition . "remove"))])))))
+    (clankos-installation-method-zero root)
+    (clankos-installation-test--git (expand-file-name "area" root) "init" "-q")
+    (should (string-match-p
+             "became a separate repository: area"
+             (cadr (should-error (clankos-installation-apply-input root)))))
+    (delete-directory (expand-file-name "area/.git" root) t)
+    (let ((input (clankos-installation-apply-input root)))
+      (should (equal '("cleanup")
+                     (delq nil (mapcar (lambda (node)
+                                         (and (equal "area" (alist-get 'path node))
+                                              (alist-get 'status node)))
+                                       (alist-get 'nodes input)))))
+      (should (equal clankos-installation-test-repository
+                     (alist-get 'clankos (aref (alist-get 'nodes input) 0)))))))
+
 ;;;; Ownership
 
 (ert-deftest clankos-installation/the-first-edit-seeds-ownership-from-the-lock ()

@@ -426,35 +426,39 @@ repository's URL."
         (pos-bytes-print (clankos-installation-edit default-directory path action words keep kind))
       (error (message "installation-edit: %s" (error-message-string err)) (kill-emacs 1)))))
 
+(defun clankos-installation-apply-input (root)
+  "Return the bounded input to the apply-v1 installer for ROOT.
+A managed node that became a repository of its own, and a node whose
+methodologies are a path, are refused."
+  (let* ((plan (clankos-installation-plan root))
+         (file (expand-file-name "installation-state.json"
+                                 (file-name-directory (clankos-installation--config root))))
+         (nodes
+          (mapcar
+           (lambda (node)
+             (when (equal (alist-get 'status node) "blocked")
+               (error "Managed node became a separate repository: %s" (alist-get 'path node)))
+             (unless (eq (alist-get 'legacy node) :null)
+               (error "Legacy path methodologies: replace the path with source declarations before apply-v1; see clankos-run help apply-v1"))
+             (let* ((file (alist-get 'config node))
+                    (text (unless (eq file :null)
+                            (clankos-installation--read (expand-file-name file root))))
+                    (config (and text (pos-node-read-config text))))
+               (append (list (cons 'text (or text :null))
+                             (cons 'harnesses (or (alist-get 'harnesses config) :null))
+                             (cons 'bin (or (alist-get 'bin config) :null))) node)))
+           (append (alist-get 'nodes plan) nil)))
+         (clankos (clankos-installation--pinned root nodes)))
+    `((schema . 1)
+      (nodes . ,(vconcat (mapcar (lambda (node) (cons (cons 'clankos clankos) node))
+                                 nodes)))
+      (state . ,(file-relative-name file root))
+      (before . ,(if (file-exists-p file) (clankos-installation--read file) :null)))))
+
 (defun clankos-installation-apply-batch ()
   "Print the bounded input to the apply-v1 installer."
   (condition-case err
-      (let* ((root default-directory)
-             (plan (clankos-installation-plan root))
-             (file (expand-file-name "installation-state.json"
-                                     (file-name-directory (clankos-installation--config root))))
-             (nodes
-              (mapcar
-               (lambda (node)
-                 (when (equal (alist-get 'status node) "blocked")
-                   (error "Managed node became a separate repository: %s" (alist-get 'path node)))
-                 (unless (eq (alist-get 'legacy node) :null)
-                   (error "Legacy path methodologies: replace the path with source declarations before apply-v1; see clankos-run help apply-v1"))
-                 (let* ((file (alist-get 'config node))
-                        (text (unless (eq file :null)
-                                (clankos-installation--read (expand-file-name file root))))
-                        (config (and text (pos-node-read-config text))))
-                   (append (list (cons 'text (or text :null))
-                                 (cons 'harnesses (or (alist-get 'harnesses config) :null))
-                                 (cons 'bin (or (alist-get 'bin config) :null))) node)))
-               (append (alist-get 'nodes plan) nil)))
-             (clankos (clankos-installation--pinned root nodes)))
-        (pos-bytes-print
-         `((schema . 1)
-           (nodes . ,(vconcat (mapcar (lambda (node) (cons (cons 'clankos clankos) node))
-                                      nodes)))
-           (state . ,(file-relative-name file root))
-           (before . ,(if (file-exists-p file) (clankos-installation--read file) :null)))))
+      (pos-bytes-print (clankos-installation-apply-input default-directory))
     (error (message "apply-v1: %s" (error-message-string err)) (kill-emacs 1))))
 
 (provide 'clankos-installation)
