@@ -72,8 +72,9 @@ line and says where it is defined.
 
     Each requirement is the name of a check in test/model/, one script
     for each group, and scripts/render-model writes this section from
-    them. A requirement poslib holds runs poslib's test in the image.
-    One marked "not tested here" names what holds it instead.
+    them. A requirement poslib holds cites poslib's test, which the
+    image's poslib has and poslib's own suite passed at that commit. One
+    marked "not tested here" names what holds it instead.
 
     The tree, test/model/tree.sh
       - A tree is a root, the responsibilities beneath it, and each
