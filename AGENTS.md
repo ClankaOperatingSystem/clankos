@@ -32,3 +32,11 @@ Tests
   read, so that the tests can give them a node's state.
 - test/run runs the tests in the images, which CLANKOS_IMAGE names. Build
   clankos:test and clankos-skills:test from the same commit first.
+- The garden tests are the end-to-end paths: bootstrap (initiate), upgrade
+  with migration (upgrade), opting in to skills (methodology, apply-v1),
+  a mounted repository (refresh) and a fresh clone with remote children
+  (bundle-install). A rule belongs in the host's tests, and a garden
+  test checks only what the containers alone show.
+- On Docker Desktop for Mac, a container may read a file the host has
+  just changed at its old size. A test that changes a file a container
+  has just read calls settle before the next container reads it.
