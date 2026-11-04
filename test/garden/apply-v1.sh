@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Apply saved intent across local nodes, and recover after a skills CLI failure.
+# Apply saved intent across local nodes, keep skills across applies,
+# recover after a skills CLI failure, and clean a node no longer
+# configured. The refusals apply-v1 makes before it changes anything are
+# the host's tests, of lisp/ and clankos-skills/; this test is of what
+# only the skills CLI in its container shows.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
@@ -67,21 +71,6 @@ status() {
         return 1
     fi
 }
-# A legacy child must refuse the whole plan before installing the root.
-cp area/.pos/config.yaml "$work/child-config"
-printf 'pos: 2\nmethodologies: methodologies/\n' > area/.pos/config.yaml
-mkdir -p area/.agents/skills area/methodologies/hello/skills
-cp -R "$work/sources/hello/skills/hello-greet" area/methodologies/hello/skills/
-ln -s ../../methodologies/hello/skills/hello-greet area/.agents/skills/hello-greet
-check 'legacy paths refuse apply before installation' status 1 "$bin/clankos-run" apply-v1
-check 'legacy refusal gives a migration route' grep -q 'replace the path with source declarations' "$work/status-err"
-check 'legacy refusal leaves root skills absent' test ! -e .agents
-check 'legacy refusal leaves ownership absent' test ! -e .clankos/installation-state.json
-check 'legacy refusal preserves the old skill link' test -L area/.agents/skills/hello-greet
-cp "$work/child-config" area/.pos/config.yaml
-check 'source configuration refuses an unmigrated skill link' status 1 "$bin/clankos-run" apply-v1
-check 'unmigrated link refusal leaves root skills absent' test ! -e .agents
-rm area/.agents/skills/hello-greet
 check 'apply installs local nodes without entering a nested repository' apply
 check 'root source is installed' grep -qx v1 .agents/skills/hello-part/SKILL.md
 check 'child source is installed' grep -qx v1 area/.agents/skills/hello-greet/SKILL.md
@@ -105,16 +94,19 @@ assert any(e['node']=='.' and e['skill']=='hello-part' for e in s)
 PY
 printf 'Local changes to a kept skill.\n' >> .agents/skills/hello-greet/SKILL.md
 cp .agents/skills/hello-greet/SKILL.md "$work/kept"
+settle
 check 'later apply preserves released skill despite its declared source' apply
 check 'kept local edits survive' cmp -s .agents/skills/hello-greet/SKILL.md "$work/kept"
 # Refuse every node before installing the newly desired root source.
 check 'edit an unrelated source without reclaiming kept skills' edit . add https://git.example/other.git v1
 printf 'Local change\n' >> area/.agents/skills/hello-greet/SKILL.md
 cp .clankos/installation-state.json "$work/state"
+settle
 check 'local modification in a later node refuses the whole preflight' status 1 apply
 check 'earlier node is not installed after a preflight refusal' test ! -e .agents/skills/other-one
 check 'preflight failure leaves ownership unchanged' cmp -s .clankos/installation-state.json "$work/state"
 git show HEAD:area/.agents/skills/hello-greet/SKILL.md > area/.agents/skills/hello-greet/SKILL.md
+settle
 check 'retry after restoring local edits succeeds' apply
 check 'unrelated edit did not reclaim the kept skill' cmp -s .agents/skills/hello-greet/SKILL.md "$work/kept"
 check 'update selected source revision' edit . add https://git.example/hello.git v2 hello-part
@@ -161,27 +153,9 @@ check 'successful retry releases the kept identity' python3 - <<'PY'
 import json
 assert not any(e['node']=='.' and e['skill']=='hello-part' for e in json.load(open('.clankos/installation-state.json'))['managed'])
 PY
-# An old identity cannot remove a same-name skill now owned by another source.
-python3 - <<'PY'
-import json
-p='skills-lock.json';s=json.load(open(p));e=s['skills']['hello-greet']
-e['source']='elsewhere/replacement';e['sourceUrl']='https://github.com/elsewhere/replacement.git'
-with open(p,'w') as f: json.dump(s,f)
-p='.clankos/installation-state.json';s=json.load(open(p))
-s['managed'].append({'node':'.','source':'https://git.example/hello.git','skill':'hello-greet','disposition':'remove'})
-with open(p,'w') as f: json.dump(s,f)
-PY
-check 'stale source ownership does not remove a replacement' apply
-check 'replacement files remain unchanged' cmp -s .agents/skills/hello-greet/SKILL.md "$work/kept"
-cp skills-lock.json "$work/lock"
-printf '{broken' > skills-lock.json
-check 'malformed lock refuses apply' status 1 apply
-cp "$work/lock" skills-lock.json
-# Refuse paths that would let the CLI alter another directory or repository.
-mkdir -p "$work/external" .agents/skills/other-one/.git
+# Refuse a harness path that would let the CLI alter another directory.
+mkdir -p "$work/external"
 printf 'Untouched\n' > "$work/external/marker"
-check 'nested repository inside an installed skill is refused' status 1 apply
-mv .agents/skills/other-one/.git "$work/skill-git"
 ln -s "$work/external" .claude
 check 'a harness path through a symlink is refused' status 1 apply
 check 'symlink target remains untouched' grep -qx Untouched "$work/external/marker"
@@ -195,10 +169,7 @@ p='.clankos/installation-state.json';s=json.load(open(p))
 s['managed'].append({'node':'gone','source':'https://git.example/hello.git','skill':'hello-greet','disposition':'remove'})
 with open(p,'w') as f: json.dump(s,f)
 PY
-git -C area init -q
-check 'cleanup refuses a node that became a separate repository' status 1 apply
-check 'refused cleanup preserves the child skill' test -f area/.agents/skills/hello-greet/SKILL.md
-mv area/.git "$work/child-git"
+settle
 check 'apply cleans a formerly configured node' apply
 check 'cleanup removes managed files' test ! -e area/.agents/skills/hello-greet
 check 'cleanup clears completed ownership' python3 - <<'PY'
@@ -214,6 +185,4 @@ printf '[url "file://%s/remotes/"]\n\tinsteadOf = https://git.example/\n[url "fi
     "$work/linked" "$work/linked" > "$work/linked/config/git/config"
 (cd "$work/linked" && unset CLANKOS_WORKSPACE && export XDG_CONFIG_HOME="$work/linked/config" && apply)
 check 'apply works with Git metadata outside the worktree mount' test $? -eq 0
-cd area || exit 1
-check 'apply from a child refuses to widen scope' status 2 "$bin/clankos-run" apply-v1
 [ "$failures" -eq 0 ]
