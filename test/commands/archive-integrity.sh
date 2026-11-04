@@ -120,8 +120,8 @@ check "a version 2 configuration in .clanka is read" status 1 "$bin/archive-inte
 mv .clanka .clankos
 check "a configuration in .clankos is read" status 1 "$bin/archive-integrity" check .
 mv .clankos .clanka
-printf 'pos: 1\n' > .clanka/config.yml
-check "a version 1 configuration is refused" status 2 "$bin/archive-integrity" check .
+printf 'projects: [a]\n' > .clanka/config.yml
+check "a configuration poslib refuses is refused" status 2 "$bin/archive-integrity" check .
 printf 'pos: 2\nprojects: projects/\n' > .clanka/config.yml
 
 check "an unknown command is refused" status 2 "$bin/archive-integrity" bogus
