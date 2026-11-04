@@ -29,8 +29,8 @@ check "an arrival sets the task to NEXT" grep -qx "intray.org:2: NEXT Ask Ada fo
 check "and removes the link" sh -c '! grep -q WAITING_ON intray.org'
 
 cp intray.org before
-check "a person not recorded is refused" \
-    sh -c "! '$bin/pos-person' wait quote 'Nobody Here' >/dev/null 2>&1"
+check "a person not recorded is refused, exit 1" \
+    status 1 "$bin/pos-person" wait quote 'Nobody Here'
 check "a refusal writes nothing" cmp -s before intray.org
 check "one argument is usage" status 2 "$bin/pos-person" add
 check "help needs no container" status 0 env CLANKOS_IMAGE=none.invalid/none "$bin/pos-person" --help

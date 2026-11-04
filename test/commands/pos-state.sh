@@ -40,7 +40,7 @@ check "no lock or backup file is left" test "$(ls -A | sort | tr '\n' ' ')" = ".
 cp tasks.org before
 check "a state that is not one is refused" sh -c "! '$bin/pos-state' roofer BLOCKED >/dev/null 2>&1"
 check "the state the task has is refused" sh -c "! '$bin/pos-state' roofer WAITING >/dev/null 2>&1"
-check "an ID no heading has is refused" sh -c "! '$bin/pos-state' absent DONE >/dev/null 2>&1"
+check "an ID no heading has is refused, exit 1" status 1 "$bin/pos-state" absent DONE
 check "a refusal writes nothing" cmp -s before tasks.org
 check "one argument is usage" status 2 "$bin/pos-state" roofer
 check "help needs no container" status 0 env CLANKOS_IMAGE=none.invalid/none "$bin/pos-state" --help

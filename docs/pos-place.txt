@@ -72,8 +72,9 @@ which an editor on the host sees. It sees saved files only.
 4. Exit status
 
     0     saved
+    1     refused; the reason is on stderr
     2     usage
-    255   refused, or an Emacs error; the message is on stderr
+    255   an Emacs error; the message is on stderr
     125   Docker failed to run the container
     126   the workspace is not visible in the container
     127   docker, or the command in the image, was not found

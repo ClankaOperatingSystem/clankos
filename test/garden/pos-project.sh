@@ -29,8 +29,8 @@ check "a responsibility's project goes where its projects belong" \
 check "an outcome of two lines is refused" \
     sh -c "! '$bin/pos-project' create . two-lines 'Two' 'One.
 Two.' 2030-03-01 >/dev/null 2>&1"
-check "a name that is taken is refused" \
-    sh -c "! '$bin/pos-project' create . mend-roof 'Again' 'Outcome.' 2030-03-01 >/dev/null 2>&1"
+check "a name that is taken is refused, exit 1" \
+    status 1 "$bin/pos-project" create . mend-roof 'Again' 'Outcome.' 2030-03-01
 
 "$bin/pos-project" status projects/mend-roof WIP 'Rang the roofer' > out 2> err
 check "status prints the file and both statuses" \

@@ -42,8 +42,8 @@ check "no lock or backup file is left" \
     test "$(ls -A | sort | tr '\n' ' ')" = ".pos err intray.org out tasks.org "
 
 cp tasks.org before
-check "a heading that is not there is refused" \
-    sh -c "! '$bin/pos-place' roofer tasks.org 'Tasks/Absent' >/dev/null 2>&1"
+check "a heading that is not there is refused, exit 1" \
+    status 1 "$bin/pos-place" roofer tasks.org 'Tasks/Absent'
 check "a heading within the task is refused" \
     sh -c "! '$bin/pos-place' roofer tasks.org 'Tasks/Mend the house/Call the roofer' >/dev/null 2>&1"
 check "a refusal writes nothing" cmp -s before tasks.org

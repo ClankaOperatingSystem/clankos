@@ -42,7 +42,7 @@ check "no lock or backup file is left" test "$(ls -A | sort | tr '\n' ' ')" = ".
 cp tasks.org before
 check "a date that is no date is refused" sh -c "! '$bin/pos-item' schedule roofer tomorrow >/dev/null 2>&1"
 check "a tag with no sign is refused" sh -c "! '$bin/pos-item' tag roofer phone >/dev/null 2>&1"
-check "an ID no heading has is refused" sh -c "! '$bin/pos-item' tag absent +phone >/dev/null 2>&1"
+check "an ID no heading has is refused, exit 1" status 1 "$bin/pos-item" tag absent +phone
 check "a refusal writes nothing" cmp -s before tasks.org
 check "a form that is not one is usage" status 2 "$bin/pos-item" close roofer
 check "a date and no more is usage" status 2 "$bin/pos-item" schedule roofer
