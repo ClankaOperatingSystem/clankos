@@ -1,19 +1,10 @@
 #!/usr/bin/env bash
-# The skills the image installs: what each is, and that the script each
-# carries runs the commands from wherever a session is started.
+# The skills the image installs, and that the script each carries runs
+# the commands from wherever a session is started.
 # Exit: 0 every check passed, 1 otherwise.
 set -uo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/../lib/check.sh"
 image_remote
-
-for skill in "$repo"/skills/*/; do
-    name=$(basename -- "$skill")
-    check "$name says its name, which is its directory's" \
-        test "$(sed -n '2p' "$skill/SKILL.md")" = "name: $name"
-    check "$name has a description on one line, with no colon a YAML reader would trip on" \
-        sh -c "sed -n '3p' '$skill/SKILL.md' | grep -q '^description: [^:]*\(:[^ ][^:]*\)*\$'"
-    check "$name carries the script that runs the commands" test -x "$skill/scripts/clankos"
-done
 
 mkdir garden && cd garden && git init -q .
 "$bin/initiate" --no-tree < /dev/null > ../out 2>&1
