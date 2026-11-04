@@ -58,7 +58,12 @@ project's file, and seal the record with the seal skill.
 
 ## Close
 
-Mark the review item done with
+Cite the sealed record from the project's file, so the review that was
+held can be found from the project: its link is what
+`scripts/clankos archive-integrity link PATH` prints for the record's
+sealed path, with the review's date as the link's description.
+
+Then mark the review item done with
 `scripts/clankos pos-state FILE:LINE DONE 'What was reviewed'`. Its
 repeater moves the date on, so the next review is scheduled by
 finishing this one, and the note is kept with the item. If the review
