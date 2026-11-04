@@ -20,3 +20,11 @@ Every change reaches master through a pull request.
   debian-emacs-container. No prefixes such as "feat/" or "fix/".
 - Push the branch and open a pull request against master.
 - Do not merge it. The maintainer reviews and merges.
+
+Tests
+
+- make check runs the tests that need no container: the Lisp of lisp/,
+  with ERT, against poslib at the commit the Dockerfile pins. It takes
+  seconds; run it on every change.
+- test/run runs the tests in the images, which CLANKOS_IMAGE names. Build
+  clankos:test and clankos-skills:test from the same commit first.
