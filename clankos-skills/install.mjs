@@ -25,7 +25,7 @@
 // failed while changing the node.
 import { locks, hash, paths } from './installation.mjs';
 import {
-  changing, key, nameRefusals, owners, preparation, refRefusal, wanted as wantedBy,
+  changing, key, nameRefusals, owners, preparation, refRefusal, untouched, wanted as wantedBy,
 } from './rules.mjs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
@@ -249,20 +249,13 @@ if (explicit) {
     paths(node, [...new Set([...Object.entries(locked).filter(([name, entry]) => wanted.has(name)
       || isChanging(name, entry)).map(([name]) => name), ...wanted.keys(),
     ...managed.filter((each) => each.disposition !== 'keep' && !(each.skill in locked)).map((each) => each.skill)])]);
-    const actual = {};
-    for (const [name, entry] of Object.entries(locked)) {
-      if (!wanted.has(name) && !isChanging(name, entry)) continue;
-      actual[name] = hash(join(node, '.agents/skills', name));
-      if (actual[name] !== null && actual[name] !== entry.computedHash) {
-        throw Error(`${name}: local changes or no recorded hash; restore or keep the skill before applying`);
-      }
-    }
-    for (const entry of managed) {
-      if (!(entry.skill in locked) && !wanted.has(entry.skill)
-          && entry.disposition !== 'keep' && existsSync(join(node, '.agents/skills', entry.skill))) {
-        throw Error(`${entry.skill}: managed files have no lock entry; removal cannot be verified`);
-      }
-    }
+    const actual = untouched({
+      locked, wanted, isChanging, managed,
+      inspect: (name) => ({
+        present: existsSync(join(node, '.agents/skills', name)),
+        hash: () => hash(join(node, '.agents/skills', name)),
+      }),
+    });
     prepared = preparation({
       locked, want, isChanging, owned, seed: plan.seed, declared: declaredKeys, actual,
     });
