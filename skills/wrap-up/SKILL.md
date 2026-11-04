@@ -49,12 +49,21 @@ of its own keeps the handover as that command says.
 Commit what the session changed, `journal.org` and the ledger among
 it, by the repository's own rules for a commit. The ledger is in
 `archive-integrity/` in the directory's configuration directory,
-`.clanka/`, `.clankos/` or `.pos/`, which may be new and untracked. Do
-not push, amend or rewrite history, and do not create a repository, a
-schedule or a migration as part of closing.
+`.clanka/`, `.clankos/` or `.pos/`, which may be new and untracked.
 
-Finish with a few lines: the line the command printed, the commits and
-the open matters. Do not reopen the work.
+Then push as the repository's rules say. Where its work reaches the
+default branch only through pull requests, the session is not closed
+until its branch is pushed and its pull request is open: run the
+checks the rules name before a push, push the session's branch, and
+open its pull request, or add to the one already open for that
+branch. Where the rules say nothing of pushing, do not push.
+
+Never push the default branch, merge, amend or rewrite history, and do
+not create a repository, a schedule or a migration as part of closing.
+
+Finish with a few lines: the line the command printed, the commits,
+the pull request where there is one, and the open matters. Do not
+reopen the work.
 
 If the command refuses, report what it said. Do not write the journal
 or the archive by hand.
